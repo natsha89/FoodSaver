@@ -20,4 +20,5 @@ public class User {
     private String password;
     private List<String> savedRecipes; // List of saved recipe IDs
     private List<String> allergies; // Field for allergies
+    private List<String> dietaryPreferences; // Field for dietary preferences (e.g., vegan, vegetarian, keto)
 }

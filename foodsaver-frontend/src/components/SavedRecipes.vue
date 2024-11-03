@@ -1,6 +1,11 @@
 <template>
   <v-container>
-    <v-card class="mb-4">
+    <v-alert v-if="!isAuthenticated" type="warning">
+      You must be logged in to view saved recipes.
+      <v-btn @click="goToLogin" color="primary">Login</v-btn> <!-- Button to go to Login page -->
+    </v-alert>
+
+    <v-card v-else class="mb-4">
       <v-card-title>Saved Recipes</v-card-title>
       <v-card-text>
         <v-list>
@@ -19,6 +24,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'; // Import Vuex mapGetters
 import axios from 'axios';
 
 export default {
@@ -27,11 +33,18 @@ export default {
       savedRecipes: [], // Initially empty, will store saved recipes
     };
   },
+  computed: {
+    ...mapGetters(['isAuthenticated', 'user']), // Map isAuthenticated and user from Vuex
+  },
   methods: {
+    goToLogin() {
+      this.$router.push({ name: 'Login' }); // Navigate to the login page
+    },
     async fetchSavedRecipes() {
       // Fetch saved recipes from the API when the component mounts
       try {
-        const response = await axios.get(`/api/recipes/${this.userId}`); // Use actual user ID from context
+        const userId = this.user.id; // Get the user's ID from Vuex
+        const response = await axios.get(`/api/recipes/${userId}`); // Use actual user ID from context
         this.savedRecipes = response.data;
       } catch (error) {
         console.error('Error fetching saved recipes:', error);
@@ -48,7 +61,9 @@ export default {
     },
   },
   mounted() {
-    this.fetchSavedRecipes(); // Fetch saved recipes when the component is mounted
+    if (this.isAuthenticated) {
+      this.fetchSavedRecipes(); // Fetch saved recipes when the component is mounted
+    }
   },
 };
 </script>

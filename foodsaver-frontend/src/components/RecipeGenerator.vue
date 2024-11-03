@@ -2,7 +2,6 @@
   <v-container class="recipe-generator">
     <h3>Recipe Suggestions</h3>
 
-    <!-- Ingredient Selection -->
     <v-select
         v-model="selectedIngredients"
         :items="foodItems"
@@ -14,7 +13,6 @@
         persistent-hint
     ></v-select>
 
-    <!-- Allergy Selection -->
     <v-select
         v-model="selectedAllergies"
         :items="allergyOptions"
@@ -26,12 +24,11 @@
         persistent-hint
     ></v-select>
 
-    <v-btn @click="generateRecipes" :disabled="selectedIngredients.length === 0 || loading">
+    <v-btn @click="generateRecipes" :disabled="isGenerateButtonDisabled">
       <span v-if="loading">Generating...</span>
       <span v-else>Generate Recipes</span>
     </v-btn>
 
-    <!-- Loading Indicator -->
     <v-progress-circular
         v-if="loading"
         indeterminate
@@ -40,7 +37,6 @@
         class="my-2"
     ></v-progress-circular>
 
-    <!-- Displaying Generated Recipes -->
     <div v-if="recipes.length > 0">
       <h4>Generated Recipes:</h4>
       <v-list>
@@ -50,12 +46,16 @@
               <v-list-item-title>{{ recipe.title }}</v-list-item-title>
               <v-list-item-subtitle>{{ recipe.instructions }}</v-list-item-subtitle>
             </v-list-item-content>
+            <v-list-item-action>
+              <v-btn @click="saveRecipe(recipe)" color="primary">Save Recipe</v-btn>
+              <v-btn @click="removeRecipe(recipe.id)" color="red">Delete Recipe</v-btn>
+            </v-list-item-action>
           </v-list-item>
         </v-list-item-group>
       </v-list>
     </div>
 
-    <v-alert v-else-if="recipes.length === 0 && !loading" type="info" class="mt-3">
+    <v-alert v-else-if="!loading" type="info" class="mt-3">
       No recipes generated. Please select food items to see suggestions!
     </v-alert>
   </v-container>
@@ -63,63 +63,111 @@
 
 <script>
 import axios from 'axios';
+import { mapGetters } from 'vuex';
 
 export default {
   data() {
     return {
-      foodItems: [], // List of foodItems fetched from the API
-      selectedIngredients: [], // Ingredients selected by the user
-      selectedAllergies: [], // Allergies selected by the user
-      recipes: [], // List of generated recipes
-      allergyOptions: [
-        { name: 'Dairy-free' },
-        { name: 'Gluten-free' },
-        { name: 'Nut-free' }
-      ], // Example allergy options formatted as objects
-      loading: false // Loading state for the button and spinner
+      foodItems: [],
+      selectedIngredients: [],
+      selectedAllergies: [],
+      recipes: [],
+      allergyOptions: [],
+      loading: false
     };
   },
+  computed: {
+    ...mapGetters(['isAuthenticated', 'user']),
+    isGenerateButtonDisabled() {
+      return this.selectedIngredients.length === 0 || this.loading;
+    }
+  },
   methods: {
-    async generateRecipes() {
-      this.loading = true; // Set loading state to true
+    async fetchFoodItems() {
       try {
-        const response = await axios.get('/api/recipes/search', {
-          params: {
-            query: this.selectedIngredients.join(','), // Send selected ingredients
-            allergies: this.selectedAllergies // Send selected allergies
-          }
+        if (this.isAuthenticated) {
+          const userId = this.user.id; // Hämta det aktuella användar-ID:t
+          const response = await axios.get(`/api/foodItems/user/${userId}`);
+          this.foodItems = response.data;
+        } else {
+          const response = await axios.get('/api/foodItems/edamam');
+          this.foodItems = response.data;
+        }
+      } catch (error) {
+        console.error("Error fetching food items:", error);
+      }
+    },
+    async fetchAllergyOptions() {
+      try {
+        const response = await axios.get('/api/foodItems/allergies');
+        this.allergyOptions = response.data;
+      } catch (error) {
+        console.error("Error fetching allergy options:", error);
+      }
+    },
+    async generateRecipes() {
+      this.loading = true;
+      try {
+        const ingredients = this.selectedIngredients.map(item => item.id); // Hämta ID:n på valda ingredienser
+        const allergies = this.selectedAllergies;
+
+        const response = await axios.post('/api/recipes/generate', {
+          ingredients: ingredients,
+          allergies: allergies
         });
-        this.recipes = response.data; // Store generated recipes in the component's state
+
+        this.recipes = response.data; // Spara genererade recept
       } catch (error) {
         console.error("Error generating recipes:", error);
       } finally {
-        this.loading = false; // Reset loading state
+        this.loading = false; // Återställ laddningstillstånd
+      }
+    },
+    async saveRecipe(recipe) {
+      // Kontrollera om användaren är inloggad
+      if (!this.isAuthenticated) {
+        alert("Du måste logga in för att spara recept. Vänligen logga in för att fortsätta.");
+        this.$router.push({ name: 'Login' });
+        return;
+      }
+
+      try {
+        const savedRecipe = {
+          ...recipe,          // Kopiera receptinformation
+          userId: this.user.id // Lägg till userId
+        };
+        await axios.post('/api/recipes', savedRecipe);
+        alert("Recept sparat framgångsrikt!");
+      } catch (error) {
+        console.error("Error saving recipe:", error);
+      }
+    },
+    async removeRecipe(id) {
+      if (!this.isAuthenticated) {
+        alert("Du måste logga in för att ta bort recept. Vänligen logga in för att fortsätta.");
+        this.$router.push({ name: 'Login' });
+        return;
+      }
+
+      try {
+        await axios.delete(`/api/recipes/${id}`); // Anropa DELETE endpointen för att ta bort receptet
+        this.recipes = this.recipes.filter(recipe => recipe.id !== id); // Ta bort receptet från listan
+        alert("Receptet har tagits bort framgångsrikt!");
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
       }
     }
   },
   mounted() {
-    // Fetch foodItems from the API when the component is mounted
-    axios.get('/api/foodItems')
-        .then(response => {
-          this.foodItems = response.data; // Save foodItems in the component's state
-        })
-        .catch(error => {
-          console.error("Error fetching foodItems:", error);
-        });
+    this.fetchFoodItems(); // Hämta matvaror vid montering
+    this.fetchAllergyOptions(); // Hämta allergier
   }
 };
 </script>
 
 <style scoped>
 .recipe-generator {
-  margin-top: 20px; /* Add margin to the top */
-}
-h3 {
-  color: #4CAF50; /* Green color for the heading */
-  margin-bottom: 15px; /* Add margin below the heading */
-}
-.v-btn:disabled {
-  background-color: #BDBDBD; /* Gray color for disabled button */
-  color: white; /* White text for disabled button */
+  max-width: 600px;
+  margin: auto;
 }
 </style>

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -21,11 +22,20 @@ public class EdamamService {
     @Value("${edamam.recipe_url}")
     private String recipeUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${edamam.allergy_url}")
+    private String allergies;
+
+    private final RestTemplate restTemplate;
+
+    public EdamamService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public List<Recipe> searchRecipes(String query, List<String> allergies) {
-        StringBuilder url = new StringBuilder(recipeUrl + "?type=public&q=" + query +
-                "&app_id=" + appId + "&app_key=" + appKey);
+        StringBuilder url = new StringBuilder(recipeUrl)
+                .append("?type=public&q=").append(query)
+                .append("&app_id=").append(appId)
+                .append("&app_key=").append(appKey);
 
         if (allergies != null && !allergies.isEmpty()) {
             for (String allergy : allergies) {
@@ -33,10 +43,27 @@ public class EdamamService {
             }
         }
 
-        EdamamResponse response = restTemplate.getForObject(url.toString(), EdamamResponse.class);
-        if (response != null && response.getHits() != null) {
-            return response.toRecipes();
+        try {
+            EdamamResponse response = restTemplate.getForObject(url.toString(), EdamamResponse.class);
+            return response != null && response.getHits() != null ? response.toRecipes() : Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace(); // Replace with proper logging
+            return Collections.emptyList();
         }
-        return new ArrayList<>();
+    }
+
+    public List<String> getSupportedAllergies() {
+        String url = "https://api.edamam.com/api/health-labels?app_id=" + appId + "&app_key=" + appKey;
+
+        List<String> allergies = new ArrayList<>();
+        try {
+            String[] supportedAllergies = restTemplate.getForObject(url, String[].class);
+            if (supportedAllergies != null) {
+                Collections.addAll(allergies, supportedAllergies);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Replace with proper logging
+        }
+        return allergies;
     }
 }

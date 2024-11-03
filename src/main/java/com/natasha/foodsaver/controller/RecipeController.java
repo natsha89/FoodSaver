@@ -1,9 +1,12 @@
 package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.Recipe;
+import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.service.RecipeService;
-import com.natasha.foodsaver.service.EdamamService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,26 +18,30 @@ public class RecipeController {
     @Autowired
     private RecipeService recipeService;
 
-    @Autowired
-    private EdamamService edamamService;
+    @GetMapping("/generate")
+    public List<Recipe> generateRecipes(@RequestParam String ingredients, @AuthenticationPrincipal User user) {
+        List<String> userAllergies = user.getAllergies();
+        List<String> userPreferences = user.getDietaryPreferences();
 
-    @GetMapping("/{userId}")
-    public List<Recipe> getRecipes(@PathVariable String userId) {
-        return recipeService.getRecipesByUserId(userId);
+        List<Recipe> aiRecipes = recipeService.generateAIRecipes(ingredients, userAllergies, userPreferences);
+        List<Recipe> edamamRecipes = recipeService.searchRecipes(ingredients, userAllergies);
+
+        aiRecipes.addAll(edamamRecipes);
+        return aiRecipes;
     }
 
-    @PostMapping
-    public Recipe saveRecipe(@RequestBody Recipe recipe) {
-        return recipeService.saveRecipe(recipe);
+
+    @PostMapping("/save")
+    public ResponseEntity<Recipe> saveGeneratedRecipe(@RequestBody Recipe recipe, @AuthenticationPrincipal User user) {
+        recipe.setUserId(user.getId()); // Set the user ID
+        Recipe savedRecipe = recipeService.saveRecipe(recipe);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedRecipe);
     }
 
-    @DeleteMapping("/{recipeId}")  // New endpoint for deleting a recipe
-    public void deleteRecipe(@PathVariable String recipeId) {
-        recipeService.deleteRecipe(recipeId);
-    }
 
-    @GetMapping("/search")
-    public List<Recipe> searchRecipes(@RequestParam String query, @RequestParam(required = false) List<String> allergies) {
-        return edamamService.searchRecipes(query, allergies);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRecipe(@PathVariable String id) {
+        recipeService.deleteRecipe(id);
+        return ResponseEntity.noContent().build();
     }
 }

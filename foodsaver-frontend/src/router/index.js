@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
-import AboutView from '../views/AboutView.vue';
-import IngredientList from '../components/FoodItem.vue';
+import FoodItem from '../components/FoodItem.vue';
 import RecipeGenerator from '../components/RecipeGenerator.vue';
 import SavedRecipes from '../components/SavedRecipes.vue';
 import LoginForm from "../components/LoginForm.vue";
@@ -10,8 +9,7 @@ import UserProfile from '../components/Profile.vue'; // Importera den uppdaterad
 
 const routes = [
     { path: '/', name: 'Home', component: HomeView },
-    { path: '/about', name: 'About', component: AboutView },
-    { path: '/ingredient-list', name: 'IngredientList', component: IngredientList },
+    { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes },
     { path: '/login', name: 'Login', component: LoginForm },

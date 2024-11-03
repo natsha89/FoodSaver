@@ -1,23 +1,34 @@
 package com.natasha.foodsaver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Data
+@Setter
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EdamamResponse {
+
+    @JsonProperty("hits")
     private List<Hit> hits;
 
-    @Data
+    public List<Recipe> toRecipes() {
+        return hits.stream().map(Hit::getRecipe).toList();
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Hit {
         private Recipe recipe;
-    }
 
-    public List<Recipe> toRecipes() {
-        return hits.stream().map(Hit::getRecipe).collect(Collectors.toList());
+        public Recipe getRecipe() {
+            return recipe;
+        }
+
+        public void setRecipe(Recipe recipe) {
+            this.recipe = recipe;
+        }
     }
 }

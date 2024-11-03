@@ -52,7 +52,7 @@ export default {
       fullName: '',
       email: '',
       password: '',
-      allergies: '', // Field for allergies
+      allergies: '',
       nameRules: [
         v => !!v || 'Full Name is required',
       ],
@@ -76,15 +76,15 @@ export default {
             fullName: this.fullName,
             email: this.email,
             password: this.password,
-            allergies: this.allergies.split(',').map(a => a.trim()), // Split and trim allergies
+            allergies: this.allergies.split(',').map(a => a.trim()), // Process allergies input
           });
           this.responseMessage = response.data.message; // Display success message
+          // Optionally, redirect the user to the login page or another page here
         } catch (error) {
           if (error.response) {
-            // Check if there is a response from the backend
             this.responseMessage = error.response.data.message || 'An unknown error occurred.';
           } else {
-            this.responseMessage = 'Network error: Unable to reach the server.'; // Handle network errors
+            this.responseMessage = 'Network error: Unable to reach the server.';
           }
         }
       }
