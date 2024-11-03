@@ -1,3 +1,4 @@
+
 import { createStore } from 'vuex'; // Importera createStore från vuex
 import axios from 'axios';
 

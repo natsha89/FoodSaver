@@ -1,12 +1,16 @@
 package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.FoodItem;
-import com.natasha.foodsaver.model.Recipe;
+import com.natasha.foodsaver.model.ApiResponse;
 import com.natasha.foodsaver.service.FoodItemService;
 import com.natasha.foodsaver.service.EdamamService;
+import com.natasha.foodsaver.service.NotificationService; // Import the NotificationService
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -19,39 +23,31 @@ public class FoodItemController {
     @Autowired
     private EdamamService edamamService;
 
-    @GetMapping("/{userId}")
-    public List<FoodItem> getFoodItems(@PathVariable String userId) {
-        List<FoodItem> foodItems = foodItemService.getFoodItemsByUserId(userId);
-        List<String> userAllergies = foodItemService.getUserAllergies(userId);
-        for (FoodItem item : foodItems) {
-            for (String allergen : item.getAllergens()) {
-                if (userAllergies.contains(allergen)) {
-                    System.out.println("Warning: " + item.getName() + " contains " + allergen + " and may cause an allergic reaction.");
-                }
-            }
-        }
-        return foodItems;
+    @Autowired
+    private NotificationService notificationService; // Add the NotificationService
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<FoodItem>>> getFoodItems() {
+        List<FoodItem> foodItems = foodItemService.getAllFoodItems();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Food items retrieved successfully", foodItems));
     }
 
     @PostMapping
-    public FoodItem saveFoodItem(@RequestBody FoodItem foodItem) {
-        return foodItemService.saveFoodItem(foodItem);
+    public ResponseEntity<ApiResponse<FoodItem>> saveFoodItem(@RequestBody FoodItem foodItem) {
+        FoodItem savedFoodItem = foodItemService.saveFoodItem(foodItem);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Food item saved successfully", savedFoodItem));
     }
 
-    @GetMapping("/recipes/{userId}")
-    public List<Recipe> getRecipes(@PathVariable String userId) {
-        List<FoodItem> foodItems = foodItemService.getFoodItemsByUserId(userId);
-        String query = foodItems.stream()
-                .map(FoodItem::getName)
-                .reduce((a, b) -> a + "," + b)
-                .orElse("");
-
-        List<String> allergies = foodItemService.getUserAllergies(userId);
-        return edamamService.searchRecipes(query, allergies);
+    @GetMapping("/allergies")
+    public ResponseEntity<ApiResponse<List<String>>> getSupportedAllergies() {
+        List<String> allergies = edamamService.getSupportedAllergies();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Supported allergies retrieved successfully", allergies));
     }
 
-    @GetMapping("/expiring/{userId}")
-    public List<FoodItem> getExpiringFoodItems(@PathVariable String userId) {
-        return foodItemService.getExpiringFoodItemsByUserId(userId);
+    @GetMapping("/notifications/expiring")
+    public ResponseEntity<ApiResponse<List<FoodItem>>> getExpiringFoodItems() {
+        List<FoodItem> expiringItems = notificationService.getExpiringFoodItems();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Expiring food items retrieved successfully", expiringItems));
     }
 }

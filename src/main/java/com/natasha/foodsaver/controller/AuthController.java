@@ -1,6 +1,7 @@
 package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.exception.GlobalExceptionHandler;
+import com.natasha.foodsaver.exception.UserAlreadyExistsException;
 import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,13 @@ public class AuthController {
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> register(@RequestBody User user) {
         try {
             User savedUser = authService.register(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new GlobalExceptionHandler.ResponseMessage("User registered successfully!", savedUser));
-        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new GlobalExceptionHandler.ResponseMessage("User registered successfully!", savedUser));
+        } catch (UserAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new GlobalExceptionHandler.ResponseMessage(e.getMessage(), null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new GlobalExceptionHandler.ResponseMessage("User registration failed.", null));
         }
     }
@@ -40,12 +45,11 @@ public class AuthController {
     @DeleteMapping("/delete")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> deleteAccount(@AuthenticationPrincipal User user) {
         try {
-            authService.deleteAccount(user.getId()); // Call a service method to handle deletion
+            authService.deleteAccount(String.valueOf(Long.valueOf(user.getId())));
             return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Your account has been deleted successfully.", null));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new GlobalExceptionHandler.ResponseMessage("Error deleting account: " + e.getMessage(), null));
         }
     }
-
 }

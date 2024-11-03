@@ -1,23 +1,31 @@
 <template>
   <v-container>
     <h3>Add a New Food Item</h3>
-    <v-form @submit.prevent="submitFoodItem">
+    <v-alert v-if="!isAuthenticated" type="warning">
+      You must be logged in to add food items.
+      <v-btn @click="goToLogin" color="primary">Login</v-btn>
+    </v-alert>
+
+    <v-form v-else @submit.prevent="submitFoodItem" v-model="valid">
       <v-text-field
           v-model="newFoodItem.name"
           label="Food Item Name"
           required
+          :rules="[v => !!v || 'Name is required']"
       ></v-text-field>
       <v-text-field
           v-model="newFoodItem.quantity"
           label="Quantity"
           type="number"
           required
+          :rules="[v => !!v || 'Quantity is required']"
       ></v-text-field>
       <v-select
           v-model="newFoodItem.unit"
           :items="units"
           label="Unit"
           required
+          :rules="[v => !!v || 'Unit is required']"
       ></v-select>
       <v-menu
           v-model="menu"
@@ -51,10 +59,11 @@
           chips
           clearable
       ></v-autocomplete>
-      <v-btn type="submit" color="success">Add Food Item</v-btn>
+      <v-btn type="submit" color="success" :disabled="!valid || loading">Add Food Item</v-btn>
+      <v-alert v-if="errorMessage" type="error" class="mt-3">{{ errorMessage }}</v-alert>
     </v-form>
 
-    <v-list>
+    <v-list v-if="!loading">
       <v-list-item-group>
         <v-list-item v-for="foodItem in foodItems" :key="foodItem.id">
           <v-list-item-content>
@@ -69,15 +78,18 @@
         </v-list-item>
       </v-list-item-group>
     </v-list>
+    <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
   </v-container>
 </template>
 
 <script>
+import {mapGetters} from 'vuex';
 import axios from 'axios';
 
 export default {
   data() {
     return {
+      valid: false, // Validation flag
       foodItems: [],
       newFoodItem: {
         name: '',
@@ -88,42 +100,66 @@ export default {
       },
       userAllergies: [],
       menu: false,
-      units: ['kg', 'g', 'lbs', 'oz', 'liters', 'ml'], // Add other units as needed
-      allergenOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs'] // Example allergen options
+      loading: false,
+      errorMessage: '', // Error message state
+      units: ['kg', 'g', 'lbs', 'oz', 'liters', 'ml'],
+      allergenOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs']
     };
   },
+  computed: {
+    ...mapGetters(['isAuthenticated']),
+  },
   mounted() {
-    this.fetchFoodItems();
-    this.fetchUserAllergies();
+    if (this.isAuthenticated) {
+      this.fetchFoodItems();
+      this.fetchUserAllergies();
+    }
   },
   methods: {
+    goToLogin() {
+      this.$router.push({name: 'Login'});
+    },
     fetchFoodItems() {
-      // Fetch food items from the API
-      axios.get('/api/foodItems/yourUserId') // Replace with the actual userId
+      this.loading = true; // Start loading
+      axios.get('/api/foodItems/yourUserId')
           .then(response => {
             this.foodItems = response.data;
           })
           .catch(error => {
-            console.error("There was an error fetching the food items:", error);
+            this.errorMessage = "Error fetching food items. Please try again later.";
+            console.error("Error fetching food items:", error);
+          })
+          .finally(() => {
+            this.loading = false; // End loading
           });
     },
     fetchUserAllergies() {
-      axios.get('/api/user/allergies') // Modify this endpoint according to your API
+      this.loading = true; // Start loading
+      axios.get('/api/user/allergies')
           .then(response => {
             this.userAllergies = response.data;
           })
           .catch(error => {
-            console.error("There was an error fetching the user's allergies:", error);
+            this.errorMessage = "Error fetching allergies. Please try again later.";
+            console.error("Error fetching allergies:", error);
+          })
+          .finally(() => {
+            this.loading = false; // End loading
           });
     },
     submitFoodItem() {
+      this.loading = true; // Start loading
       axios.post('/api/foodItems', this.newFoodItem)
           .then(response => {
-            this.foodItems.push(response.data); // Add the newly created food item to the list
-            this.resetNewFoodItem(); // Reset form fields
+            this.foodItems.push(response.data);
+            this.resetNewFoodItem();
           })
           .catch(error => {
-            console.error("There was an error adding the food item:", error);
+            this.errorMessage = "Error adding food item. Please check your input and try again.";
+            console.error("Error adding food item:", error);
+          })
+          .finally(() => {
+            this.loading = false; // End loading
           });
     },
     resetNewFoodItem() {
@@ -140,5 +176,5 @@ export default {
 </script>
 
 <style scoped>
-/* Add any necessary styles */
+/* Add necessary styles */
 </style>

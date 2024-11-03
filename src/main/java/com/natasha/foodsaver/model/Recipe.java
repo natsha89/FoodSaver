@@ -15,8 +15,17 @@ import java.util.List;
 public class Recipe {
     @Id
     private String id;
-    private String title;
+    private String name;
     private String instructions;
-    private List<String> foodItemIds; // Update if necessary
-    private String userId; // Links recipe to a user
+    private List<String> foodItem;
+    private String userId;
+    private String title;
+    private String description;
+
+
+    public Recipe(String name, String instructions, List<String> foodItems) {
+        this.name = name;
+        this.instructions = instructions;
+        this.foodItem = foodItems; // Allow setting food items if necessary
+    }
 }
