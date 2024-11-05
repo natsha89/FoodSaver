@@ -40,7 +40,7 @@ export default {
       valid: false,
       email: '',
       password: '',
-      loading: false,
+      loading: false, // State to indicate loading
       emailRules: [
         v => !!v || 'Email is required',
         v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
@@ -56,13 +56,13 @@ export default {
     async login() {
       this.responseMessage = ''; // Reset the message
       if (this.$refs.form.validate()) {
-        this.loading = true;
+        this.loading = true; // Set loading state
         try {
           const response = await this.$http.post('/api/auth/login', null, {
             params: { email: this.email, password: this.password },
           });
           this.responseMessage = response.data.message; // Display welcome message
-          // You can also redirect the user to another page after login here
+          this.$router.push('/home'); // Redirect to home or another page
         } catch (error) {
           if (error.response && error.response.data.message) {
             this.responseMessage = error.response.data.message; // Display error message from backend
@@ -70,14 +70,10 @@ export default {
             this.responseMessage = 'An unknown error occurred.'; // Generic error message
           }
         } finally {
-          this.loading = false;
+          this.loading = false; // Reset loading state
         }
       }
     },
   },
 };
 </script>
-
-<style scoped>
-/* Add any styles you want here */
-</style>

@@ -15,6 +15,11 @@ public class EdamamResponse {
     @JsonProperty("hits")
     private List<Hit> hits;
 
+    // Lägg till denna metod
+    public List<Hit> getHits() {
+        return hits;
+    }
+
     public List<Recipe> toRecipes() {
         return hits.stream().map(Hit::getRecipe).toList();
     }
