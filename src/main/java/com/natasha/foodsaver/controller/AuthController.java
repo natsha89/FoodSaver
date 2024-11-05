@@ -4,6 +4,7 @@ import com.natasha.foodsaver.exception.GlobalExceptionHandler;
 import com.natasha.foodsaver.exception.UserAlreadyExistsException;
 import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> register(@RequestBody User user) {
+    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> register(@Valid @RequestBody User user) {
         try {
             User savedUser = authService.register(user);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -41,6 +42,7 @@ public class AuthController {
                     .body(new GlobalExceptionHandler.ResponseMessage("Invalid email or password.", null));
         }
     }
+
 
     @DeleteMapping("/delete")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> deleteAccount(@AuthenticationPrincipal User user) {

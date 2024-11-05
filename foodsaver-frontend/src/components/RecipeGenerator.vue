@@ -2,6 +2,7 @@
   <v-container class="recipe-generator">
     <h3>Recipe Suggestions</h3>
 
+    <!-- Välj Matvaror -->
     <v-select
         v-model="selectedIngredients"
         :items="foodItems"
@@ -13,6 +14,7 @@
         persistent-hint
     ></v-select>
 
+    <!-- Välj Allergier -->
     <v-select
         v-model="selectedAllergies"
         :items="allergyOptions"
@@ -24,11 +26,25 @@
         persistent-hint
     ></v-select>
 
+    <!-- Välj Diet -->
+    <v-select
+        v-model="selectedDiets"
+        :items="dietOptions"
+        item-text="name"
+        item-value="name"
+        label="Select Diet"
+        multiple
+        hint="Choose a diet to follow"
+        persistent-hint
+    ></v-select>
+
+    <!-- Knapp för att generera recept -->
     <v-btn @click="generateRecipes" :disabled="isGenerateButtonDisabled">
       <span v-if="loading">Generating...</span>
       <span v-else>Generate Recipes</span>
     </v-btn>
 
+    <!-- Laddningsindikator -->
     <v-progress-circular
         v-if="loading"
         indeterminate
@@ -37,6 +53,7 @@
         class="my-2"
     ></v-progress-circular>
 
+    <!-- Visar genererade recept -->
     <div v-if="recipes.length > 0">
       <h4>Generated Recipes:</h4>
       <v-list>
@@ -55,6 +72,7 @@
       </v-list>
     </div>
 
+    <!-- Visar ett meddelande om inga recept genereras -->
     <v-alert v-else-if="!loading" type="info" class="mt-3">
       No recipes generated. Please select food items to see suggestions!
     </v-alert>
@@ -71,8 +89,10 @@ export default {
       foodItems: [],
       selectedIngredients: [],
       selectedAllergies: [],
+      selectedDiets: [],
       recipes: [],
       allergyOptions: [],
+      dietOptions: [],
       loading: false
     };
   },
@@ -85,14 +105,9 @@ export default {
   methods: {
     async fetchFoodItems() {
       try {
-        if (this.isAuthenticated) {
-          const userId = this.user.id; // Hämta det aktuella användar-ID:t
-          const response = await axios.get(`/api/foodItems/user/${userId}`);
-          this.foodItems = response.data;
-        } else {
-          const response = await axios.get('/api/foodItems/edamam');
-          this.foodItems = response.data;
-        }
+        const response = await axios.get('/api/foodItems');
+        console.log('Food Items:', response.data.data);
+        this.foodItems = response.data.data;
       } catch (error) {
         console.error("Error fetching food items:", error);
       }
@@ -100,74 +115,66 @@ export default {
     async fetchAllergyOptions() {
       try {
         const response = await axios.get('/api/foodItems/allergies');
-        this.allergyOptions = response.data;
+        console.log('Allergy Options:', response.data.data);
+        this.allergyOptions = response.data.data;
       } catch (error) {
         console.error("Error fetching allergy options:", error);
+      }
+    },
+    async fetchDietOptions() {
+      try {
+        const response = await axios.get('/api/diets');  // Assuming you have a diet endpoint
+        console.log('Diet Options:', response.data.data);
+        this.dietOptions = response.data.data;
+      } catch (error) {
+        console.error("Error fetching diet options:", error);
       }
     },
     async generateRecipes() {
       this.loading = true;
       try {
-        const ingredients = this.selectedIngredients.map(item => item.id); // Hämta ID:n på valda ingredienser
-        const allergies = this.selectedAllergies;
-
-        const response = await axios.post('/api/recipes/generate', {
-          ingredients: ingredients,
-          allergies: allergies
+        const response = await axios.get('/api/recipes/generate', {
+          params: {
+            ingredients: this.selectedIngredients,
+            allergies: this.selectedAllergies,
+            dietaryPreferences: this.selectedDiets
+          }
         });
-
-        this.recipes = response.data; // Spara genererade recept
+        this.recipes = response.data;
       } catch (error) {
         console.error("Error generating recipes:", error);
       } finally {
-        this.loading = false; // Återställ laddningstillstånd
+        this.loading = false;
       }
     },
     async saveRecipe(recipe) {
-      // Kontrollera om användaren är inloggad
-      if (!this.isAuthenticated) {
-        alert("Du måste logga in för att spara recept. Vänligen logga in för att fortsätta.");
-        this.$router.push({ name: 'Login' });
-        return;
-      }
-
       try {
-        const savedRecipe = {
-          ...recipe,          // Kopiera receptinformation
-          userId: this.user.id // Lägg till userId
-        };
-        await axios.post('/api/recipes', savedRecipe);
-        alert("Recept sparat framgångsrikt!");
+        await axios.post('/api/recipes/save', recipe);
+        alert('Recipe saved!');
       } catch (error) {
         console.error("Error saving recipe:", error);
       }
     },
-    async removeRecipe(id) {
-      if (!this.isAuthenticated) {
-        alert("Du måste logga in för att ta bort recept. Vänligen logga in för att fortsätta.");
-        this.$router.push({ name: 'Login' });
-        return;
-      }
-
+    async removeRecipe(recipeId) {
       try {
-        await axios.delete(`/api/recipes/${id}`); // Anropa DELETE endpointen för att ta bort receptet
-        this.recipes = this.recipes.filter(recipe => recipe.id !== id); // Ta bort receptet från listan
-        alert("Receptet har tagits bort framgångsrikt!");
+        await axios.delete(`/api/recipes/${recipeId}`);
+        this.recipes = this.recipes.filter(r => r.id !== recipeId);
       } catch (error) {
         console.error("Error deleting recipe:", error);
       }
     }
   },
   mounted() {
-    this.fetchFoodItems(); // Hämta matvaror vid montering
-    this.fetchAllergyOptions(); // Hämta allergier
+    this.fetchFoodItems();
+    this.fetchAllergyOptions();
+    this.fetchDietOptions();
   }
 };
 </script>
 
 <style scoped>
 .recipe-generator {
-  max-width: 600px;
+  max-width: 800px;
   margin: auto;
 }
 </style>

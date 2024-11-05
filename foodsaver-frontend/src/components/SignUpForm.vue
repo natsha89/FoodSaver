@@ -23,11 +23,27 @@
               type="password"
               required
           ></v-text-field>
-          <v-text-field
-              v-model="allergies"
-              label="Allergies (comma separated)"
-              placeholder="e.g. Gluten, Nuts"
-          ></v-text-field>
+
+          <!-- Allergies selection -->
+          <v-autocomplete
+              v-model="selectedAllergies"
+              :items="allergyOptions"
+              label="Select Allergies"
+              multiple
+              chips
+              clearable
+          ></v-autocomplete>
+
+          <!-- Dietary Preferences selection -->
+          <v-autocomplete
+              v-model="selectedDietaryPreferences"
+              :items="dietaryOptions"
+              label="Select Dietary Preferences"
+              multiple
+              chips
+              clearable
+          ></v-autocomplete>
+
         </v-form>
         <v-alert v-if="responseMessage" type="error" dismissible>
           {{ responseMessage }}
@@ -45,24 +61,24 @@
 
 <script>
 export default {
-  name: 'SignUpForm',
   data() {
     return {
       valid: false,
       fullName: '',
       email: '',
       password: '',
-      allergies: '',
-      nameRules: [
-        v => !!v || 'Full Name is required',
-      ],
+      selectedAllergies: [],
+      selectedDietaryPreferences: [],
+      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs'],
+      dietaryOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo'],
+      nameRules: [v => !!v || 'Full Name is required'],
       emailRules: [
         v => !!v || 'Email is required',
-        v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+        v => /.+@.+\..+/.test(v) || 'E-mail must be valid'
       ],
       passwordRules: [
         v => !!v || 'Password is required',
-        v => v.length >= 6 || 'Password must be at least 6 characters',
+        v => v.length >= 6 || 'Password must be at least 6 characters'
       ],
       responseMessage: '', // Variable to store response messages
     };
@@ -76,23 +92,16 @@ export default {
             fullName: this.fullName,
             email: this.email,
             password: this.password,
-            allergies: this.allergies.split(',').map(a => a.trim()), // Process allergies input
+            allergies: this.selectedAllergies, // Send selected allergies
+            dietaryPreferences: this.selectedDietaryPreferences // Send selected dietary preferences
           });
           this.responseMessage = response.data.message; // Display success message
-          // Optionally, redirect the user to the login page or another page here
+          this.$router.push('/login'); // Redirect to login after successful registration
         } catch (error) {
-          if (error.response) {
-            this.responseMessage = error.response.data.message || 'An unknown error occurred.';
-          } else {
-            this.responseMessage = 'Network error: Unable to reach the server.';
-          }
+          this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
         }
       }
     },
   },
 };
 </script>
-
-<style scoped>
-/* Add any styles you want here */
-</style>
