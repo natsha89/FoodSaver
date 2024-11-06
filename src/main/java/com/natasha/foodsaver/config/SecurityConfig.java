@@ -15,11 +15,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // Allow public access to register and login
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify").permitAll() // Allow public access to register and login
                         .anyRequest().authenticated() // Secure all other endpoints
                 )
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/auth/register", "/api/auth/login") // Disable CSRF protection for these endpoints
+                        .ignoringRequestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify") // Disable CSRF protection for these endpoints
                 );
 
 
