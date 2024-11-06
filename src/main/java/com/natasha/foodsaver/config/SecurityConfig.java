@@ -20,13 +20,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify",  "/verify", "/signup").permitAll() // Include "/verify" explicitly
                         .anyRequest().authenticated()
                 )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/auth/**")
-                )
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())); // Enable CORS with custom config
+                        .ignoringRequestMatchers("/api/auth/**") // Configure CSRF for specific URLs
+                ); // CSRF protection is still active, but you are selectively disabling it for certain endpoints
 
         return http.build();
     }
@@ -39,7 +39,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8081")); // Frontend origin
+        configuration.setAllowedOrigins(List.of("http://localhost:8081", "http://127.0.0.1:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
 
