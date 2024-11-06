@@ -30,7 +30,7 @@
           <v-btn text>Saved Recipes</v-btn>
         </router-link>
         <router-link to="/login" class="nav-link">
-          <v-btn text>Sign In</v-btn>
+          <v-btn text>Log In</v-btn>
         </router-link>
         <router-link to="/profile" class="nav-link">
           <v-btn text>My Account</v-btn>

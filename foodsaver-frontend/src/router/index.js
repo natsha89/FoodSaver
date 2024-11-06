@@ -7,6 +7,8 @@ import LoginForm from "../components/LoginForm.vue";
 import SignUpForm from "../components/SignUpForm.vue"; // Importera Sign Up-komponenten
 import UserProfile from '../components/Profile.vue'; // Importera den uppdaterade komponenten
 
+
+
 const routes = [
     { path: '/', name: 'Home', component: HomeView },
     { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
