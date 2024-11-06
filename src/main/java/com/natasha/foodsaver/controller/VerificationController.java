@@ -22,12 +22,12 @@ public class VerificationController {
         try {
             boolean verified = authService.verifyEmail(token);
             if (verified) {
-                return new RedirectView("http://localhost:8080/login"); // Redirect to login page
+                return new RedirectView("http://localhost:8081/login"); // Redirect to login page
             } else {
-                return new RedirectView("http://localhost:8080/signup?error=Invalid or expired token"); // Invalid token
+                return new RedirectView("http://localhost:8081/signup?error=Invalid or expired token"); // Invalid token
             }
         } catch (RuntimeException e) {
-            return new RedirectView("http://localhost:8080/signup?error=Error verifying email"); // Error handling
+            return new RedirectView("http://localhost:8081/signup?error=Error verifying email"); // Error handling
         }
     }
 }
