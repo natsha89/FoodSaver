@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -17,16 +18,16 @@ public class VerificationController {
     private AuthService authService;
 
     @GetMapping("/verify")
-    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+    public RedirectView verifyEmail(@RequestParam String token) {
         try {
             boolean verified = authService.verifyEmail(token);
             if (verified) {
-                return ResponseEntity.ok("Email verified successfully.");
+                return new RedirectView("http://localhost:8080/login"); // Redirect to login page
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired token.");
+                return new RedirectView("http://localhost:8080/signup?error=Invalid or expired token"); // Invalid token
             }
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error verifying email: " + e.getMessage());
+            return new RedirectView("http://localhost:8080/signup?error=Error verifying email"); // Error handling
         }
     }
 }

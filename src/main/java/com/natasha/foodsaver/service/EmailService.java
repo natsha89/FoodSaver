@@ -24,7 +24,7 @@ public class EmailService {
 
     public void sendVerificationEmail(String recipientEmail, String token) {
         String subject = "Please verify your email address";
-        String confirmationUrl = "http://localhost:8080/api/auth/verify?token=" + token;
+        String confirmationUrl = "http://localhost:8081/api/auth/verify?token=" + token;
         String message = "To confirm your account, please click the link below:\n" + confirmationUrl;
 
         MailjetRequest request = new MailjetRequest(Emailv31.resource)
