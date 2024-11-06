@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-card>
-      <v-card-title>Sign In</v-card-title>
+      <v-card-title>Log In</v-card-title>
       <v-card-text>
         <v-form ref="form" v-model="valid">
           <v-text-field
@@ -40,7 +40,7 @@ export default {
       valid: false,
       email: '',
       password: '',
-      loading: false, // State to indicate loading
+      loading: false, // Loading state
       emailRules: [
         v => !!v || 'Email is required',
         v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
@@ -49,25 +49,32 @@ export default {
         v => !!v || 'Password is required',
         v => v.length >= 6 || 'Password must be at least 6 characters',
       ],
-      responseMessage: '', // Variable to store response messages
+      responseMessage: '', // Store response message
     };
   },
   methods: {
     async login() {
-      this.responseMessage = ''; // Reset the message
+      this.responseMessage = ''; // Reset message
       if (this.$refs.form.validate()) {
         this.loading = true; // Set loading state
         try {
-          const response = await this.$http.post('/api/auth/login', null, {
-            params: { email: this.email, password: this.password },
+          // Send email and password as request body
+          const response = await this.$http.post('/auth/login', {
+            email: this.email,
+            password: this.password,
           });
-          this.responseMessage = response.data.message; // Display welcome message
+
+          // Set auth token in localStorage or sessionStorage
+          localStorage.setItem('authToken', response.data.token);
+
+          this.responseMessage = 'Login successful!'; // Display success message
           this.$router.push('/home'); // Redirect to home or another page
         } catch (error) {
+          // Handle error message from backend
           if (error.response && error.response.data.message) {
-            this.responseMessage = error.response.data.message; // Display error message from backend
+            this.responseMessage = error.response.data.message;
           } else {
-            this.responseMessage = 'An unknown error occurred.'; // Generic error message
+            this.responseMessage = 'An unknown error occurred.';
           }
         } finally {
           this.loading = false; // Reset loading state
@@ -77,3 +84,7 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Add custom styles if needed */
+</style>

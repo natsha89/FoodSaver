@@ -20,13 +20,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify",  "/verify", "/signup").permitAll() // Include "/verify" explicitly
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify", "/api/auth/resend-verification").permitAll() // Tillåt registrering, inloggning och återutsändning av verifieringslänk utan autentisering
+                        .anyRequest().authenticated() // Alla andra anrop kräver autentisering
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/auth/**") // Configure CSRF for specific URLs
-                ); // CSRF protection is still active, but you are selectively disabling it for certain endpoints
+                        .ignoringRequestMatchers("/api/auth/**") // Försäkra att CSRF skyddet är avstängt för dessa endpoints
+                ); // CSRF skydd är aktiverat men ignorerar för specifika URLer som vi tillhandahåller API-anrop för
 
         return http.build();
     }
@@ -39,12 +39,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8081", "http://127.0.0.1:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://192.168.0.88:3000")); // Tillåt origin från frontend på port 3000
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Tillåt dessa HTTP-metoder
+        configuration.setAllowCredentials(true); // Tillåter cookies och headers
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Tillåt vissa headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);  // Applicera CORS-konfigurationen på alla vägar
         return source;
     }
 }
