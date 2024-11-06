@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,6 +27,9 @@ public class AuthService {
 
     @Autowired
     private EmailService emailService;
+
+    private static final int VERIFICATION_LINK_EXPIRY_MINUTES = 60; // För att ange hur lång tid verifieringslänken är giltig
+
 
     public User register(User user) {
         // Check if the email already exists
@@ -96,5 +100,22 @@ public class AuthService {
         }
         logger.warn("Invalid verification token: {}", token);
         return false;
+    }
+    public void resendVerificationEmail(String email) {
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String token = generateVerificationToken();
+            user.setVerificationToken(token);
+            user.setVerificationTokenExpiration(LocalDateTime.now().plusMinutes(VERIFICATION_LINK_EXPIRY_MINUTES)); // Token utgår efter en timme
+            userRepository.save(user);
+            emailService.sendVerificationEmail(user.getEmail(), token); // Skicka ny verifieringslänk
+        }
+    }
+
+    private String generateVerificationToken() {
+        // Här kan du använda en mer avancerad metod för att generera token (t.ex. JWT)
+        return Long.toHexString(System.currentTimeMillis());
     }
 }
