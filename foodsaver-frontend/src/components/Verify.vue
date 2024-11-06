@@ -22,6 +22,7 @@
       <v-card>
         <v-card-title>Email Verified!</v-card-title>
         <v-card-text>
+          <p>Welcome to FoodSaver!</p>
           <p>Congratulations, your email has been verified! You are now ready to start using the service. Please log in.</p>
           <router-link to="/login">
             <v-btn>Go to Login</v-btn>
