@@ -54,33 +54,29 @@ export default {
   },
   methods: {
     async login() {
-      this.responseMessage = ''; // Reset message
+      this.responseMessage = ''; // Rensa tidigare meddelanden
       if (this.$refs.form.validate()) {
-        this.loading = true; // Set loading state
+        this.loading = true; // Aktivera loading-status
         try {
-          // Send email and password as request body
-          const response = await this.$http.post('/auth/login', {
+          // Skicka POST-begäran till backend för inloggning
+          const response = await this.$http.post('/api/auth/login', {
             email: this.email,
-            password: this.password,
+            password: this.password
           });
 
-          // Set auth token in localStorage or sessionStorage
+          // Spara token i localStorage eller sessionStorage
           localStorage.setItem('authToken', response.data.token);
 
-          this.responseMessage = 'Login successful!'; // Display success message
-          this.$router.push('/home'); // Redirect to home or another page
+          // Navigera till annan vy (exempelvis hem)
+          this.$router.push('/home');
+          this.responseMessage = 'Login successful!';
         } catch (error) {
-          // Handle error message from backend
-          if (error.response && error.response.data.message) {
-            this.responseMessage = error.response.data.message;
-          } else {
-            this.responseMessage = 'An unknown error occurred.';
-          }
+          this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
         } finally {
-          this.loading = false; // Reset loading state
+          this.loading = false;
         }
       }
-    },
+    }
   },
 };
 </script>

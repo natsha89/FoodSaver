@@ -1,8 +1,9 @@
 <template>
   <v-container>
     <v-card>
-      <v-card-title>Sign Up</v-card-title>
+      <v-card-title>Create Account</v-card-title>
       <v-card-text>
+        <!-- Sign up form -->
         <v-form ref="form" v-model="valid">
           <v-text-field
               v-model="fullName"
@@ -10,12 +11,14 @@
               label="Full Name"
               required
           ></v-text-field>
+
           <v-text-field
               v-model="email"
               :rules="emailRules"
               label="Email"
               required
           ></v-text-field>
+
           <v-text-field
               v-model="password"
               :rules="passwordRules"
@@ -32,6 +35,7 @@
               multiple
               chips
               clearable
+              hint="Select any allergies you have"
           ></v-autocomplete>
 
           <!-- Dietary Preferences selection -->
@@ -42,15 +46,24 @@
               multiple
               chips
               clearable
+              hint="Select any dietary preferences"
           ></v-autocomplete>
-
         </v-form>
-        <v-alert v-if="responseMessage" type="error" dismissible>
+
+        <!-- Display response message if any -->
+        <v-alert v-if="responseMessage" :type="responseType" dismissible>
           {{ responseMessage }}
         </v-alert>
       </v-card-text>
+
       <v-card-actions>
-        <v-btn @click="signUp" :disabled="!valid">Create Account</v-btn>
+        <!-- Create account button -->
+        <v-btn @click="signUp" :disabled="!valid || isSubmitting">
+          <span v-if="isSubmitting">Creating...</span>
+          <span v-else>Create Account</span>
+        </v-btn>
+
+        <!-- Sign In link -->
         <router-link to="/login">
           <v-btn text>Sign In</v-btn>
         </router-link>
@@ -63,30 +76,35 @@
 export default {
   data() {
     return {
-      valid: false,
+      valid: false, // Form validation state
+      isSubmitting: false, // Submit button state (loading indicator)
       fullName: '',
       email: '',
       password: '',
-      selectedAllergies: [],
-      selectedDietaryPreferences: [],
-      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs'],
-      dietaryOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo'],
-      nameRules: [v => !!v || 'Full Name is required'],
+      selectedAllergies: [], // Selected allergies array
+      selectedDietaryPreferences: [], // Selected dietary preferences array
+      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs', 'None'], // Allergy options
+      dietaryOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo', 'None'], // Dietary options
+      nameRules: [v => !!v || 'Full Name is required'], // Full Name validation
       emailRules: [
         v => !!v || 'Email is required',
         v => /.+@.+\..+/.test(v) || 'E-mail must be valid'
-      ],
+      ], // Email validation
       passwordRules: [
         v => !!v || 'Password is required',
         v => v.length >= 6 || 'Password must be at least 6 characters'
-      ],
-      responseMessage: '', // Variable to store response messages
+      ], // Password validation
+      responseMessage: '', // Variable to store response messages (error/success)
+      responseType: 'error', // Type of response message (default: error)
     };
   },
   methods: {
+    // Sign up function
     async signUp() {
-      this.responseMessage = ''; // Reset the message
-      if (this.$refs.form.validate()) {
+      this.responseMessage = ''; // Reset the response message
+      this.responseType = 'error'; // Default response type is error
+      if (this.$refs.form.validate()) { // Validate form
+        this.isSubmitting = true; // Set submitting state to true
         try {
           const response = await this.$http.post('/api/auth/register', {
             fullName: this.fullName,
@@ -96,12 +114,24 @@ export default {
             dietaryPreferences: this.selectedDietaryPreferences // Send selected dietary preferences
           });
           this.responseMessage = response.data.message; // Display success message
-          this.$router.push('/login'); // Redirect to login after successful registration
+          this.responseType = 'success'; // Set response type to success
+          this.$router.push('/login'); // Redirect to login page after successful registration
         } catch (error) {
+          // Handle error response gracefully
           this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
+        } finally {
+          this.isSubmitting = false; // Set submitting state to false
         }
       }
     },
   },
 };
 </script>
+
+<style scoped>
+/* Optional styling */
+.v-form {
+  max-width: 500px;
+  margin: auto;
+}
+</style>

@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <!-- Check if user is authenticated -->
     <v-card v-if="isAuthenticated">
       <v-card-title>My Account</v-card-title>
       <v-card-text>
@@ -15,63 +16,91 @@
           </v-list-item>
         </v-list>
 
+        <!-- Show any response message -->
         <v-alert v-if="responseMessage" type="error" dismissible>
           {{ responseMessage }}
         </v-alert>
 
+        <!-- Navigation Buttons -->
         <v-btn @click="goToSavedRecipes" color="primary">My Recipes</v-btn>
         <v-btn @click="goToFoodItems" color="secondary">My Food Items</v-btn>
       </v-card-text>
+
       <v-card-actions>
-        <v-btn @click="deleteAccount" color="red">Delete Account</v-btn>
+        <!-- Delete Account Button -->
+        <v-btn @click="openDeleteDialog" color="red">Delete Account</v-btn>
       </v-card-actions>
     </v-card>
 
+    <!-- If not authenticated, show warning message -->
     <v-alert v-else type="warning">
       You must be logged in to view this page.
-      <v-btn @click="goToLogin" color="primary">Login</v-btn> <!-- Button to go to Login page -->
+      <v-btn @click="goToLogin" color="primary">Login</v-btn>
     </v-alert>
+
+    <!-- Dialog for confirming account deletion -->
+    <v-dialog v-model="isDeleteDialogVisible" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">Confirm Account Deletion</v-card-title>
+        <v-card-text>Are you sure you want to delete your account? This action cannot be undone.</v-card-text>
+        <v-card-actions>
+          <v-btn @click="closeDeleteDialog" color="grey">Cancel</v-btn>
+          <v-btn @click="deleteAccount" color="red">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'; // Import Vuex mapGetters
+import { mapGetters } from 'vuex';
+import http from '../http'; // Import the centralized HTTP handler
 
 export default {
   name: 'UserProfile',
   computed: {
-    ...mapGetters(['isAuthenticated', 'user']), // Map getters from Vuex
+    ...mapGetters(['isAuthenticated', 'user']),
   },
   data() {
     return {
       responseMessage: '',
+      isDeleteDialogVisible: false,  // For controlling delete confirmation dialog
     };
   },
   methods: {
+    // Open the confirmation dialog
+    openDeleteDialog() {
+      this.isDeleteDialogVisible = true;
+    },
+    // Close the confirmation dialog
+    closeDeleteDialog() {
+      this.isDeleteDialogVisible = false;
+    },
+    // Perform the account deletion
     async deleteAccount() {
-      const confirmed = confirm('Are you sure you want to delete your account? This action cannot be undone.');
-      if (confirmed) {
-        try {
-          const response = await this.$http.delete('/api/auth/delete');
-          this.responseMessage = response.data.message;
-          this.$router.push({name: 'Home'});
-        } catch (error) {
-          this.responseMessage = error.response.data.message || 'An unknown error occurred.';
-        }
+      try {
+        const response = await http.delete('/auth/delete'); // Use the http.js instance for API request
+        this.responseMessage = response.data.message; // Show the success message
+        this.$router.push({ name: 'Home' }); // Redirect user to Home page after account deletion
+        this.closeDeleteDialog();  // Close the dialog after deletion
+      } catch (error) {
+        // Handle error message from backend
+        this.responseMessage = error.response?.data?.message || 'An unknown error occurred.';
       }
     },
     goToSavedRecipes() {
-      this.$router.push({name: 'SavedRecipes'});
+      this.$router.push({ name: 'SavedRecipes' });
     },
     goToFoodItems() {
-      this.$router.push({name: 'FoodItems'});
+      this.$router.push({ name: 'FoodItems' });
     },
     goToLogin() {
-      this.$router.push({name: 'Login'}); // Navigate to the login page
+      this.$router.push({ name: 'Login' }); // Navigate to the login page if not logged in
     },
   },
 };
 </script>
 
 <style scoped>
+/* Add some custom styling if necessary */
 </style>

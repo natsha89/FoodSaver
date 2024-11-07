@@ -73,8 +73,13 @@
     </div>
 
     <!-- Visar ett meddelande om inga recept genereras -->
-    <v-alert v-else-if="!loading" type="info" class="mt-3">
+    <v-alert v-else-if="!loading && recipes.length === 0" type="info" class="mt-3">
       No recipes generated. Please select food items to see suggestions!
+    </v-alert>
+
+    <!-- Loading state for fetching data -->
+    <v-alert v-if="isFetchingData" type="info" class="mt-3">
+      Loading food items, allergies, and diets...
     </v-alert>
   </v-container>
 </template>
@@ -93,7 +98,8 @@ export default {
       recipes: [],
       allergyOptions: [],
       dietOptions: [],
-      loading: false
+      loading: false,
+      isFetchingData: true,  // State for data fetching loading indicator
     };
   },
   computed: {
@@ -103,33 +109,49 @@ export default {
     }
   },
   methods: {
+    // Fetch food items
     async fetchFoodItems() {
+      this.isFetchingData = true;
       try {
         const response = await axios.get('/api/foodItems');
         console.log('Food Items:', response.data.data);
         this.foodItems = response.data.data;
       } catch (error) {
         console.error("Error fetching food items:", error);
+        this.$notify.error("Failed to load food items.");
+      } finally {
+        this.isFetchingData = false;
       }
     },
+    // Fetch allergy options
     async fetchAllergyOptions() {
+      this.isFetchingData = true;
       try {
         const response = await axios.get('/api/foodItems/allergies');
         console.log('Allergy Options:', response.data.data);
         this.allergyOptions = response.data.data;
       } catch (error) {
         console.error("Error fetching allergy options:", error);
+        this.$notify.error("Failed to load allergy options.");
+      } finally {
+        this.isFetchingData = false;
       }
     },
+    // Fetch diet options
     async fetchDietOptions() {
+      this.isFetchingData = true;
       try {
-        const response = await axios.get('/api/diets');  // Assuming you have a diet endpoint
+        const response = await axios.get('/api/diets'); // Assuming you have a diet endpoint
         console.log('Diet Options:', response.data.data);
         this.dietOptions = response.data.data;
       } catch (error) {
         console.error("Error fetching diet options:", error);
+        this.$notify.error("Failed to load diet options.");
+      } finally {
+        this.isFetchingData = false;
       }
     },
+    // Generate recipes based on selected options
     async generateRecipes() {
       this.loading = true;
       try {
@@ -141,26 +163,35 @@ export default {
           }
         });
         this.recipes = response.data;
+        if (this.recipes.length === 0) {
+          this.$notify.info("No recipes found for the selected ingredients, allergies, or diets.");
+        }
       } catch (error) {
         console.error("Error generating recipes:", error);
+        this.$notify.error("Failed to generate recipes.");
       } finally {
         this.loading = false;
       }
     },
+    // Save a recipe to user's profile or favorites
     async saveRecipe(recipe) {
       try {
         await axios.post('/api/recipes/save', recipe);
-        alert('Recipe saved!');
+        this.$notify.success("Recipe saved successfully!");
       } catch (error) {
         console.error("Error saving recipe:", error);
+        this.$notify.error("Failed to save recipe.");
       }
     },
+    // Remove a recipe from user's saved recipes
     async removeRecipe(recipeId) {
       try {
         await axios.delete(`/api/recipes/${recipeId}`);
         this.recipes = this.recipes.filter(r => r.id !== recipeId);
+        this.$notify.success("Recipe deleted successfully.");
       } catch (error) {
         console.error("Error deleting recipe:", error);
+        this.$notify.error("Failed to delete recipe.");
       }
     }
   },
@@ -176,5 +207,9 @@ export default {
 .recipe-generator {
   max-width: 800px;
   margin: auto;
+}
+
+.my-2 {
+  margin-top: 1rem;
 }
 </style>

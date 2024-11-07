@@ -1,40 +1,29 @@
 package com.natasha.foodsaver.model;
 
+import com.natasha.foodsaver.service.AIService;
+import com.theokanning.openai.OpenAiService;
+import com.theokanning.openai.completion.CompletionRequest;
+import com.theokanning.openai.completion.CompletionResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Duration;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
 @Document(collection = "foodItems")
 public class FoodItem {
 
     @Id
-    private String id; // Identifier for food item
-    private String userId; // Link to user
-    private String name; // Name of food item
-    private double quantity; // Quantity of food item
-    private String unit; // Unit (grams, pieces, etc.)
-    private LocalDate expirationDate; // Expiration date
-    private List<String> allergens; // Allergens associated with food item
-    private List<String> recipeSuggestions; // Recipe suggestions based on the food item
-
-    // No-argument constructor
-    public FoodItem() {
-    }
-
-    // All-arguments constructor
-    public FoodItem(String id, String userId, String name, double quantity, String unit,
-                    LocalDate expirationDate, List<String> allergens, List<String> recipeSuggestions) {
-        this.id = id;
-        this.userId = userId;
-        this.name = name;
-        this.quantity = quantity;
-        this.unit = unit;
-        this.expirationDate = expirationDate;
-        this.allergens = allergens;
-        this.recipeSuggestions = recipeSuggestions;
-    }
+    private String id;
+    private String userId;
+    private String name;
+    private double quantity;
+    private String unit;
+    private LocalDate expirationDate;
+    private List<String> allergens;
+    private List<Recipe> recipeSuggestions;  // Change to hold Recipe objects
 
     // Getters and Setters
     public String getId() {
@@ -93,26 +82,42 @@ public class FoodItem {
         this.allergens = allergens;
     }
 
-    public List<String> getRecipeSuggestions() {
+    public List<Recipe> getRecipeSuggestions() {
         return recipeSuggestions;
     }
 
-    public void setRecipeSuggestions(List<String> recipeSuggestions) {
+    public void setRecipeSuggestions(List<Recipe> recipeSuggestions) {
         this.recipeSuggestions = recipeSuggestions;
     }
 
-    // toString method
-    @Override
-    public String toString() {
-        return "FoodItem{" +
-                "id='" + id + '\'' +
-                ", userId='" + userId + '\'' +
-                ", name='" + name + '\'' +
-                ", quantity=" + quantity +
-                ", unit='" + unit + '\'' +
-                ", expirationDate=" + expirationDate +
-                ", allergens=" + allergens +
-                ", recipeSuggestions=" + recipeSuggestions +
-                '}';
+    // Allergy Check
+    public void checkAllergies(List<String> userAllergies) {
+        for (String allergen : allergens) {
+            if (userAllergies.contains(allergen)) {
+                sendAllergenNotification(allergen);
+            }
+        }
+    }
+
+    private void sendAllergenNotification(String allergen) {
+        System.out.println("Alert: " + name + " contains " + allergen + ", which you're allergic to.");
+    }
+
+    // Fetch Recipe Suggestions
+    public void fetchRecipeSuggestions(AIService aiService) {
+        // Pass ingredients and allergens to AI service to generate recipes
+        String ingredients = String.join(", ", Arrays.asList(name)); // Assuming the food item's name as the ingredient for simplicity
+        recipeSuggestions = aiService.generateRecipes(ingredients, allergens);
+    }
+
+    // Expiration Notification
+    public void scheduleExpirationNotification() {
+        LocalDate notificationDate = expirationDate.minusDays(3);
+        long daysUntilNotification = Duration.between(LocalDate.now(), notificationDate).toDays();
+
+        if (daysUntilNotification > 0) {
+            // Notification logic here
+            System.out.println(name + " will expire in 3 days.");
+        }
     }
 }

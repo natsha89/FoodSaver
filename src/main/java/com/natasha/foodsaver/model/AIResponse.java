@@ -1,21 +1,39 @@
 package com.natasha.foodsaver.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class AIResponse {
-    private List<Recipe> recipes; // List of recipes returned by the AI service
+    @JsonProperty("choices")
+    private List<Choice> choices;
 
-    // Standardkonstruktor
-    public AIResponse() {
-    }
-
-    // Getter för recipes
     public List<Recipe> getRecipes() {
-        return recipes;
+        // Här ska du bearbeta `choices` för att skapa en lista av Recipe-objekt
+        // För enkelhetens skull antas det här att du bara hämtar den första promptens text
+        // och delar upp den i individuella recept.
+        // Du kan justera detta beroende på OpenAI:s faktiska svar.
+        if (choices != null && !choices.isEmpty()) {
+            String recipeText = choices.get(0).getText(); // Anta att första valet innehåller recepttext
+            return parseRecipes(recipeText);
+        }
+        return List.of();
     }
 
-    // Setter för recipes
-    public void setRecipes(List<Recipe> recipes) {
-        this.recipes = recipes;
+    private List<Recipe> parseRecipes(String recipeText) {
+        // Här kan du implementera en metod som delar upp texten till faktiska Recipe-objekt
+        // För enkelhetens skull returnerar vi en lista med ett enkelt exempel
+        return List.of(new Recipe(recipeText));
+    }
+
+    public static class Choice {
+        private String text;
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
     }
 }

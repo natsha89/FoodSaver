@@ -1,14 +1,11 @@
-
 package com.natasha.foodsaver.service;
 
 import com.natasha.foodsaver.model.FoodItem;
-import com.natasha.foodsaver.model.User;
+import com.natasha.foodsaver.model.Recipe;
 import com.natasha.foodsaver.repository.FoodItemRepository;
-import com.natasha.foodsaver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,26 +15,48 @@ public class FoodItemService {
     private FoodItemRepository foodItemRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private AIService aiService; // Inject AIService
 
-    public List<FoodItem> getFoodItemsByUserId(String userId) {
-        return foodItemRepository.findByUserId(userId);
+    public List<FoodItem> getAllFoodItems() {
+        return foodItemRepository.findAll();
     }
 
-    public FoodItem saveFoodItem(FoodItem foodItem) {
-        User user = userRepository.findById(foodItem.getUserId()).orElse(null);
-        if (user != null) {
-            for (String allergen : foodItem.getAllergens()) {
-                if (user.getAllergies().contains(allergen)) {
-                    System.out.println("Warning: " + foodItem.getName() + " contains allergens: " + allergen);
-                }
-            }
-            return foodItemRepository.save(foodItem);
+    public FoodItem getFoodItemById(String id) {
+        return foodItemRepository.findById(id).orElse(null);
+    }
+
+    public FoodItem createFoodItem(FoodItem foodItem) {
+        // Fetch recipe suggestions from AI service
+        foodItem.fetchRecipeSuggestions(aiService);
+        // Other logic as before
+        foodItem.scheduleExpirationNotification();
+        foodItem.checkAllergies(getUserAllergies(foodItem.getUserId()));
+        return foodItemRepository.save(foodItem);
+    }
+
+    public FoodItem updateFoodItem(String id, FoodItem foodItem) {
+        FoodItem existingFoodItem = foodItemRepository.findById(id).orElse(null);
+        if (existingFoodItem != null) {
+            existingFoodItem.setName(foodItem.getName());
+            existingFoodItem.setQuantity(foodItem.getQuantity());
+            existingFoodItem.setUnit(foodItem.getUnit());
+            existingFoodItem.setExpirationDate(foodItem.getExpirationDate());
+            existingFoodItem.setAllergens(foodItem.getAllergens());
+            existingFoodItem.setRecipeSuggestions(foodItem.getRecipeSuggestions());
+            existingFoodItem.fetchRecipeSuggestions(aiService); // Re-fetch recipe suggestions if updated
+            existingFoodItem.scheduleExpirationNotification();
+            existingFoodItem.checkAllergies(getUserAllergies(existingFoodItem.getUserId()));
+            return foodItemRepository.save(existingFoodItem);
         }
         return null;
     }
 
-    public List<FoodItem> getAllFoodItems() {
-        return foodItemRepository.findAll();
+    public void deleteFoodItem(String id) {
+        foodItemRepository.deleteById(id);
+    }
+
+    private List<String> getUserAllergies(String userId) {
+        // Return a mock list of allergies (this should be replaced with actual logic)
+        return List.of("Peanuts", "Dairy");
     }
 }
