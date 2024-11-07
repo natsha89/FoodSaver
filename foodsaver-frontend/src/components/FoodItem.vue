@@ -1,11 +1,14 @@
 <template>
   <v-container>
     <h3>Add a New Food Item</h3>
+
+    <!-- If the user is not authenticated, show login alert -->
     <v-alert v-if="!isAuthenticated" type="warning">
       You must be logged in to add food items.
       <v-btn @click="goToLogin" color="primary">Login</v-btn>
     </v-alert>
 
+    <!-- The form to add a new food item -->
     <v-form v-else @submit.prevent="submitFoodItem" v-model="valid">
       <v-text-field
           v-model="newFoodItem.name"
@@ -13,6 +16,7 @@
           required
           :rules="[v => !!v || 'Name is required']"
       ></v-text-field>
+
       <v-text-field
           v-model="newFoodItem.quantity"
           label="Quantity"
@@ -20,6 +24,7 @@
           required
           :rules="[v => !!v || 'Quantity is required']"
       ></v-text-field>
+
       <v-select
           v-model="newFoodItem.unit"
           :items="units"
@@ -27,6 +32,7 @@
           required
           :rules="[v => !!v || 'Unit is required']"
       ></v-select>
+
       <v-menu
           v-model="menu"
           ref="menu"
@@ -51,6 +57,7 @@
             @input="menu = false"
         ></v-date-picker>
       </v-menu>
+
       <v-autocomplete
           v-model="newFoodItem.allergens"
           :items="allergenOptions"
@@ -59,38 +66,37 @@
           chips
           clearable
       ></v-autocomplete>
+
       <v-btn type="submit" color="success" :disabled="!valid || loading">Add Food Item</v-btn>
       <v-alert v-if="errorMessage" type="error" class="mt-3">{{ errorMessage }}</v-alert>
     </v-form>
 
-    <v-list v-if="!loading">
-      <v-list-item-group>
-        <v-list-item v-for="foodItem in foodItems" :key="foodItem.id">
-          <v-list-item-content>
-            <v-list-item-title>{{ foodItem.name }}</v-list-item-title>
-            <v-list-item-subtitle>
-              {{ foodItem.quantity }} {{ foodItem.unit }} - Expires: {{ foodItem.expirationDate }}
-            </v-list-item-subtitle>
-            <v-alert v-if="foodItem.allergens.some(allergen => userAllergies.includes(allergen))" type="error" class="mt-2">
-              Warning: This food item contains allergens you are sensitive to!
-            </v-alert>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list-item-group>
+    <!-- Display recipe suggestions if they are available -->
+    <v-list v-if="recipeSuggestions.length">
+      <h4>Recipe Suggestions</h4>
+      <v-list-item v-for="recipe in recipeSuggestions" :key="recipe.id">
+        <v-list-item-content>
+          <v-list-item-title>{{ recipe.name }}</v-list-item-title>
+          <v-list-item-subtitle>{{ recipe.description }}</v-list-item-subtitle>
+          <v-btn @click="saveRecipe(recipe)" color="primary">Save Recipe</v-btn>
+        </v-list-item-content>
+      </v-list-item>
     </v-list>
+
+    <!-- Show loading spinner when data is being fetched -->
     <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
   </v-container>
 </template>
 
 <script>
-import {mapGetters} from 'vuex';
-import axios from 'axios';
+import { mapGetters } from 'vuex';
+import http from '../http'; // Import the centralized API handler
 
 export default {
   data() {
     return {
-      valid: false, // Validation flag
-      foodItems: [],
+      valid: false,
+      recipeSuggestions: [],
       newFoodItem: {
         name: '',
         quantity: '',
@@ -98,10 +104,9 @@ export default {
         expirationDate: '',
         allergens: []
       },
-      userAllergies: [],
       menu: false,
       loading: false,
-      errorMessage: '', // Error message state
+      errorMessage: '',
       units: ['kg', 'g', 'lbs', 'oz', 'liters', 'ml'],
       allergenOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs']
     };
@@ -112,69 +117,66 @@ export default {
   mounted() {
     if (this.isAuthenticated) {
       this.fetchFoodItems();
-      this.fetchUserAllergies();
     }
   },
   methods: {
     goToLogin() {
-      this.$router.push({name: 'Login'});
+      this.$router.push({ name: 'Login' });
     },
+    // Fetch the list of food items
     fetchFoodItems() {
-      this.loading = true; // Start loading
-      axios.get('/api/foodItems/yourUserId')
+      this.loading = true;
+      http.get('/foodItems')
           .then(response => {
             this.foodItems = response.data;
           })
-          .catch(error => {
+          .catch(() => {
             this.errorMessage = "Error fetching food items. Please try again later.";
-            console.error("Error fetching food items:", error);
           })
           .finally(() => {
-            this.loading = false; // End loading
+            this.loading = false;
           });
     },
-    fetchUserAllergies() {
-      this.loading = true; // Start loading
-      axios.get('/api/user/allergies')
-          .then(response => {
-            this.userAllergies = response.data;
-          })
-          .catch(error => {
-            this.errorMessage = "Error fetching allergies. Please try again later.";
-            console.error("Error fetching allergies:", error);
-          })
-          .finally(() => {
-            this.loading = false; // End loading
-          });
-    },
+    // Submit a new food item
     submitFoodItem() {
-      this.loading = true; // Start loading
-      axios.post('/api/foodItems', this.newFoodItem)
+      this.loading = true;
+      http.post('/foodItems', this.newFoodItem)
           .then(response => {
             this.foodItems.push(response.data);
+            this.fetchRecipeSuggestions(response.data.id);
             this.resetNewFoodItem();
           })
-          .catch(error => {
-            this.errorMessage = "Error adding food item. Please check your input and try again.";
-            console.error("Error adding food item:", error);
+          .catch(() => {
+            this.errorMessage = "Error adding food item. Please try again later.";
           })
           .finally(() => {
-            this.loading = false; // End loading
+            this.loading = false;
           });
     },
+    // Fetch recipe suggestions based on the food item
+    fetchRecipeSuggestions(foodItemId) {
+      http.get(`/foodItems/${foodItemId}/recipeSuggestions`)
+          .then(response => {
+            this.recipeSuggestions = response.data;
+          })
+          .catch(() => {
+            this.errorMessage = "Error fetching recipe suggestions.";
+          });
+    },
+    // Save a selected recipe
+    saveRecipe(recipe) {
+      http.post('/foodItems/saveRecipe', recipe)
+          .then(() => {
+            this.savedRecipes.push(recipe);
+          })
+          .catch(() => {
+            this.errorMessage = "Error saving recipe.";
+          });
+    },
+    // Reset the new food item form
     resetNewFoodItem() {
-      this.newFoodItem = {
-        name: '',
-        quantity: '',
-        unit: '',
-        expirationDate: '',
-        allergens: []
-      };
+      this.newFoodItem = { name: '', quantity: '', unit: '', expirationDate: '', allergens: [] };
     }
   }
 };
 </script>
-
-<style scoped>
-/* Add necessary styles */
-</style>

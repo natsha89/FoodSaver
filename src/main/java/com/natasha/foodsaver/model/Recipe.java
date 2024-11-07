@@ -40,6 +40,11 @@ public class Recipe {
         this.foodItem = foodItems; // Allow setting food items if necessary
     }
 
+    // Constructor to initialize the description
+    public Recipe(String description) {
+            this.description = description;
+        }
+
     // Getters and Setters
     public String getId() {
         return id;

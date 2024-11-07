@@ -20,14 +20,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify", "/api/auth/resend-verification").permitAll() // Tillåt registrering, inloggning och återutsändning av verifieringslänk utan autentisering
-                        .anyRequest().authenticated() // Alla andra anrop kräver autentisering
+                        .anyRequest().permitAll()  // Tillåt alla anrop utan autentisering
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/auth/**") // Försäkra att CSRF skyddet är avstängt för dessa endpoints
-                ); // CSRF skydd är aktiverat men ignorerar för specifika URLer som vi tillhandahåller API-anrop för
-
+                        .ignoringRequestMatchers("/api/auth/**") // Lämnar detta oförändrat
+                );
         return http.build();
     }
 
@@ -42,7 +40,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://192.168.0.88:3000")); // Tillåt origin från frontend på port 3000
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Tillåt dessa HTTP-metoder
         configuration.setAllowCredentials(true); // Tillåter cookies och headers
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Tillåt vissa headers
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Tillåt vissa headers (Authorization behövs för Bearer tokens)
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);  // Applicera CORS-konfigurationen på alla vägar
