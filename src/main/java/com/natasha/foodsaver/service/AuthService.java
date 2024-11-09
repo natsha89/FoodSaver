@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -140,5 +141,9 @@ public class AuthService {
     private String generateVerificationToken() {
         // En enkel metod för att generera token (kan ersättas med mer avancerade tekniker som JWT)
         return Long.toHexString(System.currentTimeMillis()); // En token baserat på systemets nuvarande tid
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll(); // Hämta alla användare från databasen
     }
 }
