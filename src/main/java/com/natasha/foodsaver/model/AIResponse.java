@@ -3,57 +3,60 @@ package com.natasha.foodsaver.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
+// Klass som representerar svaret från Cohere AI API
 public class AIResponse {
 
-    // Choices returned by Cohere API
+    // Listan av "choices" som returneras från Cohere API
     @JsonProperty("choices")
     private List<Choice> choices;
 
-    // Getter for choices
+    // Getter för choices (val som returneras från API:t)
     public List<Choice> getChoices() {
         return choices;
     }
 
-    // Setter for choices
+    // Setter för choices
     public void setChoices(List<Choice> choices) {
         this.choices = choices;
     }
 
-    // Extracting recipes from the choices (simplified to demonstrate parsing)
+    // Metod som extraherar recept från de val (choices) som returneras från API:t
     public List<Recipe> getRecipes() {
+        // Kontrollera om det finns val från Cohere och hämta recepttext från det första valet
         if (choices != null && !choices.isEmpty()) {
-            String recipeText = choices.get(0).getText(); // Extracting the text from the first choice
-            return parseRecipes(recipeText);  // Parsing the text into Recipe objects
+            String recipeText = choices.get(0).getText(); // Extrahera texten från det första valet
+            return parseRecipes(recipeText);  // Anropa metod för att parsa texten till Recipe objekt
         }
-        return List.of();  // Return empty list if no choices available
+        return List.of();  // Returnera en tom lista om inga val finns
     }
 
-    // A simple method to parse recipe text (split by lines for demonstration)
+    // Enkel metod för att parsa recepttexten och skapa en lista med Recipe objekt
     private List<Recipe> parseRecipes(String recipeText) {
-        // Example: splitting the recipeText into parts and creating Recipe objects
-        String[] parts = recipeText.split("\n", 3); // Assuming format: name, ingredients, instructions
+        // Exempel: Dela upp recipeText i delar och skapa Recipe objekt (förväntar formatet: namn, ingredienser, instruktioner)
+        String[] parts = recipeText.split("\n", 3); // Dela upp texten vid radbrytningar i tre delar
         if (parts.length == 3) {
-            String name = parts[0].trim();
-            String ingredients = parts[1].trim();
-            String instructions = parts[2].trim();
+            String name = parts[0].trim();  // Receptets namn
+            String ingredients = parts[1].trim();  // Ingredienserna
+            String instructions = parts[2].trim();  // Instruktionerna
 
-            List<String> ingredientList = List.of(ingredients.split(",\\s*"));
-            Recipe recipe = new Recipe(name, instructions, ingredientList);  // Create the Recipe object
-            return List.of(recipe);
+            // Omvandla ingredienser till en lista och skapa ett Recipe objekt
+            List<String> ingredientList = List.of(ingredients.split(",\\s*"));  // Dela ingredienserna vid kommatecken
+            Recipe recipe = new Recipe(name, instructions, ingredientList);  // Skapa Recipe objektet
+            return List.of(recipe);  // Returnera en lista med ett enda recept
         }
-        return List.of();  // If the format is unexpected, return empty list
+        return List.of();  // Om formatet inte är som förväntat, returnera en tom lista
     }
 
-    // Inner class representing the choice from the Cohere response
+    // Inre klass som representerar ett val (choice) från Cohere:s API-svar
     public static class Choice {
         private String text;
 
-        // Getter for text
+        // Getter för text
         public String getText() {
             return text;
         }
 
-        // Setter for text
+        // Setter för text
         public void setText(String text) {
             this.text = text;
         }

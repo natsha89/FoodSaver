@@ -8,36 +8,41 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
-@RestController
-@RequestMapping("/api/auth")
+@RestController  // Denna klass hanterar REST API-anrop och är en controller för verifiering
+@RequestMapping("/api/auth")  // Definierar basvägen för alla endpoints relaterade till autentisering och verifiering
 public class VerificationController {
 
     @Autowired
-    private AuthService authService;
+    private AuthService authService;  // Injektionspunkt för tjänsten som hanterar autentisering och verifiering
 
-    // Kontrollera om verifieringen lyckades
+    // Endpoint för att verifiera en användares e-postadress med hjälp av en verifieringstoken
     @GetMapping("/verify")
     public RedirectView verifyEmail(@RequestParam String token) {
         try {
-            boolean verified = authService.verifyEmail(token);
+            boolean verified = authService.verifyEmail(token);  // Anropa authService för att verifiera token
             if (verified) {
-                return new RedirectView("http://localhost:8081/verify?status=success"); // Användare är verifierad
+                // Om verifieringen lyckades, omdirigera användaren till en success-sida
+                return new RedirectView("http://localhost:8081/verify?status=success");
             } else {
-                return new RedirectView("http://localhost:8081/verify?status=expired"); // Token har gått ut
+                // Om token har gått ut eller är ogiltig, omdirigera användaren till en expired-sida
+                return new RedirectView("http://localhost:8081/verify?status=expired");
             }
         } catch (RuntimeException e) {
-            return new RedirectView("http://localhost:8081/verify?status=error"); // Fel vid verifiering
+            // Om något går fel under verifieringen, omdirigera till en error-sida
+            return new RedirectView("http://localhost:8081/verify?status=error");
         }
     }
 
-    // Begär en ny verifieringslänk
+    // Endpoint för att begära en ny verifieringslänk för användarens e-post
     @GetMapping("/resend-verification")
     public RedirectView resendVerificationEmail(@RequestParam String email) {
         try {
-            authService.resendVerificationEmail(email); // Skicka ny länk
-            return new RedirectView("http://localhost:8081/verify?status=resend"); // Begäran om att skicka länken igen
+            authService.resendVerificationEmail(email);  // Skicka en ny verifieringslänk via AuthService
+            // Omdirigera användaren till en sida som visar att länken har skickats
+            return new RedirectView("http://localhost:8081/verify?status=resend");
         } catch (RuntimeException e) {
-            return new RedirectView("http://localhost:8081/verify?status=error"); // Fel
+            // Om ett fel uppstår, omdirigera till en error-sida
+            return new RedirectView("http://localhost:8081/verify?status=error");
         }
     }
 }

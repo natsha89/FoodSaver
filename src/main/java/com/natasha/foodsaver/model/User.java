@@ -9,36 +9,37 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Document(collection = "users")
+// Denna klass representerar användardata som lagras i en MongoDB-databas
+@Document(collection = "users")  // Indikerar att denna klass mappar till "users"-kollektionen i MongoDB
 public class User {
 
-    @Id
+    @Id  // Detta annoterar att detta fält är primärnyckeln i databasen
     private String id;
 
-    @NotBlank(message = "Full Name is required")
+    @NotBlank(message = "Full Name is required")  // Fältet fullName är obligatoriskt
     private String fullName;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is required")  // Fältet email är obligatoriskt
+    @Email(message = "Email should be valid")  // Validerar att e-postadressen har ett giltigt format
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @NotBlank(message = "Password is required")  // Fältet password är obligatoriskt
+    @Size(min = 6, message = "Password must be at least 6 characters")  // Validerar att lösenordet är minst 6 tecken långt
     private String password;
 
-    private List<String> allergies;
-    private List<String> dietaryPreferences;
-    private List<String> savedRecipes; // Add this field
+    private List<String> allergies;  // Lista av allergier som användaren har
+    private List<String> dietaryPreferences;  // Lista av användarens kostpreferenser (t.ex. vegetarian, glutenfri, etc.)
+    private List<String> savedRecipes;  // Lista av användarens sparade recept (referenser till recept)
 
-    private String verificationToken; // Token for email verification
-    private LocalDateTime verificationTokenExpiration; // Expiration time for the verification token
-    private boolean emailVerified = false; // Whether the email is verified or not
+    private String verificationToken;  // Token för e-postverifiering
+    private LocalDateTime verificationTokenExpiration;  // Utloppsdatum och tid för verifieringstoken
+    private boolean emailVerified = false;  // Flagga som anger om användarens e-post är verifierad eller inte
 
-    // No-argument constructor
+    // No-argument constructor (Krävs för databindning och deserialisering)
     public User() {
     }
 
-    // All-arguments constructor
+    // All-arguments constructor (Används för att skapa ett User-objekt med alla fält ifyllda)
     public User(String id, String fullName, String email, String password, List<String> allergies,
                 List<String> dietaryPreferences, List<String> savedRecipes, String verificationToken,
                 LocalDateTime verificationTokenExpiration, boolean emailVerified) {
@@ -54,7 +55,8 @@ public class User {
         this.emailVerified = emailVerified;
     }
 
-    // Getters and Setters
+    // Getters and Setters (Tillåter andra klasser att få tillgång till och ändra fältvärdena)
+
     public String getId() {
         return id;
     }
@@ -135,7 +137,7 @@ public class User {
         this.emailVerified = emailVerified;
     }
 
-    // toString method
+    // toString-metod (Används för att skriva ut objektets data, exempelvis vid felsökning eller loggning)
     @Override
     public String toString() {
         return "User{" +
@@ -152,4 +154,3 @@ public class User {
                 '}';
     }
 }
-
