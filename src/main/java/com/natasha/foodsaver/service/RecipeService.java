@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RecipeService {
@@ -24,13 +25,25 @@ public class RecipeService {
         return recipeRepository.findById(id).orElse(null);
     }
 
-    public Recipe createRecipe(Recipe recipe) {
-        return recipeRepository.save(recipe);
+    public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
+        // Generera recept via AIService och skicka med kostpreferenser och antal portioner
+        List<Recipe> generatedRecipes = aiService.generateRecipes(ingredients, allergens, dietaryPreferences, servings);
+
+        // Filtrera bort recept som redan finns i databasen baserat på namn
+        List<String> existingRecipeNames = recipeRepository.findAll().stream()
+                .map(Recipe::getName)
+                .collect(Collectors.toList());
+
+        // Returnera endast nya recept som inte redan finns i databasen
+        return generatedRecipes.stream()
+                .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))
+                .collect(Collectors.toList());
     }
 
     public Recipe updateRecipe(String id, Recipe recipe) {
         Recipe existingRecipe = recipeRepository.findById(id).orElse(null);
         if (existingRecipe != null) {
+            // Uppdatera det existerande receptet med nya värden
             existingRecipe.setName(recipe.getName());
             existingRecipe.setInstructions(recipe.getInstructions());
             existingRecipe.setFoodItem(recipe.getFoodItem());
@@ -39,14 +52,13 @@ public class RecipeService {
             existingRecipe.setDescription(recipe.getDescription());
             return recipeRepository.save(existingRecipe);
         }
-        return null;
+        return null; // Om receptet inte finns, returnera null
     }
 
     public void deleteRecipe(String id) {
         recipeRepository.deleteById(id);
     }
 
-    public List<Recipe> generateRecipes(String ingredients, List<String> allergens) {
-        return aiService.generateRecipes(ingredients, allergens);  // Generera recept via AIService
-    }
+
+
 }
