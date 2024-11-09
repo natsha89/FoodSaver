@@ -20,8 +20,6 @@ public class FoodItem {
     private String unit;
     private LocalDate expirationDate;
     private List<String> allergens = new ArrayList<>();
-    private List<Recipe> recipeSuggestions = new ArrayList<>();
-
     private boolean expirationNotificationSent = false;
     private boolean allergenNotificationSent = false;
 
@@ -83,14 +81,6 @@ public class FoodItem {
         this.allergens = allergens;
     }
 
-    public List<Recipe> getRecipeSuggestions() {
-        return recipeSuggestions;
-    }
-
-    public void setRecipeSuggestions(List<Recipe> recipeSuggestions) {
-        this.recipeSuggestions = recipeSuggestions;
-    }
-
     public boolean isExpirationNotificationSent() {
         return expirationNotificationSent;
     }
@@ -138,13 +128,5 @@ public class FoodItem {
 
     private void sendExpirationNotification() {
         System.out.println(name + " will expire in 3 days. Consider using it soon!");
-    }
-
-    // Fetch receptförslag från AI om inga varningar finns
-    public void fetchRecipeSuggestions(AIService aiService, String dietaryPreferences, int servings) {
-        if (!allergenNotificationSent && !expirationNotificationSent) {
-            String ingredients = name;
-            this.recipeSuggestions = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
-        }
     }
 }
