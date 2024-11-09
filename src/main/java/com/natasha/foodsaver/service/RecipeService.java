@@ -12,59 +12,61 @@ import java.util.stream.Collectors;
 public class RecipeService {
 
     @Autowired
-    private RecipeRepository recipeRepository;
+    private RecipeRepository recipeRepository;  // Autowired RecipeRepository för att interagera med databasen
 
     @Autowired
-    private AIService aiService; // Lägger till AIService för att generera recept
+    private AIService aiService; // Lägger till AIService för att generera recept via AI
 
+    // Metod för att generera recept baserat på ingredienser, allergener, kostpreferenser och antal portioner
     public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         try {
-            // Generera recept via AIService och skicka med kostpreferenser och antal portioner
+            // Generera recept via AIService genom att skicka med ingredienser, allergener, kostpreferenser och antal portioner
             List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
 
-            // Filtrera bort recept som redan finns i databasen baserat på namn
+            // Hämta alla existerande receptnamn från databasen
             List<String> existingRecipeNames = recipeRepository.findAll().stream()
-                    .map(Recipe::getName)
+                    .map(Recipe::getName)  // Extrahera namn på alla recept
                     .collect(Collectors.toList());
 
-            // Returnera endast nya recept som inte redan finns i databasen
+            // Filtrera bort recept som redan finns i databasen baserat på namn
             return generatedRecipes.stream()
-                    .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))
+                    .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))  // Bevara endast de recept som inte redan finns i databasen
                     .collect(Collectors.toList());
         } catch (Exception e) {
             // Logga eventuella fel
             System.err.println("Error generating recipes: " + e.getMessage());
-            throw new RuntimeException("Error generating recipes", e); // Skicka vidare undantaget till kontroller
+            throw new RuntimeException("Error generating recipes", e); // Skicka vidare undantaget så det kan hanteras av controller
         }
     }
 
-
+    // Metod för att hämta alla recept från databasen
     public List<Recipe> getAllRecipes() {
-        return recipeRepository.findAll();
+        return recipeRepository.findAll();  // Hämta alla recept från databasen
     }
 
+    // Metod för att hämta ett specifikt recept baserat på ID
     public Recipe getRecipeById(String id) {
-        return recipeRepository.findById(id).orElse(null);
+        return recipeRepository.findById(id).orElse(null);  // Hämta receptet om det finns, annars returnera null
     }
 
-
+    // Metod för att uppdatera ett befintligt recept i databasen
     public Recipe updateRecipe(String id, Recipe recipe) {
-        Recipe existingRecipe = recipeRepository.findById(id).orElse(null);
+        Recipe existingRecipe = recipeRepository.findById(id).orElse(null);  // Hitta det befintliga receptet med angivet ID
         if (existingRecipe != null) {
-            // Uppdatera det existerande receptet med nya värden
+            // Uppdatera det befintliga receptet med nya värden
             existingRecipe.setName(recipe.getName());
             existingRecipe.setInstructions(recipe.getInstructions());
             existingRecipe.setFoodItem(recipe.getFoodItem());
             existingRecipe.setUserId(recipe.getUserId());
             existingRecipe.setTitle(recipe.getTitle());
             existingRecipe.setDescription(recipe.getDescription());
-            return recipeRepository.save(existingRecipe);
+            return recipeRepository.save(existingRecipe);  // Spara det uppdaterade receptet i databasen
         }
-        return null; // Om receptet inte finns, returnera null
+        return null;  // Om receptet inte finns, returnera null
     }
 
+    // Metod för att ta bort ett recept från databasen baserat på ID
     public void deleteRecipe(String id) {
-        recipeRepository.deleteById(id);
+        recipeRepository.deleteById(id);  // Ta bort receptet med angivet ID från databasen
     }
-
 }

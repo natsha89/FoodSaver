@@ -9,46 +9,53 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/foodItems")
+@RestController  // Denna klass hanterar REST API-anrop och är en controller för matvaror
+@RequestMapping("/api/foodItems")  // Definierar basvägen för alla endpoints i denna controller
 public class FoodItemController {
 
     @Autowired
-    private FoodItemService foodItemService;
+    private FoodItemService foodItemService;  // Injektionspunkt för tjänsten som hanterar matvaror
 
-    // Fetch all food items
+    // Endpoint för att hämta alla matvaror
     @GetMapping
     public ResponseEntity<List<FoodItem>> getAllFoodItems() {
-        List<FoodItem> foodItems = foodItemService.getAllFoodItems();
-        return ResponseEntity.ok(foodItems);
+        List<FoodItem> foodItems = foodItemService.getAllFoodItems();  // Hämta alla matvaror via service
+        return ResponseEntity.ok(foodItems);  // Returnera listan med matvaror med HTTP-status 200 OK
     }
 
-    // Fetch a single food item by ID
+    // Endpoint för att hämta en matvara baserat på dess ID
     @GetMapping("/{id}")
     public ResponseEntity<FoodItem> getFoodItemById(@PathVariable String id) {
-        FoodItem foodItem = foodItemService.getFoodItemById(id);
-        return foodItem != null ? ResponseEntity.ok(foodItem) : ResponseEntity.notFound().build();
+        FoodItem foodItem = foodItemService.getFoodItemById(id);  // Hämta matvaran med det specifika ID:t
+        return foodItem != null  // Om matvaran hittades
+                ? ResponseEntity.ok(foodItem)  // Returnera den hittade matvaran med HTTP-status 200 OK
+                : ResponseEntity.notFound().build();  // Om matvaran inte finns, returnera HTTP-status 404 Not Found
     }
 
-    // Create a new food item
+    // Endpoint för att skapa en ny matvara
     @PostMapping
     public ResponseEntity<FoodItem> createFoodItem(@RequestBody FoodItem foodItem) {
-        // FoodItemService handles fetching recipe suggestions and allergens
+        // Skapa en ny matvara via FoodItemService
         FoodItem createdFoodItem = foodItemService.createFoodItem(foodItem);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFoodItem);
+        return ResponseEntity.status(HttpStatus.CREATED)  // Returnera den skapade matvaran med HTTP-status 201 Created
+                .body(createdFoodItem);
     }
 
-    // Update an existing food item
+    // Endpoint för att uppdatera en existerande matvara
     @PutMapping("/{id}")
     public ResponseEntity<FoodItem> updateFoodItem(@PathVariable String id, @RequestBody FoodItem foodItem) {
+        // Uppdatera matvaran baserat på ID och de nya data som skickas i request body
         FoodItem updatedFoodItem = foodItemService.updateFoodItem(id, foodItem);
-        return updatedFoodItem != null ? ResponseEntity.ok(updatedFoodItem) : ResponseEntity.notFound().build();
+        return updatedFoodItem != null  // Om uppdateringen lyckades
+                ? ResponseEntity.ok(updatedFoodItem)  // Returnera den uppdaterade matvaran med HTTP-status 200 OK
+                : ResponseEntity.notFound().build();  // Om matvaran inte finns, returnera HTTP-status 404 Not Found
     }
 
-    // Delete a food item by ID
+    // Endpoint för att ta bort en matvara baserat på ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFoodItem(@PathVariable String id) {
+        // Ta bort matvaran baserat på ID via FoodItemService
         foodItemService.deleteFoodItem(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();  // Returnera HTTP-status 204 No Content (inga data att returnera)
     }
 }

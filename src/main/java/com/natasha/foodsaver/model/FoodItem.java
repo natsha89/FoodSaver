@@ -7,23 +7,22 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-@Document(collection = "foodItems")
+@Document(collection = "foodItems")  // Anger att denna klass ska mappar till en MongoDB-samling (collection) med namnet "foodItems"
 public class FoodItem {
 
-    @Id
+    @Id  // Anger att detta är primärnyckeln för objektet i MongoDB
     private String id;
-    private String userId;
-    private String name;
-    private double quantity;
-    private String unit;
-    private LocalDate expirationDate;
-    private List<String> allergens = new ArrayList<>();
-    private List<Recipe> recipeSuggestions = new ArrayList<>();
+    private String userId;  // Användar-ID för att koppla matvaran till en specifik användare
+    private String name;  // Namnet på matvaran (t.ex. "Mjölk", "Tomat")
+    private double quantity;  // Mängd av matvaran (t.ex. 2.5 för 2.5 liter mjölk)
+    private String unit;  // Enheten för mängden (t.ex. "liter", "gram")
+    private LocalDate expirationDate;  // Förfallodatum för matvaran
+    private List<String> allergens = new ArrayList<>();  // Lista över allergener som matvaran innehåller
+    private List<Recipe> recipeSuggestions = new ArrayList<>();  // Lista över receptförslag baserat på matvaran
 
-    // Getters and Setters
+    // Getters och Setters (metoder för att hämta och sätta värden)
     public String getId() {
         return id;
     }
@@ -88,37 +87,42 @@ public class FoodItem {
         this.recipeSuggestions = recipeSuggestions;
     }
 
-    // Allergy Check
+    // Allergikontroll
+    // Denna metod kontrollerar om matvaran innehåller några allergener som användaren är känslig för
     public void checkAllergies(List<String> userAllergies) {
         for (String allergen : allergens) {
             if (userAllergies.contains(allergen)) {
-                sendAllergenNotification(allergen);
+                sendAllergenNotification(allergen);  // Om allergen finns, skicka varning
             }
         }
     }
 
+    // Skickar en varning om ett allergen finns i matvaran
     private void sendAllergenNotification(String allergen) {
         System.out.println("Alert: " + name + " contains " + allergen + ", which you're allergic to.");
     }
 
-    // Fetch Recipe Suggestions
+    // Hämtar receptförslag från AI-tjänsten
+    // Skickar med ingredienser och allergener för att generera recept
     public void fetchRecipeSuggestions(AIService aiService, String dietaryPreferences, int servings) {
-        // Pass ingredients and allergens to AI service to generate recipes
-        String ingredients = name; // Assuming the food item's name as the ingredient for simplicity
+        // Använder matvarans namn som ingrediens för förenkling
+        String ingredients = name;
         this.recipeSuggestions = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
     }
 
-    // Expiration Notification
+    // Planera en förfallovarsel (skickar en påminnelse om förfallodatumet)
     public void scheduleExpirationNotification() {
-        LocalDate notificationDate = expirationDate.minusDays(3);
-        long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);
+        LocalDate notificationDate = expirationDate.minusDays(3);  // Sätter varsel 3 dagar innan förfallodatumet
+        long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);  // Beräknar antal dagar kvar
 
+        // Om det är dags att skicka påminnelse (0 dagar kvar)
         if (daysUntilNotification == 0) {
-            System.out.println(name + " will expire in 3 days.");
-            // Notification logic can be implemented here
+            System.out.println(name + " will expire in 3 days.");  // Skriver ut varning i konsolen
+            // Logik för att skicka ett verkligt meddelande kan implementeras här
         }
     }
 
+    // En extra metod för att hämta receptförslag, men den är tom i denna version
     public void fetchRecipeSuggestions(AIService aiService) {
     }
 }

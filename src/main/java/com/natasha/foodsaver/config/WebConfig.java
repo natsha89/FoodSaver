@@ -7,18 +7,22 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+@Configuration  // Markerar denna klass som en Spring-konfigurationsklass
 public class WebConfig implements WebMvcConfigurer {
+
+    // Överskriver metoden för att lägga till CORS-konfiguration
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Allow all endpoints
-                .allowedOrigins("http://localhost:3000") // Change this to your frontend port
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+        // Tillåter alla endpoints i applikationen att ta emot CORS-förfrågningar
+        registry.addMapping("/**")  // Tillåt alla vägar (endpoints)
+                .allowedOrigins("http://localhost:3000")  // Endast tillåt anrop från denna origin (Frontend som körs på port 3000)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // Tillåt dessa HTTP-metoder för CORS
+                .allowedHeaders("*");  // Tillåt alla headers i CORS-förfrågningar
     }
+
+    // Bean som skapar en instans av RestTemplate
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        return new RestTemplate();  // Skapa och returnera en ny instans av RestTemplate
     }
-    
 }

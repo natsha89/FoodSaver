@@ -1,13 +1,10 @@
 package com.natasha.foodsaver.exception;
 
+// Exception class that represents the case when a user's email is not verified
 public class EmailNotVerifiedException extends RuntimeException {
-    // Constructor that accepts a message
-    public EmailNotVerifiedException(String message) {
-        super(message); // Call the superclass constructor with the message
-    }
 
-    // Constructor that accepts both a message and a cause
-    public EmailNotVerifiedException(String message, Throwable cause) {
-        super(message, cause); // Call the superclass constructor with the message and cause
+    // Constructor that accepts a custom error message
+    public EmailNotVerifiedException(String message) {
+        super(message); // Call the superclass (RuntimeException) constructor with the provided message
     }
 }
