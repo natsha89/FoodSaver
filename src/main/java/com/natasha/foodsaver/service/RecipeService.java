@@ -18,19 +18,26 @@ public class RecipeService {
     private AIService aiService; // Lägger till AIService för att generera recept
 
     public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
-        // Generera recept via AIService och skicka med kostpreferenser och antal portioner
-        List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
+        try {
+            // Generera recept via AIService och skicka med kostpreferenser och antal portioner
+            List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
 
-        // Filtrera bort recept som redan finns i databasen baserat på namn
-        List<String> existingRecipeNames = recipeRepository.findAll().stream()
-                .map(Recipe::getName)
-                .collect(Collectors.toList());
+            // Filtrera bort recept som redan finns i databasen baserat på namn
+            List<String> existingRecipeNames = recipeRepository.findAll().stream()
+                    .map(Recipe::getName)
+                    .collect(Collectors.toList());
 
-        // Returnera endast nya recept som inte redan finns i databasen
-        return generatedRecipes.stream()
-                .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))
-                .collect(Collectors.toList());
+            // Returnera endast nya recept som inte redan finns i databasen
+            return generatedRecipes.stream()
+                    .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            // Logga eventuella fel
+            System.err.println("Error generating recipes: " + e.getMessage());
+            throw new RuntimeException("Error generating recipes", e); // Skicka vidare undantaget till kontroller
+        }
     }
+
 
     public List<Recipe> getAllRecipes() {
         return recipeRepository.findAll();
