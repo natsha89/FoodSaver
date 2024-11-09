@@ -43,53 +43,59 @@ public class RecipeController {
 
     @PostMapping("/generate")
     public ResponseEntity<List<Recipe>> generateRecipes(@RequestBody RecipeGenerationRequest request) {
-        List<Recipe> generatedRecipes = recipeService.generateRecipes(
-                request.getIngredients(),
-                request.getAllergens(),
-                request.getDietaryPreferences(),
-                request.getServings()
-        );
-        return generatedRecipes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(generatedRecipes);
+        try {
+            System.out.println("Received request with ingredients: " + request.getIngredients());
+            List<Recipe> generatedRecipes = recipeService.generateRecipes(
+                    request.getIngredients(),
+                    request.getAllergens(),
+                    request.getDietaryPreferences(),
+                    request.getServings()
+            );
+            return generatedRecipes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(generatedRecipes);
+        } catch (Exception e) {
+            System.err.println("An error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-
 
     // Request body class for generating recipes
-    public static class RecipeGenerationRequest {
-        private String ingredients;
-        private List<String> allergens;
-        private String dietaryPreferences; // Kostpreferens
-        private int servings; // Antal portioner
+        public static class RecipeGenerationRequest {
+            private String ingredients;
+            private List<String> allergens;
+            private String dietaryPreferences; // Kostpreferens
+            private int servings; // Antal portioner
 
-        public String getIngredients() {
-            return ingredients;
-        }
+            // Getters and setters
+            public String getIngredients() {
+                return ingredients;
+            }
 
-        public void setIngredients(String ingredients) {
-            this.ingredients = ingredients;
-        }
+            public void setIngredients(String ingredients) {
+                this.ingredients = ingredients;
+            }
 
-        public List<String> getAllergens() {
-            return allergens;
-        }
+            public List<String> getAllergens() {
+                return allergens;
+            }
 
-        public void setAllergens(List<String> allergens) {
-            this.allergens = allergens;
-        }
+            public void setAllergens(List<String> allergens) {
+                this.allergens = allergens;
+            }
 
-        public String getDietaryPreferences() {
-            return dietaryPreferences;
-        }
+            public String getDietaryPreferences() {
+                return dietaryPreferences;
+            }
 
-        public void setDietaryPreferences(String dietaryPreferences) {
-            this.dietaryPreferences = dietaryPreferences;
-        }
+            public void setDietaryPreferences(String dietaryPreferences) {
+                this.dietaryPreferences = dietaryPreferences;
+            }
 
-        public int getServings() {
-            return servings;
-        }
+            public int getServings() {
+                return servings;
+            }
 
-        public void setServings(int servings) {
-            this.servings = servings;
+            public void setServings(int servings) {
+                this.servings = servings;
+            }
         }
     }
-}

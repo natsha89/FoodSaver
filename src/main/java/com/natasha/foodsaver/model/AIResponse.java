@@ -5,7 +5,7 @@ import java.util.List;
 
 public class AIResponse {
 
-    // Choices returned by OpenAI API
+    // Choices returned by Cohere API
     @JsonProperty("choices")
     private List<Choice> choices;
 
@@ -30,10 +30,7 @@ public class AIResponse {
 
     // A simple method to parse recipe text (split by lines for demonstration)
     private List<Recipe> parseRecipes(String recipeText) {
-        // You can customize the logic here to handle more complex recipe structures
         // Example: splitting the recipeText into parts and creating Recipe objects
-
-        // For demonstration, we'll split by new lines and assume a basic format
         String[] parts = recipeText.split("\n", 3); // Assuming format: name, ingredients, instructions
         if (parts.length == 3) {
             String name = parts[0].trim();
@@ -47,7 +44,7 @@ public class AIResponse {
         return List.of();  // If the format is unexpected, return empty list
     }
 
-    // Inner class representing the choice from the OpenAI response
+    // Inner class representing the choice from the Cohere response
     public static class Choice {
         private String text;
 

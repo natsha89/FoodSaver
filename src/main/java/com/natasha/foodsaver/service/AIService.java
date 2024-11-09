@@ -17,11 +17,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class AIService {
 
-    @Value("${openai.api.key}")
-    private String openAiApiKey;
+    @Value("${cohere.api.key}")
+    private String cohereApiKey;
 
-    @Value("${openai.api.url}")
-    private String openAiApiUrl;
+    @Value("${cohere.api.url}")
+    private String cohereApiUrl;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -31,13 +31,12 @@ public class AIService {
         this.objectMapper = objectMapper;
     }
 
-    // Ny metod för att generera recept från OpenAI
     public List<Recipe> generateAIRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         String dietPrompt = dietaryPreferences != null && !dietaryPreferences.isEmpty() ? dietaryPreferences : "no specific dietary preferences";
 
         // Skapa AI-prompt med alla parametrar
         String prompt = String.format(
-                "Create a recipe using the following ingredients: %s. Exclude any ingredients that contain: %s. Make sure the recipe is %s, and prepare it in less than 30 minutes. The recipe should be suitable for %d servings.",
+                "Create a recipe using the following ingredients: %s. Exclude any ingredients that contain: %s. Make sure the recipe is %s, and suitable for %d servings.",
                 ingredients,
                 String.join(", ", allergens),
                 dietPrompt, // Hanterar fallet där kostpreferenser saknas
@@ -45,14 +44,28 @@ public class AIService {
         );
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + openAiApiKey);
+        headers.set("Authorization", "Bearer " + cohereApiKey);
         headers.set("Content-Type", "application/json");
 
-        String jsonBody = String.format("{\"model\":\"text-davinci-003\",\"prompt\":\"%s\",\"max_tokens\":300,\"temperature\":0.7}", prompt);
+        // JSON-body med parametrar enligt Cohere's Generate API dokumentation
+        String jsonBody = String.format(
+                "{\"model\":\"command-nightly\", " +
+                        "\"prompt\":\"%s\", " +
+                        "\"max_tokens\":300, " +
+                        "\"temperature\":0.7, " +
+                        "\"k\":0, " +
+                        "\"p\":0.75, " +
+                        "\"stop_sequences\":[], " +
+                        "\"return_likelihoods\":\"NONE\"}",
+                prompt
+        );
+
         HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(openAiApiUrl, HttpMethod.POST, entity, String.class);
+        // Skicka begäran till Cohere API
+        ResponseEntity<String> response = restTemplate.exchange(cohereApiUrl, HttpMethod.POST, entity, String.class);
 
+        // Bearbeta svaret från Cohere
         AIResponse aiResponse = parseResponse(response.getBody());
 
         // Omvandla AIResponse till en lista av Recipe
@@ -61,9 +74,18 @@ public class AIService {
 
     private AIResponse parseResponse(String responseBody) {
         try {
-            return objectMapper.readValue(responseBody, AIResponse.class);
+            // Om Cohere:s svar innehåller en lista med val, använd den för att extrahera texten.
+            AIResponse aiResponse = objectMapper.readValue(responseBody, AIResponse.class);
+
+            if (aiResponse == null || aiResponse.getChoices() == null || aiResponse.getChoices().isEmpty()) {
+                throw new RuntimeException("Cohere returned an invalid response.");
+            }
+
+            return aiResponse;
         } catch (Exception e) {
-            throw new RuntimeException("Error parsing OpenAI response", e);
+            // Logga eventuella fel och kasta ett undantag
+            System.err.println("Error parsing response: " + e.getMessage());
+            throw new RuntimeException("Error parsing Cohere response", e);
         }
     }
 
@@ -73,23 +95,19 @@ public class AIService {
         for (AIResponse.Choice choice : aiResponse.getChoices()) {
             String aiRecipeText = choice.getText();
 
-            // Anta att receptet är strukturerat som: "Namn\nIngredienser\nInstruktioner"
-            String[] parts = aiRecipeText.split("\n", 3); // Dela upp texten i delar: namn, ingredienser, instruktioner
+            // Förbättra hur du delar upp texten här och extraherar ingredienser och instruktioner
+            String[] parts = aiRecipeText.split("\n", 3);
 
             if (parts.length == 3) {
                 String name = parts[0].trim();
                 String ingredients = parts[1].trim();
                 String instructions = parts[2].trim();
 
-                // Konvertera ingredienser till en lista
-                List<String> ingredientList = List.of(ingredients.split(",\\s*"));
-
                 // Skapa och lägg till receptet i listan
-                Recipe recipe = new Recipe(name, instructions, ingredientList);
+                Recipe recipe = new Recipe(name, instructions, List.of(ingredients.split(",\\s*")));
                 recipes.add(recipe);
             }
         }
         return recipes;
     }
-
 }

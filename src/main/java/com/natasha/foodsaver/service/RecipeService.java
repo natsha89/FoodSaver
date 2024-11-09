@@ -17,14 +17,6 @@ public class RecipeService {
     @Autowired
     private AIService aiService; // Lägger till AIService för att generera recept
 
-    public List<Recipe> getAllRecipes() {
-        return recipeRepository.findAll();
-    }
-
-    public Recipe getRecipeById(String id) {
-        return recipeRepository.findById(id).orElse(null);
-    }
-
     public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         // Generera recept via AIService och skicka med kostpreferenser och antal portioner
         List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
@@ -38,6 +30,14 @@ public class RecipeService {
         return generatedRecipes.stream()
                 .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))
                 .collect(Collectors.toList());
+    }
+
+    public List<Recipe> getAllRecipes() {
+        return recipeRepository.findAll();
+    }
+
+    public Recipe getRecipeById(String id) {
+        return recipeRepository.findById(id).orElse(null);
     }
 
 
