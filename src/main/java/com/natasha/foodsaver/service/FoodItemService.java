@@ -11,41 +11,44 @@ import java.util.List;
 public class FoodItemService {
 
     @Autowired
-    private FoodItemRepository foodItemRepository; // Repository för att hantera FoodItem i databasen
+    private FoodItemRepository foodItemRepository;
 
     @Autowired
-    private AIService aiService; // Injection av AIService för att få receptförslag
+    private AIService aiService;
 
-    // Hämta alla FoodItems från databasen
+    // Hämtar alla matvaror och kollar deras utgångsdatum
     public List<FoodItem> getAllFoodItems() {
-        return foodItemRepository.findAll(); // Hämtar alla matvaror från databasen
-    }
+        List<FoodItem> foodItems = foodItemRepository.findAll();
 
-    // Hämta en FoodItem baserat på dess ID
-    public FoodItem getFoodItemById(String id) {
-        return foodItemRepository.findById(id).orElse(null); // Returnera FoodItem eller null om inte hittas
+        // Kolla utgångsdatum och generera receptförslag
+        for (FoodItem foodItem : foodItems) {
+            // Kontrollera och skicka notifiering om förfallodatumet
+            foodItem.scheduleExpirationNotification();
+            // Kontrollera om allergener matchar användarens allergier
+            foodItem.checkAllergies(getUserAllergies(foodItem.getUserId()));
+        }
+
+        return foodItems;
     }
 
     // Skapa en ny FoodItem
     public FoodItem createFoodItem(FoodItem foodItem) {
-        // Hämta receptförslag från AI-tjänsten och associera med matvaran
-        foodItem.fetchRecipeSuggestions(aiService);
+        // Kontrollera om allergener eller utgångsdatum finns
+        boolean hasAllergens = foodItem.checkAllergies(getUserAllergies(foodItem.getUserId()));
+        boolean isExpirationNear = foodItem.scheduleExpirationNotification();
 
-        // Schemalägg en påminnelse om matvarans utgångsdatum
-        foodItem.scheduleExpirationNotification();
+        // Om ingen allergi eller utgångsdatum varning finns, generera recept
+        if (!hasAllergens && !isExpirationNear) {
+            foodItem.fetchRecipeSuggestions(aiService, "Any", 2);  // Exempel: Generera receptförslag för 2 portioner
+        }
 
-        // Kontrollera om matvaran innehåller allergener baserat på användarens allergier
-        foodItem.checkAllergies(getUserAllergies(foodItem.getUserId()));
-
-        // Spara FoodItem till databasen och returnera den
         return foodItemRepository.save(foodItem);
     }
 
-    // Uppdatera en befintlig FoodItem
+    // Uppdatera en FoodItem
     public FoodItem updateFoodItem(String id, FoodItem foodItem) {
-        FoodItem existingFoodItem = foodItemRepository.findById(id).orElse(null); // Hämta den befintliga matvaran
-        if (existingFoodItem != null) { // Om matvaran finns
-            // Uppdatera egenskaper på den befintliga matvaran med nya värden
+        FoodItem existingFoodItem = foodItemRepository.findById(id).orElse(null);
+        if (existingFoodItem != null) {
             existingFoodItem.setName(foodItem.getName());
             existingFoodItem.setQuantity(foodItem.getQuantity());
             existingFoodItem.setUnit(foodItem.getUnit());
@@ -53,29 +56,27 @@ public class FoodItemService {
             existingFoodItem.setAllergens(foodItem.getAllergens());
             existingFoodItem.setRecipeSuggestions(foodItem.getRecipeSuggestions());
 
-            // Hämta nya receptförslag om matvaran uppdateras
-            existingFoodItem.fetchRecipeSuggestions(aiService);
+            // Kontrollera allergener och utgångsdatum
+            boolean hasAllergens = foodItem.checkAllergies(getUserAllergies(existingFoodItem.getUserId()));
+            boolean isExpirationNear = foodItem.scheduleExpirationNotification();
 
-            // Schemalägg påminnelse för utgångsdatum
-            existingFoodItem.scheduleExpirationNotification();
+            // Om ingen allergi eller utgångsdatum varning finns, generera recept
+            if (!hasAllergens && !isExpirationNear) {
+                existingFoodItem.fetchRecipeSuggestions(aiService, "Any", 2);  // Exempel: Generera receptförslag för 2 portioner
+            }
 
-            // Kontrollera allergier baserat på användarens allergier
-            existingFoodItem.checkAllergies(getUserAllergies(existingFoodItem.getUserId()));
-
-            // Spara den uppdaterade matvaran till databasen och returnera den
             return foodItemRepository.save(existingFoodItem);
         }
-        return null; // Returnera null om matvaran inte hittades
+        return null;
     }
 
-    // Ta bort en FoodItem baserat på dess ID
+    // Hämta användarens allergier
+    public List<String> getUserAllergies(String userId) {
+        // Detta kan ersättas med riktig användardata från din databas eller användargränssnitt
+        return List.of("Peanuts", "Dairy"); // Detta är bara ett exempel
+    }
+
     public void deleteFoodItem(String id) {
-        foodItemRepository.deleteById(id); // Ta bort matvaran från databasen
-    }
-
-    // Metod som simulerar hämtning av användarens allergier (detta bör ersättas med verklig logik)
-    private List<String> getUserAllergies(String userId) {
-        // För närvarande returneras en hårdkodad lista av allergier som exempel
-        return List.of("Peanuts", "Dairy"); // Detta bör ersättas med verkliga användardata
+        foodItemRepository.deleteById(id);
     }
 }

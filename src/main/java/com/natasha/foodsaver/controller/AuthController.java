@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController  // Denna klass hanterar REST API-anrop och är en controller för autentisering
 @RequestMapping("/api/auth")  // Definierar basvägen för alla endpoints i denna controller
 public class AuthController {
@@ -62,6 +64,18 @@ public class AuthController {
             // Om det uppstår ett fel vid radering av kontot, returnera status 500 (serverfel)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new GlobalExceptionHandler.ResponseMessage("Error deleting account: " + e.getMessage(), null));
+        }
+    }
+    @GetMapping("/users")
+    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> getAllUsers() {
+        try {
+            // Hämta alla användare från AuthService
+            List<User> users = authService.getAllUsers();
+            return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("All users fetched successfully.", users));
+        } catch (RuntimeException e) {
+            // Om det uppstår ett fel vid hämtning av användare, returnera status 500 (serverfel)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GlobalExceptionHandler.ResponseMessage("Error fetching users: " + e.getMessage(), null));
         }
     }
 }

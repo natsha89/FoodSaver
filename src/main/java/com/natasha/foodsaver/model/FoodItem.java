@@ -9,20 +9,24 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "foodItems")  // Anger att denna klass ska mappar till en MongoDB-samling (collection) med namnet "foodItems"
+@Document(collection = "foodItems")
 public class FoodItem {
 
-    @Id  // Anger att detta är primärnyckeln för objektet i MongoDB
+    @Id
     private String id;
-    private String userId;  // Användar-ID för att koppla matvaran till en specifik användare
-    private String name;  // Namnet på matvaran (t.ex. "Mjölk", "Tomat")
-    private double quantity;  // Mängd av matvaran (t.ex. 2.5 för 2.5 liter mjölk)
-    private String unit;  // Enheten för mängden (t.ex. "liter", "gram")
-    private LocalDate expirationDate;  // Förfallodatum för matvaran
-    private List<String> allergens = new ArrayList<>();  // Lista över allergener som matvaran innehåller
-    private List<Recipe> recipeSuggestions = new ArrayList<>();  // Lista över receptförslag baserat på matvaran
+    private String userId;
+    private String name;
+    private double quantity;
+    private String unit;
+    private LocalDate expirationDate;
+    private List<String> allergens = new ArrayList<>();
+    private List<Recipe> recipeSuggestions = new ArrayList<>();
 
-    // Getters och Setters (metoder för att hämta och sätta värden)
+    private boolean expirationNotificationSent = false;
+    private boolean allergenNotificationSent = false;
+
+
+    // Getters och Setters
     public String getId() {
         return id;
     }
@@ -87,42 +91,60 @@ public class FoodItem {
         this.recipeSuggestions = recipeSuggestions;
     }
 
-    // Allergikontroll
-    // Denna metod kontrollerar om matvaran innehåller några allergener som användaren är känslig för
-    public void checkAllergies(List<String> userAllergies) {
-        for (String allergen : allergens) {
-            if (userAllergies.contains(allergen)) {
-                sendAllergenNotification(allergen);  // Om allergen finns, skicka varning
-            }
-        }
+    public boolean isExpirationNotificationSent() {
+        return expirationNotificationSent;
     }
 
-    // Skickar en varning om ett allergen finns i matvaran
+    public void setExpirationNotificationSent(boolean expirationNotificationSent) {
+        this.expirationNotificationSent = expirationNotificationSent;
+    }
+
+    public boolean isAllergenNotificationSent() {
+        return allergenNotificationSent;
+    }
+
+    public void setAllergenNotificationSent(boolean allergenNotificationSent) {
+        this.allergenNotificationSent = allergenNotificationSent;
+    }
+
+    // Kontrollera om matvaran innehåller allergener som användaren har
+    public boolean checkAllergies(List<String> userAllergies) {
+        for (String allergen : allergens) {
+            if (userAllergies.contains(allergen) && !allergenNotificationSent) {
+                sendAllergenNotification(allergen);
+                allergenNotificationSent = true;
+                return true; // Returnera true om allergen hittas
+            }
+        }
+        return false; // Ingen allergen hittades
+    }
+
     private void sendAllergenNotification(String allergen) {
         System.out.println("Alert: " + name + " contains " + allergen + ", which you're allergic to.");
     }
 
-    // Hämtar receptförslag från AI-tjänsten
-    // Skickar med ingredienser och allergener för att generera recept
-    public void fetchRecipeSuggestions(AIService aiService, String dietaryPreferences, int servings) {
-        // Använder matvarans namn som ingrediens för förenkling
-        String ingredients = name;
-        this.recipeSuggestions = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
-    }
+    // Schemalägg förfallovarsel
+    public boolean scheduleExpirationNotification() {
+        LocalDate notificationDate = expirationDate.minusDays(3);
+        long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);
 
-    // Planera en förfallovarsel (skickar en påminnelse om förfallodatumet)
-    public void scheduleExpirationNotification() {
-        LocalDate notificationDate = expirationDate.minusDays(3);  // Sätter varsel 3 dagar innan förfallodatumet
-        long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);  // Beräknar antal dagar kvar
-
-        // Om det är dags att skicka påminnelse (0 dagar kvar)
-        if (daysUntilNotification == 0) {
-            System.out.println(name + " will expire in 3 days.");  // Skriver ut varning i konsolen
-            // Logik för att skicka ett verkligt meddelande kan implementeras här
+        if (daysUntilNotification <= 3 && !expirationNotificationSent) {
+            sendExpirationNotification();
+            expirationNotificationSent = true;
+            return true; // Returnera true om notifiering skickas
         }
+        return false; // Inget behov av notifiering
     }
 
-    // En extra metod för att hämta receptförslag, men den är tom i denna version
-    public void fetchRecipeSuggestions(AIService aiService) {
+    private void sendExpirationNotification() {
+        System.out.println(name + " will expire in 3 days. Consider using it soon!");
+    }
+
+    // Fetch receptförslag från AI om inga varningar finns
+    public void fetchRecipeSuggestions(AIService aiService, String dietaryPreferences, int servings) {
+        if (!allergenNotificationSent && !expirationNotificationSent) {
+            String ingredients = name;
+            this.recipeSuggestions = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
+        }
     }
 }
