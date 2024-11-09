@@ -28,15 +28,6 @@ public class RecipeController {
         return recipe != null ? ResponseEntity.ok(recipe) : ResponseEntity.notFound().build();
     }
 
-    @PostMapping
-    public ResponseEntity<Recipe> createRecipe(@RequestBody Recipe recipe) {
-        try {
-            Recipe createdRecipe = recipeService.createRecipe(recipe);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdRecipe);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
-    }
 
     @PutMapping("/{id}")
     public ResponseEntity<Recipe> updateRecipe(@PathVariable String id, @RequestBody Recipe recipe) {
@@ -49,9 +40,15 @@ public class RecipeController {
         recipeService.deleteRecipe(id);
         return ResponseEntity.noContent().build();
     }
+
     @PostMapping("/generate")
     public ResponseEntity<List<Recipe>> generateRecipes(@RequestBody RecipeGenerationRequest request) {
-        List<Recipe> generatedRecipes = recipeService.generateRecipes(request.getIngredients(), request.getAllergens());
+        List<Recipe> generatedRecipes = recipeService.generateRecipes(
+                request.getIngredients(),
+                request.getAllergens(),
+                request.getDietaryPreferences(), // Lägg till kostpreferenser i request
+                request.getServings()            // Lägg till antal portioner i request
+        );
         return generatedRecipes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(generatedRecipes);
     }
 
@@ -59,6 +56,8 @@ public class RecipeController {
     public static class RecipeGenerationRequest {
         private String ingredients;
         private List<String> allergens;
+        private String dietaryPreferences; // Kostpreferens
+        private int servings; // Antal portioner
 
         public String getIngredients() {
             return ingredients;
@@ -74,6 +73,22 @@ public class RecipeController {
 
         public void setAllergens(List<String> allergens) {
             this.allergens = allergens;
+        }
+
+        public String getDietaryPreferences() {
+            return dietaryPreferences;
+        }
+
+        public void setDietaryPreferences(String dietaryPreferences) {
+            this.dietaryPreferences = dietaryPreferences;
+        }
+
+        public int getServings() {
+            return servings;
+        }
+
+        public void setServings(int servings) {
+            this.servings = servings;
         }
     }
 }

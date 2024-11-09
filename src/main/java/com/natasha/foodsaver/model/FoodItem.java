@@ -1,16 +1,14 @@
 package com.natasha.foodsaver.model;
 
 import com.natasha.foodsaver.service.AIService;
-import com.theokanning.openai.OpenAiService;
-import com.theokanning.openai.completion.CompletionRequest;
-import com.theokanning.openai.completion.CompletionResult;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.*;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Document(collection = "foodItems")
 public class FoodItem {
@@ -22,8 +20,8 @@ public class FoodItem {
     private double quantity;
     private String unit;
     private LocalDate expirationDate;
-    private List<String> allergens;
-    private List<Recipe> recipeSuggestions;  // Change to hold Recipe objects
+    private List<String> allergens = new ArrayList<>();
+    private List<Recipe> recipeSuggestions = new ArrayList<>();
 
     // Getters and Setters
     public String getId() {
@@ -104,20 +102,23 @@ public class FoodItem {
     }
 
     // Fetch Recipe Suggestions
-    public void fetchRecipeSuggestions(AIService aiService) {
+    public void fetchRecipeSuggestions(AIService aiService, String dietaryPreferences, int servings) {
         // Pass ingredients and allergens to AI service to generate recipes
-        String ingredients = String.join(", ", Arrays.asList(name)); // Assuming the food item's name as the ingredient for simplicity
-        recipeSuggestions = aiService.generateRecipes(ingredients, allergens);
+        String ingredients = name; // Assuming the food item's name as the ingredient for simplicity
+        this.recipeSuggestions = aiService.generateRecipes(ingredients, allergens, dietaryPreferences, servings);
     }
 
     // Expiration Notification
     public void scheduleExpirationNotification() {
         LocalDate notificationDate = expirationDate.minusDays(3);
-        long daysUntilNotification = Duration.between(LocalDate.now(), notificationDate).toDays();
+        long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);
 
-        if (daysUntilNotification > 0) {
-            // Notification logic here
+        if (daysUntilNotification == 0) {
             System.out.println(name + " will expire in 3 days.");
+            // Notification logic can be implemented here
         }
+    }
+
+    public void fetchRecipeSuggestions(AIService aiService) {
     }
 }
