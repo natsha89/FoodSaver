@@ -27,7 +27,7 @@ public class RecipeService {
 
     public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         // Generera recept via AIService och skicka med kostpreferenser och antal portioner
-        List<Recipe> generatedRecipes = aiService.generateRecipes(ingredients, allergens, dietaryPreferences, servings);
+        List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
 
         // Filtrera bort recept som redan finns i databasen baserat på namn
         List<String> existingRecipeNames = recipeRepository.findAll().stream()
@@ -39,6 +39,7 @@ public class RecipeService {
                 .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))
                 .collect(Collectors.toList());
     }
+
 
     public Recipe updateRecipe(String id, Recipe recipe) {
         Recipe existingRecipe = recipeRepository.findById(id).orElse(null);
@@ -58,7 +59,5 @@ public class RecipeService {
     public void deleteRecipe(String id) {
         recipeRepository.deleteById(id);
     }
-
-
 
 }

@@ -24,7 +24,7 @@ public class SecurityConfig {
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/auth/**") // Lämnar detta oförändrat
+                        .ignoringRequestMatchers("/api/**") // Ignorera CSRF för specifika endpoints om du har en REST API
                 );
         return http.build();
     }
