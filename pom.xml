@@ -106,10 +106,18 @@
             <artifactId>okhttp</artifactId>
             <version>4.9.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.cohere</groupId>
+            <artifactId>cohere-java</artifactId>
+            <version>1.0.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20210307</version>
+        </dependency>
 
     </dependencies>
-
-
     <build>
         <plugins>
             <plugin>
