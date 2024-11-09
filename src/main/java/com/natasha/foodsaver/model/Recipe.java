@@ -17,9 +17,6 @@ public class Recipe {
     private String title;
     private String description;
 
-    // No-argument constructor
-    public Recipe() {
-    }
 
     // All-arguments constructor
     public Recipe(String id, String name, String instructions, List<String> foodItem,

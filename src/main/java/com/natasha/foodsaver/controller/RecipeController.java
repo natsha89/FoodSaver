@@ -46,11 +46,12 @@ public class RecipeController {
         List<Recipe> generatedRecipes = recipeService.generateRecipes(
                 request.getIngredients(),
                 request.getAllergens(),
-                request.getDietaryPreferences(), // Lägg till kostpreferenser i request
-                request.getServings()            // Lägg till antal portioner i request
+                request.getDietaryPreferences(),
+                request.getServings()
         );
         return generatedRecipes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(generatedRecipes);
     }
+
 
     // Request body class for generating recipes
     public static class RecipeGenerationRequest {

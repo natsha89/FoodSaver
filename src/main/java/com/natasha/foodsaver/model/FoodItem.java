@@ -105,7 +105,7 @@ public class FoodItem {
     public void fetchRecipeSuggestions(AIService aiService, String dietaryPreferences, int servings) {
         // Pass ingredients and allergens to AI service to generate recipes
         String ingredients = name; // Assuming the food item's name as the ingredient for simplicity
-        this.recipeSuggestions = aiService.generateRecipes(ingredients, allergens, dietaryPreferences, servings);
+        this.recipeSuggestions = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
     }
 
     // Expiration Notification

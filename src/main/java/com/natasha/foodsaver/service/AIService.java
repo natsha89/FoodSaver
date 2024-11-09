@@ -31,38 +31,8 @@ public class AIService {
         this.objectMapper = objectMapper;
     }
 
-    public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
-        // Välj logik baserat på ingredienser och allergener
-        if (shouldUseRuleBased(ingredients)) {
-            return generateRuleBasedRecipes(ingredients, allergens, dietaryPreferences, servings);
-        } else {
-            return generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
-        }
-    }
-
-    private boolean shouldUseRuleBased(String ingredients) {
-        // Regelbaserad logik om det finns få ingredienser, kan utökas med komplex logik
-        return ingredients.split(",").length <= 3;
-    }
-
-    private List<Recipe> generateRuleBasedRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
-        List<Recipe> ruleBasedRecipes = new ArrayList<>();
-
-        // Exempel på enkla recept baserat på kostpreferenser och allergier
-        if (ingredients.contains("tomato") && !allergens.contains("garlic") && dietaryPreferences.contains("vegetarian")) {
-            ruleBasedRecipes.add(new Recipe("Tomato Basil Pasta"));
-        }
-        if (ingredients.contains("egg") && !allergens.contains("gluten") && dietaryPreferences.contains("vegetarian")) {
-            ruleBasedRecipes.add(new Recipe("Simple Omelette"));
-        }
-        if (ingredients.contains("chicken") && !allergens.contains("dairy") && dietaryPreferences.contains("low-carb")) {
-            ruleBasedRecipes.add(new Recipe("Grilled Chicken Salad"));
-        }
-
-        return ruleBasedRecipes;
-    }
-
-    private List<Recipe> generateAIRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
+    // Ny metod för att generera recept från OpenAI
+    public List<Recipe> generateAIRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         String dietPrompt = dietaryPreferences != null && !dietaryPreferences.isEmpty() ? dietaryPreferences : "no specific dietary preferences";
 
         // Skapa AI-prompt med alla parametrar
@@ -84,9 +54,10 @@ public class AIService {
         ResponseEntity<String> response = restTemplate.exchange(openAiApiUrl, HttpMethod.POST, entity, String.class);
 
         AIResponse aiResponse = parseResponse(response.getBody());
-        return aiResponse.getRecipes();
-    }
 
+        // Omvandla AIResponse till en lista av Recipe
+        return mapAIResponseToRecipes(aiResponse);
+    }
 
     private AIResponse parseResponse(String responseBody) {
         try {
@@ -95,4 +66,30 @@ public class AIService {
             throw new RuntimeException("Error parsing OpenAI response", e);
         }
     }
+
+    // Omvandla AIResponse till en lista av Recipe
+    private List<Recipe> mapAIResponseToRecipes(AIResponse aiResponse) {
+        List<Recipe> recipes = new ArrayList<>();
+        for (AIResponse.Choice choice : aiResponse.getChoices()) {
+            String aiRecipeText = choice.getText();
+
+            // Anta att receptet är strukturerat som: "Namn\nIngredienser\nInstruktioner"
+            String[] parts = aiRecipeText.split("\n", 3); // Dela upp texten i delar: namn, ingredienser, instruktioner
+
+            if (parts.length == 3) {
+                String name = parts[0].trim();
+                String ingredients = parts[1].trim();
+                String instructions = parts[2].trim();
+
+                // Konvertera ingredienser till en lista
+                List<String> ingredientList = List.of(ingredients.split(",\\s*"));
+
+                // Skapa och lägg till receptet i listan
+                Recipe recipe = new Recipe(name, instructions, ingredientList);
+                recipes.add(recipe);
+            }
+        }
+        return recipes;
+    }
+
 }
