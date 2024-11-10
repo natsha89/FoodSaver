@@ -19,30 +19,30 @@ public class FoodItemController {
     // Endpoint för att skapa en ny matvara
     @PostMapping
     public ResponseEntity<?> createFoodItem(@RequestBody FoodItem foodItem) {
+        StringBuilder alertMessage = new StringBuilder();
+
         // Kontrollera om allergener eller utgångsdatum finns
         boolean hasAllergens = foodItem.checkAllergies(foodItemService.getUserAllergies(foodItem.getUserId()));
         boolean isExpirationNear = foodItem.scheduleExpirationNotification();
 
-        // Om allergener eller utgångsdatum varningar finns, returnera en 400 Bad Request
-        if (hasAllergens || isExpirationNear) {
-            String errorMessage = "Matvaran kan inte skapas. ";
-            if (hasAllergens) {
-                errorMessage += "Den innehåller allergener som du är allergisk mot. ";
-            }
-            if (isExpirationNear) {
-                errorMessage += "Utgångsdatumet är nära. ";
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(errorMessage);
+        // Om allergener finns, lägg till en varning
+        if (hasAllergens) {
+            alertMessage.append("Varning: Matvaran innehåller allergener som du är allergisk mot. ");
         }
 
-        // Annars skapa matvaran
+        // Om utgångsdatumet är nära, lägg till en varning
+        if (isExpirationNear) {
+            alertMessage.append("Notis: Matvarans utgångsdatum är nära.");
+        }
+
+        // Spara matvaran och skapa AlertResponse med meddelande
         FoodItem createdFoodItem = foodItemService.createFoodItem(foodItem);
         if (createdFoodItem != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdFoodItem);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new AlertResponse(createdFoodItem, alertMessage.toString()));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Matvaran kunde inte skapas på grund av allergener eller förfallodatum.");
+                    .body("Matvaran kunde inte sparas.");
         }
     }
 
@@ -56,33 +56,28 @@ public class FoodItemController {
     // Endpoint för att uppdatera en matvara
     @PutMapping("/{id}")
     public ResponseEntity<?> updateFoodItem(@PathVariable String id, @RequestBody FoodItem foodItem) {
+        StringBuilder alertMessage = new StringBuilder();
+
         // Kontrollera om allergener eller utgångsdatum finns
         boolean hasAllergens = foodItem.checkAllergies(foodItemService.getUserAllergies(foodItem.getUserId()));
         boolean isExpirationNear = foodItem.scheduleExpirationNotification();
 
-        // Om allergener eller utgångsdatum varningar finns, returnera en 400 Bad Request
-        if (hasAllergens || isExpirationNear) {
-            String errorMessage = "Matvaran kan inte uppdateras. ";
-            if (hasAllergens) {
-                errorMessage += "Den innehåller allergener som du är allergisk mot. ";
-            }
-            if (isExpirationNear) {
-                errorMessage += "Utgångsdatumet är nära. ";
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(errorMessage); // Returnera felmeddelande som en string
+        if (hasAllergens) {
+            alertMessage.append("Varning: Matvaran innehåller allergener som du är allergisk mot. ");
+        }
+        if (isExpirationNear) {
+            alertMessage.append("Notis: Matvarans utgångsdatum är nära.");
         }
 
-        // Annars uppdatera matvaran
+        // Uppdatera matvaran och skapa AlertResponse med meddelande
         FoodItem updatedFoodItem = foodItemService.updateFoodItem(id, foodItem);
         if (updatedFoodItem != null) {
-            return ResponseEntity.ok(updatedFoodItem);  // Returnera den uppdaterade matvaran
+            return ResponseEntity.ok(new AlertResponse(updatedFoodItem, alertMessage.toString()));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)  // Returnera "Not Found" om ingen matvara hittades
-                    .body("Matvaran med ID: " + id + " hittades inte.");  // Felmeddelande i body
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Matvaran med ID: " + id + " hittades inte.");
         }
     }
-
 
     // Endpoint för att ta bort en matvara
     @DeleteMapping("/{id}")

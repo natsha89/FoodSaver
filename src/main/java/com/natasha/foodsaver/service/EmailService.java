@@ -66,4 +66,28 @@ public class EmailService {
             throw new RuntimeException("Error sending email: " + e.getMessage(), e);
         }
     }
+
+    public void sendExpirationNotification(String recipientEmail, String message) {
+        String subject = "Food Item Expiration Alert";
+        MailjetRequest request = new MailjetRequest(Emailv31.resource)
+                .property(Emailv31.MESSAGES, new JSONArray()
+                        .put(new JSONObject()
+                                .put(Emailv31.Message.FROM, new JSONObject()
+                                        .put("Email", "vfoodsaver@gmail.com")
+                                        .put("Name", "FoodSaver"))
+                                .put(Emailv31.Message.TO, new JSONArray()
+                                        .put(new JSONObject()
+                                                .put("Email", recipientEmail)))
+                                .put(Emailv31.Message.SUBJECT, subject)
+                                .put(Emailv31.Message.TEXTPART, message)
+                                .put(Emailv31.Message.HTMLPART, "<p>" + message + "</p>")));
+        try {
+            MailjetResponse response = mailjetClient.post(request);
+            if (response.getStatus() != 200) {
+                throw new RuntimeException("Failed to send expiration notification: " + response.getStatus());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error sending expiration notification: " + e.getMessage(), e);
+        }
+    }
 }

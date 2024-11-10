@@ -97,16 +97,22 @@ public class FoodItem {
         this.allergenNotificationSent = allergenNotificationSent;
     }
 
-    // Kontrollera om matvaran innehåller allergener som användaren har
+    public boolean isExpirationNear(int daysBefore) {
+        LocalDate notificationDate = expirationDate.minusDays(daysBefore);
+        return !expirationNotificationSent && LocalDate.now().isAfter(notificationDate.minusDays(1));
+    }
+
     public boolean checkAllergies(List<String> userAllergies) {
         for (String allergen : allergens) {
-            if (userAllergies.contains(allergen) && !allergenNotificationSent) {
-                sendAllergenNotification(allergen);
-                allergenNotificationSent = true;
-                return true; // Returnera true om allergen hittas
+            for (String userAllergy : userAllergies) {
+                if (userAllergy.equalsIgnoreCase(allergen) && !allergenNotificationSent) {
+                    sendAllergenNotification(allergen);
+                    allergenNotificationSent = true;
+                    return true; // Return true if allergen found
+                }
             }
         }
-        return false; // Ingen allergen hittades
+        return false; // No allergen found
     }
 
     private void sendAllergenNotification(String allergen) {
