@@ -1,26 +1,13 @@
 import axios from 'axios';
 
-// Skapa en instans av Axios och sätt bas-URL till din backend
+// Skapa en Axios-instans med bas-URL till backend-servern
 const http = axios.create({
-    baseURL: 'http://localhost:8081', // Backend server URL
+    baseURL: 'http://localhost:8081',
     headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json', // Vi skickar data i JSON-format
     },
-    timeout: 5000,  // Timeout om du vill att förfrågningarna ska avslutas efter viss tid
+    timeout: 5000, // Timeout för API-anrop (5 sekunder)
 });
 
-// Använda instansen för att göra ett API-anrop
-const generateRecipe = async (ingredients) => {
-    try {
-        const response = await http.post('/api/recipes/generate', {
-            ingredients: ingredients.join(", "), // Skicka ingredienser som kommaseparerad sträng
-            allergens: [] // Skicka allergener om tillgängligt
-        });
-        console.log(response.data);  // Visar receptet från backend (OpenAI)
-    } catch (error) {
-        console.error("Error generating recipe:", error);
-    }
-};
-
-// Anropa funktionen med ingredienser för att testa
-generateRecipe(["tomatoes", "garlic", "olive oil", "basil"]);
+// Exportera Axios-instansen så att den kan användas i andra delar av applikationen
+export default http;

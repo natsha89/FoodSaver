@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import HomeView from '../components/Home.vue';
 import FoodItem from '../components/FoodItem.vue';
 import RecipeGenerator from '../components/RecipeGenerator.vue';
 import SavedRecipes from '../components/SavedRecipes.vue';
@@ -10,7 +10,7 @@ import UserProfile from '../components/Profile.vue'; // Importera den uppdaterad
 
 
 const routes = [
-    { path: '/', name: 'Home', component: HomeView },
+    { path: '/home', name: 'Home', component: HomeView },
     { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes },

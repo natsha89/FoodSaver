@@ -16,34 +16,6 @@ public class RecipeController {
     @Autowired
     private RecipeService recipeService;  // Autowired RecipeService för att hantera receptlogik
 
-    // Hämtar alla recept från databasen
-    @GetMapping
-    public ResponseEntity<List<Recipe>> getAllRecipes() {
-        List<Recipe> recipes = recipeService.getAllRecipes();  // Anropa RecipeService för att hämta alla recept
-        return ResponseEntity.ok(recipes);  // Returnera recepten som en OK-response
-    }
-
-    // Hämtar ett specifikt recept baserat på ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Recipe> getRecipeById(@PathVariable String id) {
-        Recipe recipe = recipeService.getRecipeById(id);  // Hämta receptet baserat på ID
-        return recipe != null ? ResponseEntity.ok(recipe) : ResponseEntity.notFound().build();  // Returnera receptet om det finns, annars 404 Not Found
-    }
-
-    // Uppdaterar ett befintligt recept baserat på ID
-    @PutMapping("/{id}")
-    public ResponseEntity<Recipe> updateRecipe(@PathVariable String id, @RequestBody Recipe recipe) {
-        Recipe updatedRecipe = recipeService.updateRecipe(id, recipe);  // Uppdatera receptet i databasen
-        return updatedRecipe != null ? ResponseEntity.ok(updatedRecipe) : ResponseEntity.notFound().build();  // Returnera det uppdaterade receptet om det finns, annars 404 Not Found
-    }
-
-    // Tar bort ett recept baserat på ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRecipe(@PathVariable String id) {
-        recipeService.deleteRecipe(id);  // Ta bort receptet från databasen
-        return ResponseEntity.noContent().build();  // Returnera en "no content" response efter borttagning
-    }
-
     // Genererar nya recept baserat på angivna ingredienser, allergener, kostpreferenser och antal portioner
     @PostMapping("/generate")
     public ResponseEntity<List<Recipe>> generateRecipes(@RequestBody RecipeGenerationRequest request) {
@@ -66,7 +38,43 @@ public class RecipeController {
         }
     }
 
-    // Request body class for generating recipes
+    // Skapar och sparar ett nytt recept
+    @PostMapping
+    public ResponseEntity<Recipe> saveRecipe(@RequestBody Recipe recipe) {
+        try {
+            // Spara receptet via RecipeService
+            Recipe savedRecipe = recipeService.saveRecipe(recipe);
+            // Returnera det sparade receptet med en OK-respons
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedRecipe);
+        } catch (Exception e) {
+            // Logga eventuella fel och returnera en serverfel-respons
+            System.err.println("An error occurred while saving the recipe: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Hämtar alla recept från databasen
+    @GetMapping
+    public ResponseEntity<List<Recipe>> getAllRecipes() {
+        List<Recipe> recipes = recipeService.getAllRecipes();  // Anropa RecipeService för att hämta alla recept
+        return ResponseEntity.ok(recipes);  // Returnera recepten som en OK-response
+    }
+
+    // Hämtar ett specifikt recept baserat på ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Recipe> getRecipeById(@PathVariable String id) {
+        Recipe recipe = recipeService.getRecipeById(id);  // Hämta receptet baserat på ID
+        return recipe != null ? ResponseEntity.ok(recipe) : ResponseEntity.notFound().build();  // Returnera receptet om det finns, annars 404 Not Found
+    }
+
+    // Tar bort ett recept baserat på ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRecipe(@PathVariable String id) {
+        recipeService.deleteRecipe(id);  // Ta bort receptet från databasen
+        return ResponseEntity.noContent().build();  // Returnera en "no content" response efter borttagning
+    }
+
+    // Request body-klass för att generera recept
     // Denna klass används för att fånga in data som skickas med POST-förfrågan för att generera recept
     public static class RecipeGenerationRequest {
         private String ingredients;  // Ingredienser för receptgenerering
@@ -74,7 +82,7 @@ public class RecipeController {
         private String dietaryPreferences;  // Kostpreferenser (t.ex. vegetarisk, glutenfri)
         private int servings;  // Antal portioner
 
-        // Getters and setters
+        // Getters och setters
         public String getIngredients() {
             return ingredients;
         }

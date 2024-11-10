@@ -49,20 +49,9 @@ public class RecipeService {
         return recipeRepository.findById(id).orElse(null);  // Hämta receptet om det finns, annars returnera null
     }
 
-    // Metod för att uppdatera ett befintligt recept i databasen
-    public Recipe updateRecipe(String id, Recipe recipe) {
-        Recipe existingRecipe = recipeRepository.findById(id).orElse(null);  // Hitta det befintliga receptet med angivet ID
-        if (existingRecipe != null) {
-            // Uppdatera det befintliga receptet med nya värden
-            existingRecipe.setName(recipe.getName());
-            existingRecipe.setInstructions(recipe.getInstructions());
-            existingRecipe.setFoodItem(recipe.getFoodItem());
-            existingRecipe.setUserId(recipe.getUserId());
-            existingRecipe.setTitle(recipe.getTitle());
-            existingRecipe.setDescription(recipe.getDescription());
-            return recipeRepository.save(existingRecipe);  // Spara det uppdaterade receptet i databasen
-        }
-        return null;  // Om receptet inte finns, returnera null
+    // Metod för att spara ett nytt recept till databasen
+    public Recipe saveRecipe(Recipe recipe) {
+        return recipeRepository.save(recipe);  // Spara det nya receptet via repository
     }
 
     // Metod för att ta bort ett recept från databasen baserat på ID

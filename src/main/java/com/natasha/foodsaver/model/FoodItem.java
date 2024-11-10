@@ -12,8 +12,8 @@ import java.util.List;
 @Document(collection = "foodItems")
 public class FoodItem {
 
+    // Fält för att lagra matobjektets data i databasen
     @Id
-    private String id;
     private String userId;
     private String name;
     private double quantity;
@@ -23,15 +23,7 @@ public class FoodItem {
     private boolean expirationNotificationSent = false;
     private boolean allergenNotificationSent = false;
 
-
     // Getters och Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getUserId() {
         return userId;
@@ -97,42 +89,48 @@ public class FoodItem {
         this.allergenNotificationSent = allergenNotificationSent;
     }
 
+    // Kontrollera om matvarans utgångsdatum är nära (inom ett visst antal dagar)
     public boolean isExpirationNear(int daysBefore) {
         LocalDate notificationDate = expirationDate.minusDays(daysBefore);
         return !expirationNotificationSent && LocalDate.now().isAfter(notificationDate.minusDays(1));
     }
 
+    // Kontrollera om matvaran innehåller allergener som användaren är allergisk mot
     public boolean checkAllergies(List<String> userAllergies) {
         for (String allergen : allergens) {
             for (String userAllergy : userAllergies) {
+                // Om användarens allergi matchar en allergen i matvaran och notifikation ej skickats
                 if (userAllergy.equalsIgnoreCase(allergen) && !allergenNotificationSent) {
-                    sendAllergenNotification(allergen);
+                    sendAllergenNotification(allergen); // Skicka allergenvarning
                     allergenNotificationSent = true;
-                    return true; // Return true if allergen found
+                    return true; // Returnera true om allergen hittas
                 }
             }
         }
-        return false; // No allergen found
+        return false; // Ingen allergen hittades
     }
 
+    // Skicka notifiering om allergen finns
     private void sendAllergenNotification(String allergen) {
-        System.out.println("Alert: " + name + " contains " + allergen + ", which you're allergic to.");
+        System.out.println("Varning: " + name + " innehåller " + allergen + ", som du är allergisk mot.");
     }
 
-    // Schemalägg förfallovarsel
+    // Schemalägg utgångsdatum-notifiering
     public boolean scheduleExpirationNotification() {
         LocalDate notificationDate = expirationDate.minusDays(3);
         long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);
 
+        // Om det är tre dagar eller färre till utgångsdatum och notifiering ej skickats
         if (daysUntilNotification <= 3 && !expirationNotificationSent) {
             sendExpirationNotification();
             expirationNotificationSent = true;
             return true; // Returnera true om notifiering skickas
         }
-        return false; // Inget behov av notifiering
+        return false; // Ingen notifiering behövs
     }
 
+    // Skicka notifiering om att matvaran snart går ut
     private void sendExpirationNotification() {
-        System.out.println(name + " will expire in 3 days. Consider using it soon!");
+        System.out.println(name + " går ut om 3 dagar. Använd den snart!");
     }
 }

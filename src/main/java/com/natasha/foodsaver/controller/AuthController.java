@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController  // Denna klass hanterar REST API-anrop och är en controller för autentisering
 @RequestMapping("/api/auth")  // Definierar basvägen för alla endpoints i denna controller
@@ -41,7 +42,10 @@ public class AuthController {
 
     // Endpoint för användarinloggning
     @PostMapping("/login")
-    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> login(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> login(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String password = payload.get("password");
+
         try {
             // Försök att logga in användaren
             User user = authService.login(email, password);
