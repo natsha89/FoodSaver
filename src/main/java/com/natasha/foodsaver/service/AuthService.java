@@ -59,31 +59,6 @@ public class AuthService {
         return user; // Returnera den registrerade användaren
     }
 
-    // Inloggning av användare
-    public User login(String email, String password) {
-        // Hämta användaren baserat på email
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            logger.warn("Försök att logga in med en icke-existerande email: {}", email);
-            throw new UserNotFoundException("Email inte funnen.");
-        }
-
-        // Kontrollera om lösenordet stämmer
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            logger.warn("Fel lösenord för email: {}", email);
-            throw new RuntimeException("Fel lösenord.");
-        }
-
-        // Kontrollera om email är verifierad
-        if (!user.isEmailVerified()) {
-            logger.warn("Försök att logga in med en icke-verifierad email: {}", email);
-            throw new EmailNotVerifiedException("Email inte verifierad. Kontrollera din inkorg.");
-        }
-
-        logger.info("Användare inloggad framgångsrikt: {}", email);
-        return user; // Returnera den inloggade användaren
-    }
-
     // Radera användarkonto
     public void deleteAccount(String userId) {
         // Kontrollera om användaren existerar
@@ -137,6 +112,31 @@ public class AuthService {
         }
     }
 
+    // Inloggning av användare
+    public User login(String email, String password) {
+        // Hämta användaren baserat på email
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            logger.warn("Försök att logga in med en icke-existerande email: {}", email);
+            throw new UserNotFoundException("Email inte funnen.");
+        }
+
+        // Kontrollera om lösenordet stämmer
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            logger.warn("Fel lösenord för email: {}", email);
+            throw new RuntimeException("Fel lösenord.");
+        }
+
+        // Kontrollera om email är verifierad
+        if (!user.isEmailVerified()) {
+            logger.warn("Försök att logga in med en icke-verifierad email: {}", email);
+            throw new EmailNotVerifiedException("Email inte verifierad. Kontrollera din inkorg.");
+        }
+
+        logger.info("Användare inloggad framgångsrikt: {}", email);
+        return user; // Returnera den inloggade användaren
+    }
+
     // Generera verifieringstoken
     private String generateVerificationToken() {
         // En enkel metod för att generera token (kan ersättas med mer avancerade tekniker som JWT)
@@ -146,4 +146,6 @@ public class AuthService {
     public List<User> getAllUsers() {
         return userRepository.findAll(); // Hämta alla användare från databasen
     }
+
+
 }

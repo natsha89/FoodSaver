@@ -2,24 +2,24 @@ package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.FoodItem;
 
-// A helper class to wrap FoodItem responses with alert messages
+// En hjälparklass som används för att slå in matvaror (FoodItem) och varningsmeddelanden (alert messages) i ett objekt
 public class AlertResponse {
-    private FoodItem foodItem;
-    private String alertMessage;
+    private FoodItem foodItem;  // Matvaran som är associerad med varningen
+    private String alertMessage;  // Varningsmeddelandet (t.ex. om förfallodatum eller allergen)
 
-    // Constructor to initialize with FoodItem and alert message
+    // Konstruktor som initialiserar AlertResponse med en FoodItem och ett alertMessage
     public AlertResponse(FoodItem foodItem, String alertMessage) {
-        this.foodItem = foodItem;
-        this.alertMessage = alertMessage;
+        this.foodItem = foodItem;  // Sätt matvaran
+        this.alertMessage = alertMessage;  // Sätt varningsmeddelandet
     }
 
-    // Getter for foodItem
+    // Getter för att hämta matvaran (FoodItem)
     public FoodItem getFoodItem() {
-        return foodItem;
+        return foodItem;  // Returnera FoodItem objektet
     }
 
-    // Getter for alertMessage
+    // Getter för att hämta varningsmeddelandet (alert message)
     public String getAlertMessage() {
-        return alertMessage;
+        return alertMessage;  // Returnera varningsmeddelandet som en sträng
     }
 }

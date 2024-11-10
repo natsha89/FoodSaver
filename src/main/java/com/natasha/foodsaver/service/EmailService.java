@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class EmailService {
 
@@ -67,26 +69,37 @@ public class EmailService {
         }
     }
 
-    public void sendExpirationNotification(String recipientEmail, String message) {
-        String subject = "Food Item Expiration Alert";
+    // Metod för att skicka ett utgångsdatum-varningsmejl till användaren
+    public void sendExpirationNotification(String recipientEmail, String foodItemName, LocalDate expirationDate) {
+        String subject = "Food Item Expiration Alert"; // Ämnet för varningsmejlet
+
+        // Meddelandet som informerar användaren om att matvaran närmar sig sitt utgångsdatum
+        String message = "The food item \"" + foodItemName + "\" is nearing its expiration date on " + expirationDate +
+                ". Please consider using it soon to avoid waste.";
+
+        // Mailjet request setup med ämne och meddelande
         MailjetRequest request = new MailjetRequest(Emailv31.resource)
                 .property(Emailv31.MESSAGES, new JSONArray()
                         .put(new JSONObject()
                                 .put(Emailv31.Message.FROM, new JSONObject()
-                                        .put("Email", "vfoodsaver@gmail.com")
-                                        .put("Name", "FoodSaver"))
+                                        .put("Email", "vfoodsaver@gmail.com") // Avsändarens e-postadress
+                                        .put("Name", "FoodSaver")) // Avsändarens namn
                                 .put(Emailv31.Message.TO, new JSONArray()
                                         .put(new JSONObject()
-                                                .put("Email", recipientEmail)))
-                                .put(Emailv31.Message.SUBJECT, subject)
-                                .put(Emailv31.Message.TEXTPART, message)
-                                .put(Emailv31.Message.HTMLPART, "<p>" + message + "</p>")));
+                                                .put("Email", recipientEmail))) // Mottagarens e-postadress
+                                .put(Emailv31.Message.SUBJECT, subject) // Ämnet för mejlet
+                                .put(Emailv31.Message.TEXTPART, message) // Textinnehållet för mejlet
+                                .put(Emailv31.Message.HTMLPART, "<p>" + message + "</p>"))); // HTML-innehållet för mejlet
+
         try {
+            // Skicka mejlet
             MailjetResponse response = mailjetClient.post(request);
             if (response.getStatus() != 200) {
+                // Om statuskod inte är 200, kasta ett undantag
                 throw new RuntimeException("Failed to send expiration notification: " + response.getStatus());
             }
         } catch (Exception e) {
+            // Hantera eventuella undantag och kasta ett RuntimeException med felmeddelande
             throw new RuntimeException("Error sending expiration notification: " + e.getMessage(), e);
         }
     }

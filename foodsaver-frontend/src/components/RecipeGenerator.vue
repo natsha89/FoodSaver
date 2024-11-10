@@ -14,29 +14,27 @@
         persistent-hint
     ></v-select>
 
-    <!-- Välj Allergier -->
-    <v-select
+    <!-- Allergier (autocomplete lista) -->
+    <v-autocomplete
         v-model="selectedAllergies"
         :items="allergyOptions"
-        item-text="name"
-        item-value="name"
         label="Select Allergies"
         multiple
-        hint="Choose allergies to avoid"
-        persistent-hint
-    ></v-select>
+        chips
+        clearable
+        hint="Select any allergies you have"
+    ></v-autocomplete>
 
-    <!-- Välj Diet -->
-    <v-select
+    <!-- Dietpreferenser (autocomplete lista) -->
+    <v-autocomplete
         v-model="selectedDiets"
         :items="dietOptions"
-        item-text="name"
-        item-value="name"
-        label="Select Diet"
+        label="Select Dietary Preferences"
         multiple
-        hint="Choose a diet to follow"
-        persistent-hint
-    ></v-select>
+        chips
+        clearable
+        hint="Select any dietary preferences"
+    ></v-autocomplete>
 
     <!-- Knapp för att generera recept -->
     <v-btn @click="generateRecipes" :disabled="isGenerateButtonDisabled">
@@ -96,8 +94,8 @@ export default {
       selectedAllergies: [],
       selectedDiets: [],
       recipes: [],
-      allergyOptions: [],
-      dietOptions: [],
+      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs', 'None'], // Allergy options for autocomplete
+      dietOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo', 'None'],    // Diet options for autocomplete
       loading: false,
       isFetchingData: true,  // State for data fetching loading indicator
     };
@@ -114,7 +112,6 @@ export default {
       this.isFetchingData = true;
       try {
         const response = await axios.get('/api/foodItems');
-        console.log('Food Items:', response.data.data);
         this.foodItems = response.data.data;
       } catch (error) {
         console.error("Error fetching food items:", error);
@@ -128,7 +125,6 @@ export default {
       this.isFetchingData = true;
       try {
         const response = await axios.get('/api/foodItems/allergies');
-        console.log('Allergy Options:', response.data.data);
         this.allergyOptions = response.data.data;
       } catch (error) {
         console.error("Error fetching allergy options:", error);
@@ -141,8 +137,7 @@ export default {
     async fetchDietOptions() {
       this.isFetchingData = true;
       try {
-        const response = await axios.get('/api/diets'); // Assuming you have a diet endpoint
-        console.log('Diet Options:', response.data.data);
+        const response = await axios.get('/api/diets');
         this.dietOptions = response.data.data;
       } catch (error) {
         console.error("Error fetching diet options:", error);
@@ -155,12 +150,11 @@ export default {
     async generateRecipes() {
       this.loading = true;
       try {
-        const response = await axios.get('/api/recipes/generate', {
-          params: {
-            ingredients: this.selectedIngredients,
-            allergies: this.selectedAllergies,
-            dietaryPreferences: this.selectedDiets
-          }
+        const response = await axios.post('/api/recipes/generate', {
+          ingredients: this.selectedIngredients.map(ingredient => ingredient.name),
+          allergies: this.selectedAllergies,
+          dietaryPreferences: this.selectedDiets.join(', '),
+          servings: 4  // Example, replace with dynamic value
         });
         this.recipes = response.data;
         if (this.recipes.length === 0) {
@@ -176,7 +170,7 @@ export default {
     // Save a recipe to user's profile or favorites
     async saveRecipe(recipe) {
       try {
-        await axios.post('/api/recipes/save', recipe);
+        await axios.post('/api/recipes', recipe);
         this.$notify.success("Recipe saved successfully!");
       } catch (error) {
         console.error("Error saving recipe:", error);
