@@ -4,11 +4,15 @@ import com.natasha.foodsaver.exception.GlobalExceptionHandler;
 import com.natasha.foodsaver.exception.UserAlreadyExistsException;
 import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,6 +74,19 @@ public class AuthController {
                     .body(new GlobalExceptionHandler.ResponseMessage("Error deleting account: " + e.getMessage(), null));
         }
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> logout(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            // Invalidate the user's session and clear the security context
+            new SecurityContextLogoutHandler().logout(request, response, SecurityContextHolder.getContext().getAuthentication());
+            return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Successfully logged out.", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GlobalExceptionHandler.ResponseMessage("Error logging out: " + e.getMessage(), null));
+        }
+    }
+
     @GetMapping("/users")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> getAllUsers() {
         try {

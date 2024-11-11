@@ -1,12 +1,16 @@
-import { createApp } from 'vue'; // Importera createApp från vue
-import App from './views/App.vue';
+import { createApp } from 'vue';
+import App from './App.vue';
 import router from './router';
 import store from './store';
-import vuetify from './plugins/vuetify'; // Importera Vuetify
+import vuetify from './plugins/vuetify'; // Vuetify setup
 
+// Create Vue application instance
+const app = createApp(App);
 
-const app = createApp(App); // Skapa en Vue-applikation
-app.use(router); // Använd router
-app.use(store); // Använd Vuex store
-app.use(vuetify); // Använd Vuetify
-app.mount('#app'); // Montera applikationen på DOM
+// Use router, Vuex store, and Vuetify plugin
+app.use(router);
+app.use(store);
+app.use(vuetify);
+
+// Mount the app to the DOM
+app.mount('#app');

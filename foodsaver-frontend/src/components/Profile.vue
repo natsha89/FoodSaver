@@ -2,7 +2,7 @@
   <v-container>
     <!-- Check if user is authenticated -->
     <v-card v-if="isAuthenticated">
-      <v-card-title>My Account</v-card-title>
+      <v-card-title>Profile</v-card-title>
       <v-card-text>
         <v-list>
           <v-list-item>
@@ -24,6 +24,9 @@
         <!-- Navigation Buttons -->
         <v-btn @click="goToSavedRecipes" color="primary">My Recipes</v-btn>
         <v-btn @click="goToFoodItems" color="secondary">My Food Items</v-btn>
+
+        <!-- Logout Button -->
+        <v-btn @click="logout" color="warning">Logout</v-btn>
       </v-card-text>
 
       <v-card-actions>
@@ -79,7 +82,7 @@ export default {
     // Perform the account deletion
     async deleteAccount() {
       try {
-        const response = await http.delete('/auth/delete'); // Use the http.js instance for API request
+        const response = await http.delete('/api/auth/delete'); // Use the http.js instance for API request
         this.responseMessage = response.data.message; // Show the success message
         this.$router.push({ name: 'Home' }); // Redirect user to Home page after account deletion
         this.closeDeleteDialog();  // Close the dialog after deletion
@@ -88,6 +91,27 @@ export default {
         this.responseMessage = error.response?.data?.message || 'An unknown error occurred.';
       }
     },
+
+    // Logout method
+    async logout() {
+      try {
+        this.responseMessage = '';
+        // Call the logout API endpoint
+        const response = await http.post('/api/auth/logout');
+        console.log(response); // or any logic to use the response
+
+        // Cler the authentication state from Vuex
+        this.$store.commit('setAuthenticated', false);
+        this.$store.commit('setUser', null); // Reset the user data in Vuex store
+
+        // Redirect user to login page after logout
+        this.$router.push({ name: 'Login' });
+      } catch (error) {
+        // Handle any error during logout
+        this.responseMessage = error.response?.data?.message || 'An error occurred while logging out.';
+      }
+    },
+
     goToSavedRecipes() {
       this.$router.push({ name: 'SavedRecipes' });
     },

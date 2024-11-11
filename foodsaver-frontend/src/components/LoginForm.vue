@@ -73,7 +73,7 @@ export default {
           localStorage.setItem('user', JSON.stringify(response.data.user)); // Persist the user info
 
           // Redirect to the home page
-          this.$router.push('/home');  // Redirect to home after successful login
+          this.$router.push('/welcome');  // Redirect to home after successful login
         } catch (error) {
           this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
         } finally {
