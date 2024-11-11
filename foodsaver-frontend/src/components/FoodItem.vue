@@ -1,157 +1,219 @@
 <template>
   <v-container>
-    <h3>Add a New Food Item</h3>
+    <!-- Toolbar -->
+    <v-toolbar color="primary" dark>
+      <v-toolbar-title>Food Items</v-toolbar-title>
+    </v-toolbar>
 
-    <!-- If the user is not authenticated, show login alert -->
-    <v-alert v-if="!isAuthenticated" type="warning">
-      You must be logged in to view this page.
-      <v-btn @click="goToLogin" color="primary">Login</v-btn>
-    </v-alert>
+    <!-- Lista av matvaror -->
+    <v-card class="mt-5">
+      <v-card-title>Available Food Items</v-card-title>
+      <v-list>
+        <v-list-item-group>
+          <v-list-item
+              v-for="(item, index) in foodItems"
+              :key="index"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{ item.name }}</v-list-item-title>
+              <v-list-item-subtitle>Quantity: {{ item.quantity }} {{ item.unit }}</v-list-item-subtitle>
+              <v-list-item-subtitle>Expiration Date: {{ item.expirationDate }}</v-list-item-subtitle>
+              <v-list-item-subtitle>Allergens: {{ item.allergens.join(', ') }}</v-list-item-subtitle>
+            </v-list-item-content>
+            <v-list-item-action>
+              <v-btn @click="deleteFoodItem(index)" color="red">
+                Delete
+              </v-btn>
+            </v-list-item-action>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
+    </v-card>
 
-    <!-- The form to add a new food item (only visible when authenticated) -->
-    <v-form v-else @submit.prevent="submitFoodItem" v-model="valid">
-      <v-text-field
-          v-model="newFoodItem.name"
-          label="Food Item Name"
-          required
-          :rules="[v => !!v || 'Name is required']"
-      ></v-text-field>
-
-      <v-text-field
-          v-model="newFoodItem.quantity"
-          label="Quantity"
-          type="number"
-          required
-          :rules="[v => !!v || 'Quantity is required']"
-      ></v-text-field>
-
-      <v-select
-          v-model="newFoodItem.unit"
-          :items="units"
-          label="Unit"
-          required
-          :rules="[v => !!v || 'Unit is required']"
-      ></v-select>
-
-      <v-menu
-          v-model="menu"
-          ref="menu"
-          :close-on-content-click="false"
-          transition="scale-transition"
-          offset-y
-          min-width="auto"
-      >
-        <template v-slot:activator="{ on, attrs }">
+    <!-- Formulär för att lägga till ny matvara -->
+    <v-card class="mt-5">
+      <v-card-title>Add New Food Item</v-card-title>
+      <v-card-text>
+        <v-form ref="form" v-model="formValid">
+          <!-- Food Item Name -->
           <v-text-field
-              v-model="newFoodItem.expirationDate"
-              label="Expiration Date"
-              append-icon="mdi-calendar"
-              readonly
-              v-bind="attrs"
-              v-on="on"
+              v-model="newItem.name"
+              :rules="nameRules"
+              label="Food Item Name"
               required
           ></v-text-field>
-        </template>
-        <v-date-picker
-            v-model="newFoodItem.expirationDate"
-            @input="menu = false"
-        ></v-date-picker>
-      </v-menu>
 
-      <v-autocomplete
-          v-model="newFoodItem.allergens"
-          :items="allergenOptions"
-          label="Allergens (optional)"
-          multiple
-          chips
-          clearable
-      ></v-autocomplete>
+          <!-- Quantity Section -->
+          <v-row class="d-flex align-center">
+            <v-col cols="3" class="d-flex align-center">
+              <v-btn @click="changeQuantity(-1)" :disabled="newItem.quantity <= 1" small outlined>-</v-btn>
+              <v-text-field
+                  v-model="newItem.quantity"
+                  :rules="quantityRules"
+                  type="number"
+                  label="Quantity"
+                  min="1"
+                  hide-details
+                  class="mx-2"
+                  style="width: 70px;"
+              ></v-text-field>
+              <v-btn @click="changeQuantity(1)" small outlined>+</v-btn>
+            </v-col>
+          </v-row>
 
-      <v-btn type="submit" color="success" :disabled="!valid || loading">Add Food Item</v-btn>
-      <v-alert v-if="errorMessage" type="error" class="mt-3">{{ errorMessage }}</v-alert>
-    </v-form>
+          <!-- Unit selection dropdown -->
+          <v-select
+              v-model="newItem.unit"
+              :items="unitOptions"
+              label="Unit"
+              required
+          ></v-select>
 
-    <!-- Show loading spinner when data is being fetched -->
-    <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
+          <v-text-field
+              v-model="newItem.expirationDate"
+              :rules="expirationDateRules"
+              label="Expiration Date"
+              type="date"
+              required
+          ></v-text-field>
+          <v-text-field
+              v-model="newItem.allergens"
+              :rules="allergenRules"
+              label="Allergens (comma separated)"
+          ></v-text-field>
+        </v-form>
+        <v-alert v-if="responseMessage" type="error" dismissible>
+          {{ responseMessage }}
+        </v-alert>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="addFoodItem" :loading="loading" :disabled="loading">Add Item</v-btn>
+      </v-card-actions>
+    </v-card>
+
+    <!-- Alert för allergen varning -->
+    <v-alert v-if="allergenAlert" type="warning" dismissible>
+      This food item contains allergens you are allergic to: {{ allergenAlert }}
+    </v-alert>
+
+    <!-- Alert för utgångsdatum -->
+    <v-alert v-if="expirationAlert" type="warning" dismissible>
+      The expiration date for this food item is approaching: {{ expirationAlert }}
+    </v-alert>
   </v-container>
 </template>
 
 <script>
-import {mapGetters} from 'vuex';
-import http from '../http'; // Import the centralized API handler
+import http from '../http';
 
 export default {
+  name: 'FoodItems',
   data() {
     return {
-      valid: false,
-      newFoodItem: {
+      foodItems: [],
+      newItem: {
         name: '',
-        quantity: '',
+        quantity: 1,
         unit: '',
         expirationDate: '',
         allergens: []
       },
-      menu: false,
+      unitOptions: ['kg', 'g', 'liters', 'ml', 'pieces'],  // Example unit options
+      formValid: false,
       loading: false,
-      errorMessage: '',
-      units: ['kg', 'g', 'lbs', 'oz', 'liters', 'ml'],
-      allergenOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs']
+      responseMessage: '',
+      allergenAlert: '',  // Varning för allergener
+      expirationAlert: '', // Varning för utgångsdatum
+      nameRules: [
+        v => !!v || 'Name is required',
+        v => v.length <= 50 || 'Name must be less than 50 characters'
+      ],
+      quantityRules: [
+        v => !!v || 'Quantity is required',
+        v => v > 0 || 'Quantity must be a positive number'
+      ],
+      unitRules: [
+        v => !!v || 'Unit is required',
+        v => v.length <= 20 || 'Unit must be less than 20 characters'
+      ],
+      expirationDateRules: [
+        v => !!v || 'Expiration Date is required',
+        v => /\d{4}-\d{2}-\d{2}/.test(v) || 'Invalid date format'
+      ],
+      allergenRules: [
+        v => Array.isArray(v) && v.every(allergen => typeof allergen === 'string') || 'Allergens must be a comma separated list'
+      ],
+      userAllergens: []  // Allergener som användaren är känslig mot
     };
   },
-  computed: {
-    ...mapGetters(['isAuthenticated']),
+  methods: {
+    async fetchUserData() {
+      try {
+        const response = await http.get('/api/user');
+        this.userAllergens = response.data.allergens;
+      } catch (error) {
+        this.responseMessage = error.response?.data.message || 'Failed to fetch user data.';
+      }
+    },
+    async fetchFoodItems() {
+      try {
+        const response = await http.get('/api/foodItems');
+        this.foodItems = response.data;
+      } catch (error) {
+        this.responseMessage = error.response?.data.message || 'Failed to fetch food items.';
+      }
+    },
+    async addFoodItem() {
+      this.responseMessage = '';
+      if (this.$refs.form.validate()) {
+        this.loading = true;
+        const allergensInFood = this.newItem.allergens.split(',').map(a => a.trim());
+        const matchedAllergens = allergensInFood.filter(allergen => this.userAllergens.includes(allergen));
+        if (matchedAllergens.length > 0) {
+          this.allergenAlert = `This food item contains allergens you are allergic to: ${matchedAllergens.join(', ')}`;
+        } else {
+          this.allergenAlert = '';
+        }
+        const expirationDate = new Date(this.newItem.expirationDate);
+        const today = new Date();
+        const daysUntilExpiration = Math.floor((expirationDate - today) / (1000 * 60 * 60 * 24));
+        if (daysUntilExpiration <= 3) {
+          this.expirationAlert = `The expiration date for this food item is approaching: ${this.newItem.expirationDate}`;
+        } else {
+          this.expirationAlert = '';
+        }
+        try {
+          const response = await http.post('/api/foodItems', this.newItem);
+          if (response.status === 201) {
+            this.foodItems.push(response.data.foodItem);
+            this.newItem = {};
+            this.allergenAlert = '';
+            this.expirationAlert = '';
+          }
+        } catch (error) {
+          this.responseMessage = error.response?.data.message || 'Failed to add food item.';
+        } finally {
+          this.loading = false;
+        }
+      }
+    },
+    changeQuantity(amount) {
+      if (this.newItem.quantity + amount >= 1) {
+        this.newItem.quantity += amount;
+      }
+    },
+    deleteFoodItem(index) {
+      const itemToDelete = this.foodItems[index];
+      http.delete(`/api/foodItems/${itemToDelete.id}`).then(() => {
+        this.foodItems.splice(index, 1);
+      }).catch(error => {
+        this.responseMessage = error.response?.data.message || 'Failed to delete food item.';
+      });
+    }
   },
   mounted() {
-    if (this.isAuthenticated) {
-      this.fetchFoodItems();
-    }
-  },
-  methods: {
-    goToLogin() {
-      this.$router.push({name: 'Login'});
-    },
-    // Fetch the list of food items
-    fetchFoodItems() {
-      this.loading = true;
-      http.get('/foodItems')
-          .then(response => {
-            this.foodItems = response.data;
-          })
-          .catch(() => {
-            this.errorMessage = "Error fetching food items. Please try again later.";
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-    },
-    // Submit a new food item
-    submitFoodItem() {
-      this.loading = true;
-      http.post('/foodItems', this.newFoodItem)
-          .then(response => {
-            this.foodItems.push(response.data);
-            this.resetNewFoodItem();
-          })
-          .catch(() => {
-            this.errorMessage = "Error adding food item. Please try again later.";
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-    },
-    // Reset the new food item form
-    resetNewFoodItem() {
-      this.newFoodItem = {name: '', quantity: '', unit: '', expirationDate: '', allergens: []};
-    },
-
-    // New method for redirection on button click
-    redirectToFoodItems() {
-      if (!this.isAuthenticated) {
-        this.$router.push({name: 'Login'}); // Redirect to login if not authenticated
-      } else {
-        this.$router.push({name: 'FoodItems'}); // Redirect to food items page if authenticated
-      }
-    }
+    this.fetchUserData();
+    this.fetchFoodItems();
   }
 };
 </script>

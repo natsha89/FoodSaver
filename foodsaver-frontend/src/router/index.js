@@ -17,7 +17,7 @@ const routes = [
     { path: '/home', name: 'Home', component: HomeView },
     { path: '/verify', name: 'VerifyPage', component: VerifyPage }, // Add this route for verification status page
     { path: '/welcome', name: 'WelcomeView', component: WelcomeView, meta: { requiresAuth: true } },
-    { path: '/food-items', name: 'FoodItems', component: FoodItem },
+    { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes, meta: { requiresAuth: true } },
     { path: '/login', name: 'Login', component: LoginForm },
