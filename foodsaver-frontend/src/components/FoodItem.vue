@@ -4,11 +4,11 @@
 
     <!-- If the user is not authenticated, show login alert -->
     <v-alert v-if="!isAuthenticated" type="warning">
-      You must be logged in to add food items.
+      You must be logged in to view this page.
       <v-btn @click="goToLogin" color="primary">Login</v-btn>
     </v-alert>
 
-    <!-- The form to add a new food item -->
+    <!-- The form to add a new food item (only visible when authenticated) -->
     <v-form v-else @submit.prevent="submitFoodItem" v-model="valid">
       <v-text-field
           v-model="newFoodItem.name"
@@ -71,32 +71,19 @@
       <v-alert v-if="errorMessage" type="error" class="mt-3">{{ errorMessage }}</v-alert>
     </v-form>
 
-    <!-- Display recipe suggestions if they are available -->
-    <v-list v-if="recipeSuggestions.length">
-      <h4>Recipe Suggestions</h4>
-      <v-list-item v-for="recipe in recipeSuggestions" :key="recipe.id">
-        <v-list-item-content>
-          <v-list-item-title>{{ recipe.name }}</v-list-item-title>
-          <v-list-item-subtitle>{{ recipe.description }}</v-list-item-subtitle>
-          <v-btn @click="saveRecipe(recipe)" color="primary">Save Recipe</v-btn>
-        </v-list-item-content>
-      </v-list-item>
-    </v-list>
-
     <!-- Show loading spinner when data is being fetched -->
     <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
   </v-container>
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import {mapGetters} from 'vuex';
 import http from '../http'; // Import the centralized API handler
 
 export default {
   data() {
     return {
       valid: false,
-      recipeSuggestions: [],
       newFoodItem: {
         name: '',
         quantity: '',
@@ -121,7 +108,7 @@ export default {
   },
   methods: {
     goToLogin() {
-      this.$router.push({ name: 'Login' });
+      this.$router.push({name: 'Login'});
     },
     // Fetch the list of food items
     fetchFoodItems() {
@@ -143,7 +130,6 @@ export default {
       http.post('/foodItems', this.newFoodItem)
           .then(response => {
             this.foodItems.push(response.data);
-            this.fetchRecipeSuggestions(response.data.id);
             this.resetNewFoodItem();
           })
           .catch(() => {
@@ -153,29 +139,18 @@ export default {
             this.loading = false;
           });
     },
-    // Fetch recipe suggestions based on the food item
-    fetchRecipeSuggestions(foodItemId) {
-      http.get(`/foodItems/${foodItemId}/recipeSuggestions`)
-          .then(response => {
-            this.recipeSuggestions = response.data;
-          })
-          .catch(() => {
-            this.errorMessage = "Error fetching recipe suggestions.";
-          });
-    },
-    // Save a selected recipe
-    saveRecipe(recipe) {
-      http.post('/foodItems/saveRecipe', recipe)
-          .then(() => {
-            this.savedRecipes.push(recipe);
-          })
-          .catch(() => {
-            this.errorMessage = "Error saving recipe.";
-          });
-    },
     // Reset the new food item form
     resetNewFoodItem() {
-      this.newFoodItem = { name: '', quantity: '', unit: '', expirationDate: '', allergens: [] };
+      this.newFoodItem = {name: '', quantity: '', unit: '', expirationDate: '', allergens: []};
+    },
+
+    // New method for redirection on button click
+    redirectToFoodItems() {
+      if (!this.isAuthenticated) {
+        this.$router.push({name: 'Login'}); // Redirect to login if not authenticated
+      } else {
+        this.$router.push({name: 'FoodItems'}); // Redirect to food items page if authenticated
+      }
     }
   }
 };

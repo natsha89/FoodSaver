@@ -83,7 +83,7 @@
 
 .v-toolbar-items .v-btn {
   color: black;
-  font-weight: 500;
+  font-weight: bold;
   font-size: 0.8em; /* Further reduce button font size */
 }
 

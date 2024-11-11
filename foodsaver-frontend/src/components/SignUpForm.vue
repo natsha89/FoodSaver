@@ -3,8 +3,8 @@
     <v-card>
       <v-card-title>Create Account</v-card-title>
       <v-card-text>
-        <!-- Sign up form -->
-        <v-form ref="form" v-model="valid">
+        <!-- Signup form -->
+        <v-form ref="form" v-model="valid" @keydown.enter="signUp">
           <v-text-field
               v-model="fullName"
               :rules="nameRules"
@@ -69,67 +69,83 @@
         </router-link>
       </v-card-actions>
     </v-card>
+
+    <!-- Success dialog -->
+    <v-dialog v-model="dialogVisible" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">You are successfully registered ✅</v-card-title>
+        <v-card-text>
+          <p>📩 A verification link has been sent to your email. Please check your email! 📩</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="closeDialog">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
-
 <script>
+import http from '../http'; // Importera din Axios-instans
+
 export default {
   data() {
     return {
-      valid: false, // Form validation state
-      isSubmitting: false, // Submit button state (loading indicator)
+      valid: false,
+      isSubmitting: false,
       fullName: '',
       email: '',
       password: '',
-      selectedAllergies: [], // Selected allergies array
-      selectedDietaryPreferences: [], // Selected dietary preferences array
-      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs', 'None'], // Allergy options
-      dietaryOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo', 'None'], // Dietary options
-      nameRules: [v => !!v || 'Full Name is required'], // Full Name validation
+      selectedAllergies: [],
+      selectedDietaryPreferences: [],
+      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs', 'None'],
+      dietaryOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo', 'None'],
+      nameRules: [v => !!v || 'Full Name is required'],
       emailRules: [
         v => !!v || 'Email is required',
         v => /.+@.+\..+/.test(v) || 'E-mail must be valid'
-      ], // Email validation
+      ],
       passwordRules: [
         v => !!v || 'Password is required',
         v => v.length >= 6 || 'Password must be at least 6 characters'
-      ], // Password validation
-      responseMessage: '', // Variable to store response messages (error/success)
-      responseType: 'error', // Type of response message (default: error)
+      ],
+      responseMessage: '',
+      responseType: 'error',
     };
   },
   methods: {
-    // Sign up function
     async signUp() {
-      this.responseMessage = ''; // Reset the response message
-      this.responseType = 'error'; // Default response type is error
-      if (this.$refs.form.validate()) { // Validate form
-        this.isSubmitting = true; // Set submitting state to true
+      this.responseMessage = '';
+      this.responseType = 'error';
+      if (this.$refs.form.validate()) {
+        this.isSubmitting = true;
         try {
-          const response = await this.$http.post('/api/auth/register', {
+          const response = await http.post('/api/auth/register', {
             fullName: this.fullName,
             email: this.email,
             password: this.password,
-            allergies: this.selectedAllergies, // Send selected allergies
-            dietaryPreferences: this.selectedDietaryPreferences // Send selected dietary preferences
+            allergies: this.selectedAllergies,
+            dietaryPreferences: this.selectedDietaryPreferences
           });
-          this.responseMessage = response.data.message; // Display success message
-          this.responseType = 'success'; // Set response type to success
-          this.$router.push('/login'); // Redirect to login page after successful registration
+
+          // Hantera lyckad registrering
+          this.responseMessage = response.data.message || 'Account created successfully!';
+          this.responseType = 'success';
+
+          // Omdirigera användaren till inloggningssidan
+          this.$router.push('/login');
         } catch (error) {
-          // Handle error response gracefully
+          // Hantera eventuella fel vid registrering
           this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
         } finally {
-          this.isSubmitting = false; // Set submitting state to false
+          this.isSubmitting = false;
         }
       }
-    },
+    }
   },
 };
 </script>
 
 <style scoped>
-/* Optional styling */
 .v-form {
   max-width: 500px;
   margin: auto;

@@ -9,9 +9,6 @@
             alt="FoodSaver Intro Image"
             class="intro-image"
         ></v-img>
-        <v-btn color="green" class="mr-4" @click="navigateTo('RecipeGenerator')" large>
-          Get Recipes
-        </v-btn>
         <v-btn color="secondary" @click="navigateTo('IngredientList')" large>
           View My Ingredients
         </v-btn>
@@ -23,8 +20,8 @@
     <v-row justify="center" class="features">
       <v-col v-for="feature in features" :key="feature.title" cols="12" md="4">
         <v-card class="feature-card">
-          <v-img :src="feature.image" height="200px" alt="Feature Image"></v-img>
-          <v-card-title class="headline">
+          <v-img :src="feature.image" height="400px" alt="Feature Image"></v-img>
+          <v-card-title class="feature-title">
             <v-icon left>{{ feature.icon }}</v-icon>
             {{ feature.title }}
           </v-card-title>
@@ -76,7 +73,7 @@ export default {
   },
   methods: {
     navigateTo(page) {
-      this.$router.push({ name: page });
+      this.$router.push({name: page});
     },
   },
 };
@@ -94,32 +91,39 @@ export default {
 }
 
 .intro-image {
-  max-width: 600px;
+  max-width: 700px;
   height: auto;
   margin: 0 auto 20px;
 }
 
 .headline {
   font-size: 2.5em;
-  color: #2E7D32; /* Darker green for the headline */
+  color: #2E7D32;
 }
 
 .slogan {
   font-size: 1.5em;
-  color: #388E3C; /* Lighter green for the slogan */
+  color: #388E3C;
   margin-bottom: 20px;
 }
 
 .feature-card {
   transition: transform 0.2s;
 }
+
 .feature-card:hover {
   transform: scale(1.05);
+}
+
+.feature-title {
+  font-size: 1.2em; /* Smaller font size for feature titles */
+  font-weight: bold;
 }
 
 .engagement {
   margin-top: 40px;
 }
+
 .engagement-card {
   background-color: #ffffff;
   border-radius: 8px;
