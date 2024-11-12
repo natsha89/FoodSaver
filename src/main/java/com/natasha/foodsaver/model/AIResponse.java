@@ -6,28 +6,28 @@ import java.util.List;
 // Klass som representerar svaret från Cohere AI API
 public class AIResponse {
 
-    // Listan av "choices" som returneras från Cohere API
-    @JsonProperty("choices")
-    private List<Choice> choices;
+    // Listan av "generations" som returneras från Cohere API
+    @JsonProperty("generations")
+    private List<Generation> generations;
 
-    // Getter för choices (val som returneras från API:t)
-    public List<Choice> getChoices() {
-        return choices;
+    // Getter för generations (recept genererade av API:t)
+    public List<Generation> getGenerations() {
+        return generations;
     }
 
-    // Setter för choices
-    public void setChoices(List<Choice> choices) {
-        this.choices = choices;
+    // Setter för generations
+    public void setGenerations(List<Generation> generations) {
+        this.generations = generations;
     }
 
-    // Metod som extraherar recept från de val (choices) som returneras från API:t
+    // Metod som extraherar recept från de generationer som returneras från API:t
     public List<Recipe> getRecipes() {
-        // Kontrollera om det finns val från Cohere och hämta recepttext från det första valet
-        if (choices != null && !choices.isEmpty()) {
-            String recipeText = choices.get(0).getText(); // Extrahera texten från det första valet
+        // Kontrollera om det finns generationer från Cohere och hämta recepttext från den första generationen
+        if (generations != null && !generations.isEmpty()) {
+            String recipeText = generations.get(0).getText(); // Extrahera texten från den första generationen
             return parseRecipes(recipeText);  // Anropa metod för att parsa texten till Recipe objekt
         }
-        return List.of();  // Returnera en tom lista om inga val finns
+        return List.of();  // Returnera en tom lista om inga generationer finns
     }
 
     // Enkel metod för att parsa recepttexten och skapa en lista med Recipe objekt
@@ -47,8 +47,8 @@ public class AIResponse {
         return List.of();  // Om formatet inte är som förväntat, returnera en tom lista
     }
 
-    // Inre klass som representerar ett val (choice) från Cohere:s API-svar
-    public static class Choice {
+    // Inre klass som representerar en generation (recept) från Cohere:s API-svar
+    public static class Generation {
         private String text;
 
         // Getter för text

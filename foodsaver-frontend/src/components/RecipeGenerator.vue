@@ -2,17 +2,31 @@
   <v-container class="recipe-generator">
     <h3>Recipe Suggestions</h3>
 
-    <!-- Välj Matvaror -->
-    <v-select
-        v-model="selectedIngredients"
-        :items="foodItems"
-        item-text="name"
-        item-value="id"
-        label="Select Ingredients"
-        multiple
-        hint="Choose one or more food items"
+    <!-- Textfält för att lägga till ingredienser -->
+    <v-text-field
+        v-model="newIngredient"
+        label="Enter an ingredient and press Enter"
+        @keyup.enter="addIngredient"
+        clearable
         persistent-hint
-    ></v-select>
+        hint="Press Enter to add each ingredient"
+    ></v-text-field>
+
+    <!-- Visar tillagda ingredienser som chips -->
+    <v-chip-group
+        v-if="selectedIngredients.length > 0"
+        multiple
+        active-class="primary--text"
+    >
+      <v-chip
+          v-for="(ingredient, index) in selectedIngredients"
+          :key="index"
+          close
+          @click:close="removeIngredient(index)"
+      >
+        {{ ingredient }}
+      </v-chip>
+    </v-chip-group>
 
     <!-- Allergier (autocomplete lista) -->
     <v-autocomplete
@@ -36,6 +50,16 @@
         hint="Select any dietary preferences"
     ></v-autocomplete>
 
+    <!-- Portioner (antal portioner input) -->
+    <v-text-field
+        v-model="selectedServing"
+        label="Number of servings"
+        type="number"
+        min="1"
+        hint="Specify the number of servings"
+        persistent-hint
+    ></v-text-field>
+
     <!-- Knapp för att generera recept -->
     <v-btn @click="generateRecipes" :disabled="isGenerateButtonDisabled">
       <span v-if="loading">Generating...</span>
@@ -51,114 +75,97 @@
         class="my-2"
     ></v-progress-circular>
 
-    <!-- Visar genererade recept -->
+    <!-- Visar genererade recept med expanderbar panel -->
     <div v-if="recipes.length > 0">
       <h4>Generated Recipes:</h4>
-      <v-list>
-        <v-list-item-group>
-          <v-list-item v-for="recipe in recipes" :key="recipe.id">
-            <v-list-item-content>
-              <v-list-item-title>{{ recipe.title }}</v-list-item-title>
-              <v-list-item-subtitle>{{ recipe.instructions }}</v-list-item-subtitle>
-            </v-list-item-content>
-            <v-list-item-action>
-              <v-btn @click="saveRecipe(recipe)" color="primary">Save Recipe</v-btn>
-              <v-btn @click="removeRecipe(recipe.id)" color="red">Delete Recipe</v-btn>
-            </v-list-item-action>
-          </v-list-item>
-        </v-list-item-group>
-      </v-list>
+      <v-expansion-panels>
+        <v-expansion-panel v-for="recipe in recipes" :key="recipe.id">
+          <v-expansion-panel-header>{{ recipe.name }}</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-card outlined class="my-3">
+              <v-card-title>Ingredients</v-card-title>
+              <v-card-text>
+                <ul>
+                  <li v-for="ingredient in recipe.ingredients" :key="ingredient">{{ ingredient }}</li>
+                </ul>
+              </v-card-text>
+              <v-card-title>Instructions</v-card-title>
+              <v-card-text>{{ recipe.instructions }}</v-card-text>
+              <v-card-actions>
+                <v-btn @click="saveRecipe(recipe)" color="primary">Save Recipe</v-btn>
+                <v-btn @click="removeRecipe(recipe.id)" color="red">Delete Recipe</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </div>
 
-    <!-- Visar ett meddelande om inga recept genereras -->
+    <!-- Meddelande om inga recept genereras -->
     <v-alert v-else-if="!loading && recipes.length === 0" type="info" class="mt-3">
-      No recipes generated. Please select food items to see suggestions!
-    </v-alert>
-
-    <!-- Loading state for fetching data -->
-    <v-alert v-if="isFetchingData" type="info" class="mt-3">
-      Loading food items, allergies, and diets...
+      No recipes generated. Please enter ingredients to see suggestions!
     </v-alert>
   </v-container>
 </template>
 
 <script>
-import axios from 'axios';
-import { mapGetters } from 'vuex';
+import http from '../http'; // Konfiguration för HTTP-förfrågningar
 
 export default {
+  name: 'RecipeGenerator',
   data() {
     return {
-      foodItems: [],
-      selectedIngredients: [],
+      newIngredient: '', // För textfält för ingredienser
+      selectedIngredients: [], // Lista av valda ingredienser
       selectedAllergies: [],
       selectedDiets: [],
+      selectedServing: 1, // Förvalt antal portioner
       recipes: [],
-      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs', 'None'], // Allergy options for autocomplete
-      dietOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo', 'None'],    // Diet options for autocomplete
+      allergyOptions: ['Gluten', 'Nuts', 'Dairy', 'Soy', 'Eggs', 'None'],
+      dietOptions: ['Vegan', 'Vegetarian', 'Keto', 'Paleo', 'None'],
       loading: false,
-      isFetchingData: true,  // State for data fetching loading indicator
     };
   },
   computed: {
-    ...mapGetters(['isAuthenticated', 'user']),
     isGenerateButtonDisabled() {
       return this.selectedIngredients.length === 0 || this.loading;
-    }
+    },
   },
   methods: {
-    // Fetch food items
-    async fetchFoodItems() {
-      this.isFetchingData = true;
-      try {
-        const response = await axios.get('/api/foodItems');
-        this.foodItems = response.data.data;
-      } catch (error) {
-        console.error("Error fetching food items:", error);
-        this.$notify.error("Failed to load food items.");
-      } finally {
-        this.isFetchingData = false;
+    addIngredient() {
+      if (this.newIngredient.trim() !== '') {
+        this.selectedIngredients.push(this.newIngredient.trim());
+        this.newIngredient = '';
       }
     },
-    // Fetch allergy options
-    async fetchAllergyOptions() {
-      this.isFetchingData = true;
-      try {
-        const response = await axios.get('/api/foodItems/allergies');
-        this.allergyOptions = response.data.data;
-      } catch (error) {
-        console.error("Error fetching allergy options:", error);
-        this.$notify.error("Failed to load allergy options.");
-      } finally {
-        this.isFetchingData = false;
-      }
+    removeIngredient(index) {
+      this.selectedIngredients.splice(index, 1);
     },
-    // Fetch diet options
-    async fetchDietOptions() {
-      this.isFetchingData = true;
-      try {
-        const response = await axios.get('/api/diets');
-        this.dietOptions = response.data.data;
-      } catch (error) {
-        console.error("Error fetching diet options:", error);
-        this.$notify.error("Failed to load diet options.");
-      } finally {
-        this.isFetchingData = false;
-      }
-    },
-    // Generate recipes based on selected options
     async generateRecipes() {
+      if (this.selectedIngredients.length === 0) {
+        this.$notify.info("Please add at least one ingredient.");
+        return;
+      }
+
       this.loading = true;
       try {
-        const response = await axios.post('/api/recipes/generate', {
-          ingredients: this.selectedIngredients.map(ingredient => ingredient.name),
-          allergies: this.selectedAllergies,
+        const response = await http.post('/api/recipes/generate', {
+          ingredients: this.selectedIngredients.join(', '),
+          allergens: this.selectedAllergies,
           dietaryPreferences: this.selectedDiets.join(', '),
-          servings: 4  // Example, replace with dynamic value
+          servings: this.selectedServing,
         });
-        this.recipes = response.data;
-        if (this.recipes.length === 0) {
-          this.$notify.info("No recipes found for the selected ingredients, allergies, or diets.");
+
+        // Kontrollera om svar är en lista av recept
+        if (response.data && Array.isArray(response.data)) {
+          this.recipes = response.data.length > 0 ? response.data : [];
+          if (this.recipes.length > 0) {
+            this.$notify.success("Recipes generated successfully!");
+          } else {
+            this.$notify.info("No recipes found with the selected ingredients.");
+          }
+        } else {
+          throw new Error("Unexpected response format from server.");
         }
       } catch (error) {
         console.error("Error generating recipes:", error);
@@ -167,20 +174,33 @@ export default {
         this.loading = false;
       }
     },
-    // Save a recipe to user's profile or favorites
     async saveRecipe(recipe) {
+      const userId = this.currentUser.id;  // Anta att användarens ID är tillgängligt via `currentUser`
+      recipe.userId = userId;
+
       try {
-        await axios.post('/api/recipes', recipe);
+        await http.post('/api/recipes', recipe, { params: { userId } });
         this.$notify.success("Recipe saved successfully!");
       } catch (error) {
         console.error("Error saving recipe:", error);
         this.$notify.error("Failed to save recipe.");
       }
+  },
+    async fetchUserRecipes() {
+      const userId = this.currentUser.id;
+
+      try {
+        const response = await http.get(`/api/recipes`, { params: { userId } });
+        this.recipes = response.data;
+      } catch (error) {
+        console.error("Error fetching user recipes:", error);
+        this.$notify.error("Failed to fetch recipes.");
+      }
     },
-    // Remove a recipe from user's saved recipes
+
     async removeRecipe(recipeId) {
       try {
-        await axios.delete(`/api/recipes/${recipeId}`);
+        await http.delete(`/api/recipes/${recipeId}`);
         this.recipes = this.recipes.filter(r => r.id !== recipeId);
         this.$notify.success("Recipe deleted successfully.");
       } catch (error) {
@@ -189,21 +209,18 @@ export default {
       }
     }
   },
-  mounted() {
-    this.fetchFoodItems();
-    this.fetchAllergyOptions();
-    this.fetchDietOptions();
-  }
 };
 </script>
-
 <style scoped>
 .recipe-generator {
   max-width: 800px;
   margin: auto;
 }
-
 .my-2 {
   margin-top: 1rem;
 }
+.my-3 {
+  margin-top: 1.5rem;
+}
 </style>
+
