@@ -29,9 +29,16 @@ public class RecipeService {
                     .collect(Collectors.toList());
 
             // Filtrera bort recept som redan finns i databasen baserat på namn
-            return generatedRecipes.stream()
+            List<Recipe> newRecipes = generatedRecipes.stream()
                     .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))  // Bevara endast de recept som inte redan finns i databasen
                     .collect(Collectors.toList());
+
+            // Spara nya recept i databasen
+            recipeRepository.saveAll(newRecipes);
+
+            // Returnera de sparade nya recepten
+            return newRecipes;
+
         } catch (Exception e) {
             // Logga eventuella fel
             System.err.println("Error generating recipes: " + e.getMessage());

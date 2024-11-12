@@ -32,7 +32,7 @@ public class AIService {
         this.objectMapper = objectMapper;
     }
 
-    // Generera recept med hjälp av AI baserat på ingredienser, allergener, kostpreferenser och antal portioner
+    // Metod för att generera recept med hjälp av AI baserat på ingredienser, allergener, kostpreferenser och antal portioner
     public List<Recipe> generateAIRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         // Om kostpreferenser inte är angivna, sätt det till "inga specifika kostpreferenser"
         String dietPrompt = dietaryPreferences != null && !dietaryPreferences.isEmpty() ? dietaryPreferences : "no specific dietary preferences";
@@ -77,14 +77,15 @@ public class AIService {
         return mapAIResponseToRecipes(aiResponse);
     }
 
-    // Bearbeta svaret från Cohere API och omvandla det till en AIResponse
+    // Metod för att bearbeta svaret från Cohere API
     private AIResponse parseResponse(String responseBody) {
+        System.out.println("test response" + responseBody);
         try {
-            // Om Cohere:s svar innehåller en lista med val, använd den för att extrahera texten.
+            // Parsar svaret med hjälp av AIResponse, som ska spegla den faktiska API-strukturen
             AIResponse aiResponse = objectMapper.readValue(responseBody, AIResponse.class);
 
-            // Kontrollera om svaret från Cohere är tomt eller ogiltigt
-            if (aiResponse == null || aiResponse.getChoices() == null || aiResponse.getChoices().isEmpty()) {
+            // Kontrollera att vi har giltiga generationer i svaret
+            if (aiResponse == null || aiResponse.getGenerations() == null || aiResponse.getGenerations().isEmpty()) {
                 throw new RuntimeException("Cohere returned an invalid response.");
             }
 
@@ -96,13 +97,13 @@ public class AIService {
         }
     }
 
-    // Omvandla AI:s svar till en lista av recept
+    // Metod för att omvandla AI:s svar till en lista av recept
     private List<Recipe> mapAIResponseToRecipes(AIResponse aiResponse) {
         List<Recipe> recipes = new ArrayList<>();
 
-        // Gå igenom varje val i AI:s svar och skapa ett recept
-        for (AIResponse.Choice choice : aiResponse.getChoices()) {
-            String aiRecipeText = choice.getText();
+        // Loop över varje generation i AI:s svar och skapa ett recept
+        for (AIResponse.Generation generation : aiResponse.getGenerations()) {
+            String aiRecipeText = generation.getText();
 
             // Dela upp AI-svaret i tre delar: namn, ingredienser, instruktioner
             String[] parts = aiRecipeText.split("\n", 3);
@@ -113,7 +114,7 @@ public class AIService {
                 String ingredients = parts[1].trim(); // Ingredienserna
                 String instructions = parts[2].trim(); // Instruktionerna
 
-                // Skapa och lägg till receptet i listan
+                // Skapa och lägg till receptet i listan, använd foodItem istället för foodItems
                 Recipe recipe = new Recipe(name, instructions, List.of(ingredients.split(",\\s*")));
                 recipes.add(recipe);
             }
