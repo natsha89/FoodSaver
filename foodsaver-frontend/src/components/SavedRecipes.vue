@@ -1,18 +1,18 @@
 <template>
   <v-container>
-    <!-- Saved Recipes card -->
+    <!-- Card for Saved Recipes -->
     <v-card class="mb-4">
       <v-card-title>Saved Recipes</v-card-title>
       <v-card-text>
         <!-- Loading indicator -->
         <v-progress-circular v-if="isLoading" indeterminate color="primary" size="30" class="my-2"></v-progress-circular>
 
-        <!-- No saved recipes message -->
+        <!-- Message for no saved recipes -->
         <v-alert v-else-if="savedRecipes.length === 0" type="info" class="mt-3">
           You don't have any saved recipes yet.
         </v-alert>
 
-        <!-- Grid of recipe tiles -->
+        <!-- Grid of recipe boxes -->
         <v-row v-else class="saved-recipes-grid">
           <v-col
               v-for="recipe in savedRecipes"
@@ -21,23 +21,28 @@
               sm="6"
               md="4"
           >
+            <!-- Recipe box showing only the title -->
             <v-card
                 class="recipe-tile"
                 @click="openRecipeDialog(recipe)"
             >
-              <v-card-title>{{ recipe.title }}</v-card-title>
-              <v-card-subtitle class="truncate">{{ recipe.description }}</v-card-subtitle>
+              <v-card-title class="truncate">{{ recipe.name }}</v-card-title>
             </v-card>
           </v-col>
         </v-row>
       </v-card-text>
     </v-card>
 
-    <!-- Recipe dialog -->
+    <!-- Recipe Dialog displaying full recipe content -->
     <v-dialog v-model="isDialogOpen" max-width="600px">
       <v-card>
-        <v-card-title>{{ selectedRecipe.title }}</v-card-title>
-        <v-card-text>{{ selectedRecipe.description }}</v-card-text>
+        <v-card-title>{{ selectedRecipe.name }}</v-card-title>
+        <v-card-text v-if="selectedRecipe.description">
+          {{ selectedRecipe.description }}
+        </v-card-text>
+        <v-card-text v-else>
+          <em>No description available for this recipe.</em>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="isDialogOpen = false">Close</v-btn>
@@ -64,8 +69,8 @@ export default {
       this.isLoading = true;
       try {
         const response = await http.get('/api/recipes');
+        console.log(response.data);  // Logga svaret för att kontrollera om beskrivningen finns.
         this.savedRecipes = response.data;
-        console.log('Fetched recipes:', this.savedRecipes);
       } catch (error) {
         console.error('Error fetching saved recipes:', error);
         this.$notify.error('Failed to load saved recipes.');
@@ -102,12 +107,13 @@ export default {
 }
 
 .recipe-tile {
-  background-color: #e0f7fa; /* Teal background color */
+  background-color: #e0f7fa;
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
   transition: transform 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 .recipe-tile:hover {
@@ -115,15 +121,13 @@ export default {
 }
 
 .v-card-title {
-  color: #004d40; /* Dark teal for title */
+  color: #004d40;
 }
 
 .truncate {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
-  color: #00796b; /* Darker teal for subtitle text */
+  color: #00796b;
 }
 </style>
