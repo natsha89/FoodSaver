@@ -1,100 +1,129 @@
 <template>
   <v-container>
-    <!-- If the user is not authenticated, show a warning -->
-    <v-alert v-if="!isAuthenticated" type="warning">
-      You must be logged in to view saved recipes.
-      <v-btn @click="goToLogin" color="primary">Login</v-btn> <!-- Button to go to Login page -->
-    </v-alert>
-
-    <!-- If the user is authenticated, show the saved recipes -->
-    <v-card v-else class="mb-4">
+    <!-- Saved Recipes card -->
+    <v-card class="mb-4">
       <v-card-title>Saved Recipes</v-card-title>
       <v-card-text>
-        <!-- Loading indicator while fetching saved recipes -->
+        <!-- Loading indicator -->
         <v-progress-circular v-if="isLoading" indeterminate color="primary" size="30" class="my-2"></v-progress-circular>
 
-        <!-- If no saved recipes, show an alert -->
+        <!-- No saved recipes message -->
         <v-alert v-else-if="savedRecipes.length === 0" type="info" class="mt-3">
           You don't have any saved recipes yet.
         </v-alert>
 
-        <!-- List of saved recipes -->
-        <v-list v-else>
-          <v-list-item v-for="(recipe, index) in savedRecipes" :key="recipe.id">
-            <v-list-item-content>{{ recipe.title }}</v-list-item-content>
-            <v-list-item-action>
-              <v-btn icon @click="removeRecipe(recipe.id, index)">
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
-            </v-list-item-action>
-          </v-list-item>
-        </v-list>
+        <!-- Grid of recipe tiles -->
+        <v-row v-else class="saved-recipes-grid">
+          <v-col
+              v-for="recipe in savedRecipes"
+              :key="recipe.id"
+              cols="12"
+              sm="6"
+              md="4"
+          >
+            <v-card
+                class="recipe-tile"
+                @click="openRecipeDialog(recipe)"
+            >
+              <v-card-title>{{ recipe.title }}</v-card-title>
+              <v-card-subtitle class="truncate">{{ recipe.description }}</v-card-subtitle>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
+
+    <!-- Recipe dialog -->
+    <v-dialog v-model="isDialogOpen" max-width="600px">
+      <v-card>
+        <v-card-title>{{ selectedRecipe.title }}</v-card-title>
+        <v-card-text>{{ selectedRecipe.description }}</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" text @click="isDialogOpen = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'; // Import Vuex mapGetters
-import axios from 'axios';
+import http from '../http';
 
 export default {
   data() {
     return {
-      savedRecipes: [], // Initially empty, will store saved recipes
-      isLoading: false, // Loading state for fetching saved recipes
+      savedRecipes: [],
+      isLoading: false,
+      isDialogOpen: false,
+      selectedRecipe: {}
     };
   },
-  computed: {
-    ...mapGetters(['isAuthenticated', 'user']), // Map isAuthenticated and user from Vuex
-  },
   methods: {
-    goToLogin() {
-      this.$router.push({ name: 'Login' }); // Navigate to the login page
-    },
     async fetchSavedRecipes() {
-      if (!this.isAuthenticated) return; // Don't fetch if not authenticated
-      this.isLoading = true; // Show loading indicator
+      this.isLoading = true;
       try {
-        const userId = this.user.id; // Get the user's ID from Vuex
-        const response = await axios.get(`/api/recipes/${userId}`); // Fetch saved recipes from the backend
-        this.savedRecipes = response.data; // Set saved recipes data
+        const response = await http.get('/api/recipes');
+        this.savedRecipes = response.data;
+        console.log('Fetched recipes:', this.savedRecipes);
       } catch (error) {
         console.error('Error fetching saved recipes:', error);
-        this.$notify.error('Failed to load saved recipes.'); // Optionally notify the user
+        this.$notify.error('Failed to load saved recipes.');
       } finally {
-        this.isLoading = false; // Hide loading indicator
+        this.isLoading = false;
       }
+    },
+    openRecipeDialog(recipe) {
+      this.selectedRecipe = recipe;
+      this.isDialogOpen = true;
     },
     async removeRecipe(recipeId, index) {
       try {
-        await axios.delete(`/api/recipes/${recipeId}`); // Delete recipe from the backend
-        this.savedRecipes.splice(index, 1); // Remove recipe from list
-        this.$notify.success('Recipe removed successfully!'); // Optionally notify the user
+        await http.delete(`/api/recipes/${recipeId}`);
+        this.savedRecipes.splice(index, 1);
+        this.$notify.success('Recipe removed successfully!');
       } catch (error) {
         console.error('Error removing recipe:', error);
-        this.$notify.error('Failed to remove recipe.'); // Optionally notify the user
-      }
-    },
-  },
-  watch: {
-    // Watch for changes in authentication state
-    isAuthenticated(newVal) {
-      if (newVal) {
-        this.fetchSavedRecipes(); // Fetch saved recipes when authenticated
-      } else {
-        this.savedRecipes = []; // Clear saved recipes when not authenticated
+        this.$notify.error('Failed to remove recipe.');
       }
     },
   },
   mounted() {
-    if (this.isAuthenticated) {
-      this.fetchSavedRecipes(); // Fetch saved recipes when the component is mounted
-    }
+    this.fetchSavedRecipes();
   },
 };
 </script>
 
 <style scoped>
-/* Optional styling */
+.saved-recipes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.recipe-tile {
+  background-color: #e0f7fa; /* Teal background color */
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-tile:hover {
+  transform: scale(1.02);
+}
+
+.v-card-title {
+  color: #004d40; /* Dark teal for title */
+}
+
+.truncate {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #00796b; /* Darker teal for subtitle text */
+}
 </style>

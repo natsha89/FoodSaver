@@ -185,7 +185,7 @@ export default {
         console.error("Error saving recipe:", error);
         this.$notify.error("Failed to save recipe.");
       }
-  },
+    },
     async fetchUserRecipes() {
       const userId = this.currentUser.id;
 
@@ -223,4 +223,3 @@ export default {
   margin-top: 1.5rem;
 }
 </style>
-
