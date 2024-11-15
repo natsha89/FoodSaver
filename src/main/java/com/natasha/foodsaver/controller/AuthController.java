@@ -3,7 +3,9 @@ package com.natasha.foodsaver.controller;
 import com.natasha.foodsaver.exception.GlobalExceptionHandler;
 import com.natasha.foodsaver.exception.UserAlreadyExistsException;
 import com.natasha.foodsaver.model.User;
+import com.natasha.foodsaver.repository.UserRepository;
 import com.natasha.foodsaver.service.AuthService;
+import com.natasha.foodsaver.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -25,6 +27,9 @@ public class AuthController {
     @Autowired
     private AuthService authService;  // Injektionspunkt för autentiseringstjänsten
 
+    @Autowired
+    private UserRepository userRepository;
+
     // Endpoint för att registrera en ny användare
     @PostMapping("/register")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> register(@Valid @RequestBody User user) {
@@ -44,16 +49,24 @@ public class AuthController {
         }
     }
 
-    // Endpoint för användarinloggning
     @PostMapping("/login")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> login(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
         String password = payload.get("password");
 
         try {
-            // Försök att logga in användaren
-            User user = authService.login(email, password);
-            return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Welcome, " + user.getFullName() + "!", user));
+            // Försök att logga in användaren och få tillbaka JWT-token
+            String token = authService.loginAndGenerateToken(email, password);
+
+            // Hämta användaren baserat på email för att kunna returnera användarinformation
+            User user = userRepository.findByEmail(email); // Assuming this is available via a repository
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new GlobalExceptionHandler.ResponseMessage("Invalid email or password.", null));
+            }
+
+            // Returnera JWT-token tillsammans med användarinformation
+            return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Welcome, " + user.getFullName() + "!", Map.of("user", user, "token", token)));
         } catch (RuntimeException e) {
             // Om inloggningen misslyckas, returnera status 401 (obehörig)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

@@ -3,14 +3,18 @@ package com.natasha.foodsaver.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Collections;
 
 @Document(collection = "users")  // Mappas till "users"-kollektionen i MongoDB
-public class User {
+public class User implements UserDetails {
 
     @Id  // Primärnyckel för MongoDB
     private String id;
@@ -107,5 +111,37 @@ public class User {
                 ", emailVerified=" + emailVerified +
                 ", jwtToken='" + jwtToken + '\'' +
                 '}';
+    }
+
+    // Implementering av UserDetails metoder:
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Här kan du definiera roller för användaren. Vi använder en statisk roll här.
+        return Collections.singletonList(() -> "ROLE_USER");
+    }
+
+    @Override
+    public String getUsername() {
+        return email;  // Användarens email används som användarnamn
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;  // Sätt som true om kontot inte ska kunna gå ut
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;  // Sätt som true om kontot inte ska vara låst
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;  // Sätt som true om autentiseringsuppgifterna inte ska gå ut
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;  // Sätt som true om kontot ska vara aktivt
     }
 }
