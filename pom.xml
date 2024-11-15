@@ -116,6 +116,11 @@
             <artifactId>json</artifactId>
             <version>20231013</version>
         </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.12.6</version> <!-- You can use the latest version -->
+        </dependency>
 
     </dependencies>
     <build>
