@@ -1,130 +1,158 @@
 <template>
-  <v-container>
-    <!-- Check if user is authenticated -->
-    <v-card v-if="isAuthenticated">
-      <v-card-title>Profile</v-card-title>
-      <v-card-text>
-        <v-list>
-          <v-list-item>
-            <v-list-item-title>Full Name: {{ user.fullName }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-title>Email: {{ user.email }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-title>Allergies: {{ user.allergies.join(', ') || 'None' }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
+  <v-app>
+    <v-container class="profile-container" fluid>
+      <v-card outlined class="profile-card">
+        <v-card-title>
+          <div class="header">
+            <h2>My Account</h2>
+            <p class="subtitle">Manage your profile and settings</p>
+          </div>
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <!-- Profile Details Section -->
+            <v-col cols="12" md="6">
+              <v-card flat class="details-card">
+                <v-card-title>Profile Details</v-card-title>
+                <v-list dense>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        <strong>Name:</strong> {{ user?.name || 'N/A' }}
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        <strong>Email:</strong> {{ user?.email || 'N/A' }}
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        <strong>Status:</strong>
+                        <span v-if="user?.emailVerified" class="verified">Verified</span>
+                        <span v-else class="unverified">Not Verified</span>
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+                <v-btn
+                    v-if="!user?.emailVerified"
+                    color="green"
+                    class="resend-btn"
+                    @click="resendVerificationEmail"
+                >
+                  Resend Verification Email
+                </v-btn>
+              </v-card>
+            </v-col>
 
-        <!-- Show any response message -->
-        <v-alert v-if="responseMessage" type="error" dismissible>
-          {{ responseMessage }}
-        </v-alert>
-
-        <!-- Navigation Buttons -->
-        <v-btn @click="goToSavedRecipes" color="primary">My Recipes</v-btn>
-        <v-btn @click="goToFoodItems" color="secondary">My Food Items</v-btn>
-
-        <!-- Logout Button -->
-        <v-btn @click="logout" color="warning">Logout</v-btn>
-      </v-card-text>
-
-      <v-card-actions>
-        <!-- Delete Account Button -->
-        <v-btn @click="openDeleteDialog" color="red">Delete Account</v-btn>
-      </v-card-actions>
-    </v-card>
-
-    <!-- If not authenticated, show warning message -->
-    <v-alert v-else type="warning">
-      You must be logged in to view this page.
-      <v-btn @click="goToLogin" color="primary">Login</v-btn>
-    </v-alert>
-
-    <!-- Dialog for confirming account deletion -->
-    <v-dialog v-model="isDeleteDialogVisible" max-width="400px">
-      <v-card>
-        <v-card-title class="headline">Confirm Account Deletion</v-card-title>
-        <v-card-text>Are you sure you want to delete your account? This action cannot be undone.</v-card-text>
-        <v-card-actions>
-          <v-btn @click="closeDeleteDialog" color="grey">Cancel</v-btn>
-          <v-btn @click="deleteAccount" color="red">Delete</v-btn>
-        </v-card-actions>
+            <!-- Actions Section -->
+            <v-col cols="12" md="6">
+              <v-card flat class="actions-card">
+                <v-card-title>Actions</v-card-title>
+                <v-list dense>
+                  <v-list-item>
+                    <v-btn color="primary" block @click="editProfile">
+                      Edit Profile
+                    </v-btn>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-btn color="error" block @click="deleteAccount">
+                      Delete Account
+                    </v-btn>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-btn color="secondary" block @click="logout">
+                      Logout
+                    </v-btn>
+                  </v-list-item>
+                </v-list>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card-text>
       </v-card>
-    </v-dialog>
-  </v-container>
+    </v-container>
+  </v-app>
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import http from '../http'; // Import the centralized HTTP handler
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
-  name: 'UserProfile',
-  computed: {
-    ...mapGetters(['isAuthenticated', 'user']),
-  },
+  name: 'userProfile',
   data() {
     return {
-      responseMessage: '',
-      isDeleteDialogVisible: false,  // For controlling delete confirmation dialog
+      loading: false,
     };
   },
+  computed: {
+    ...mapGetters(['user']), // Access user data from Vuex state
+  },
   methods: {
-    // Open the confirmation dialog
-    openDeleteDialog() {
-      this.isDeleteDialogVisible = true;
+    ...mapActions(['fetchUser', 'resendVerificationEmail', 'logout']),
+    editProfile() {
+      // Navigate to profile editing view
+      this.$router.push('/edit-profile');
     },
-    // Close the confirmation dialog
-    closeDeleteDialog() {
-      this.isDeleteDialogVisible = false;
-    },
-    // Perform the account deletion
     async deleteAccount() {
       try {
-        const response = await http.delete('/api/auth/delete'); // Use the http.js instance for API request
-        this.responseMessage = response.data.message; // Show the success message
-        this.$router.push({ name: 'Home' }); // Redirect user to Home page after account deletion
-        this.closeDeleteDialog();  // Close the dialog after deletion
+        if (confirm('Are you sure you want to delete your account? This action is irreversible.')) {
+          await this.$store.dispatch('deleteAccount', this.user.id);
+          alert('Account deleted successfully.');
+          this.logout(); // Log out the user after account deletion
+        }
       } catch (error) {
-        // Handle error message from backend
-        this.responseMessage = error.response?.data?.message || 'An unknown error occurred.';
+        console.error('Error deleting account:', error);
+        alert('Failed to delete account.');
       }
     },
-
-    // Logout method
-    async logout() {
-      try {
-        this.responseMessage = '';
-        // Call the logout API endpoint
-        const response = await http.post('/api/auth/logout');
-        console.log(response); // or any logic to use the response
-
-        // Cler the authentication state from Vuex
-        this.$store.commit('setAuthenticated', false);
-        this.$store.commit('setUser', null); // Reset the user data in Vuex store
-
-        // Redirect user to login page after logout
-        this.$router.push({ name: 'Login' });
-      } catch (error) {
-        // Handle any error during logout
-        this.responseMessage = error.response?.data?.message || 'An error occurred while logging out.';
-      }
-    },
-
-    goToSavedRecipes() {
-      this.$router.push({ name: 'SavedRecipes' });
-    },
-    goToFoodItems() {
-      this.$router.push({ name: 'FoodItems' });
-    },
-    goToLogin() {
-      this.$router.push({ name: 'Login' }); // Navigate to the login page if not logged in
-    },
+  },
+  mounted() {
+    // Fetch user data when the component is loaded
+    this.fetchUser();
   },
 };
 </script>
 
 <style scoped>
-/* Add some custom styling if necessary */
+.profile-container {
+  margin-top: 20px;
+}
+
+.profile-card {
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 0.9em;
+  color: gray;
+}
+
+.details-card,
+.actions-card {
+  padding: 10px;
+}
+
+.verified {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.unverified {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.resend-btn {
+  margin-top: 10px;
+}
 </style>

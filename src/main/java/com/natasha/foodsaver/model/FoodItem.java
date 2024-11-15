@@ -1,3 +1,4 @@
+
 package com.natasha.foodsaver.model;
 
 import com.natasha.foodsaver.service.AIService;
