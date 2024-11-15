@@ -4,6 +4,7 @@ import com.natasha.foodsaver.exception.EmailNotVerifiedException;
 import com.natasha.foodsaver.exception.InvalidCredentialsException;
 import com.natasha.foodsaver.exception.UserAlreadyExistsException;
 import com.natasha.foodsaver.exception.UserNotFoundException;
+import com.natasha.foodsaver.jwt.JwtTokenProvider;
 import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.repository.UserRepository;
 import org.slf4j.Logger;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,118 +19,132 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
-
+    // Logger för att logga viktiga händelser (t.ex. registrering, inloggning)
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository userRepository; // Dependency injection för UserRepository
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private BCryptPasswordEncoder passwordEncoder; // För att hashning av lösenord
 
     @Autowired
-    private EmailService emailService;
+    private EmailService emailService; // För att skicka verifieringsmail
 
-    private static final int VERIFICATION_LINK_EXPIRY_MINUTES = 60;
+    private static final int VERIFICATION_LINK_EXPIRY_MINUTES = 60; // Tidsgräns för verifieringslänken (i minuter)
 
+
+    // Registrera en ny användare
     public User register(User user) {
+        // Kontrollera om email redan är registrerat
         if (userRepository.findByEmail(user.getEmail()) != null) {
-            logger.warn("Attempt to register with existing email: {}", user.getEmail());
-            throw new UserAlreadyExistsException("Email already registered.");
+            logger.warn("Försök att registrera med en redan existerande email: {}", user.getEmail());
+            throw new UserAlreadyExistsException("Email är redan registrerat.");
         }
 
+        // Kryptera lösenordet
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        String token = generateVerificationToken();
+        // Generera verifieringstoken
+        String token = UUID.randomUUID().toString();
         user.setVerificationToken(token);
-        user.setVerificationTokenExpiration(LocalDateTime.now().plusMinutes(VERIFICATION_LINK_EXPIRY_MINUTES));
-        user.setEmailVerified(false);
+        user.setVerificationTokenExpiration(LocalDateTime.now().plusHours(1)); // Sätt en utgångstid för token
 
+        // Spara användaren i databasen
         userRepository.save(user);
 
+        // Skicka verifieringsmail
         emailService.sendVerificationEmail(user.getEmail(), token);
-        logger.info("User registered successfully: {}", user.getEmail());
-        return user;
+
+        logger.info("Användare registrerad framgångsrikt: {}", user.getEmail());
+        return user; // Returnera den registrerade användaren
     }
 
+    // Radera användarkonto
     public void deleteAccount(String userId) {
+        // Kontrollera om användaren existerar
         if (!userRepository.existsById(userId)) {
-            logger.warn("Attempt to delete non-existent user with ID: {}", userId);
-            throw new UserNotFoundException("User does not exist.");
+            logger.warn("Försök att radera en icke-existerande användare med ID: {}", userId);
+            throw new UserNotFoundException("Användaren finns inte.");
         }
 
+        // Radera användaren
         userRepository.deleteById(userId);
-        logger.info("User account deleted successfully: {}", userId);
+        logger.info("Användarkonto raderat framgångsrikt: {}", userId);
     }
 
+    // Verifiera email med hjälp av token
     public boolean verifyEmail(String token) {
+        // Hämta användaren baserat på verifieringstoken
         User user = userRepository.findByVerificationToken(token);
-        if (user == null) {
-            logger.warn("Invalid verification token: {}", token);
-            throw new RuntimeException("Invalid verification token.");
+        if (user != null) {
+            // Kontrollera om token har inte gått ut
+            if (user.getVerificationTokenExpiration().isAfter(LocalDateTime.now())) {
+                // Markera användarens email som verifierad
+                user.setEmailVerified(true);
+                user.setVerificationToken(null); // Ta bort token efter verifiering
+                user.setVerificationTokenExpiration(null); // Ta bort expiration date
+                userRepository.save(user); // Spara den verifierade användaren
+                logger.info("Email verifierad framgångsrikt för användare: {}", user.getEmail());
+                return true;
+            } else {
+                // Om token har gått ut
+                logger.warn("Verifieringstoken har gått ut för email: {}", user.getEmail());
+                throw new RuntimeException("Verifieringstoken har gått ut. Vänligen begär en ny.");
+            }
         }
 
-        if (user.getVerificationTokenExpiration().isBefore(LocalDateTime.now())) {
-            logger.warn("Verification token expired for email: {}", user.getEmail());
-            throw new RuntimeException("Verification token has expired. Please request a new one.");
-        }
-
-        user.setEmailVerified(true);
-        user.setVerificationToken(null);
-        user.setVerificationTokenExpiration(null);
-        userRepository.save(user);
-
-        logger.info("Email successfully verified for user: {}", user.getEmail());
-        return true;
+        logger.warn("Ogiltig verifieringstoken: {}", token);
+        return false; // Returnera false om token inte är giltig
     }
 
+    // Skicka en ny verifieringslänk
     public void resendVerificationEmail(String email) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            logger.warn("Attempt to resend verification email to non-existent user: {}", email);
-            throw new UserNotFoundException("User not found.");
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            // Generera en ny verifieringstoken
+            String token = generateVerificationToken();
+            user.setVerificationToken(token);
+            user.setVerificationTokenExpiration(LocalDateTime.now().plusMinutes(VERIFICATION_LINK_EXPIRY_MINUTES)); // Token utgår efter en timme
+            userRepository.save(user); // Spara användaren med den nya token
+            emailService.sendVerificationEmail(user.getEmail(), token); // Skicka ny verifieringslänk
         }
-
-        if (user.isEmailVerified()) {
-            logger.info("User's email is already verified: {}", email);
-            return;
-        }
-
-        String token = generateVerificationToken();
-        user.setVerificationToken(token);
-        user.setVerificationTokenExpiration(LocalDateTime.now().plusMinutes(VERIFICATION_LINK_EXPIRY_MINUTES));
-        userRepository.save(user);
-
-        emailService.sendVerificationEmail(user.getEmail(), token);
-        logger.info("Resent verification email to: {}", email);
     }
 
+    // Inloggning av användare
     public User login(String email, String password) {
+        // Hämta användaren baserat på email
         User user = userRepository.findByEmail(email);
         if (user == null) {
-            logger.warn("Attempt to login with non-existent email: {}", email);
-            throw new UserNotFoundException("User not found.");
+            logger.warn("Försök att logga in med en icke-existerande email: {}", email);
+            throw new UserNotFoundException("Email inte funnen.");
         }
 
+        // Kontrollera om lösenordet stämmer
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            logger.warn("Invalid credentials for email: {}", email);
-            throw new InvalidCredentialsException("Incorrect email or password.");
+            logger.warn("Fel lösenord för email: {}", email);
+            throw new RuntimeException("Fel lösenord.");
         }
 
+        // Kontrollera om email är verifierad
         if (!user.isEmailVerified()) {
-            logger.warn("Attempt to login with unverified email: {}", email);
-            throw new EmailNotVerifiedException("Email not verified. Please check your inbox.");
+            logger.warn("Försök att logga in med en icke-verifierad email: {}", email);
+            throw new EmailNotVerifiedException("Email inte verifierad. Kontrollera din inkorg.");
         }
 
-        logger.info("User logged in successfully: {}", email);
-        return user;
+        logger.info("Användare inloggad framgångsrikt: {}", email);
+        return user; // Returnera den inloggade användaren
     }
 
+    // Generera verifieringstoken
     private String generateVerificationToken() {
-        return UUID.randomUUID().toString();
+        // En enkel metod för att generera token (kan ersättas med mer avancerade tekniker som JWT)
+        return Long.toHexString(System.currentTimeMillis()); // En token baserat på systemets nuvarande tid
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findAll(); // Hämta alla användare från databasen
     }
 }
