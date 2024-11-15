@@ -4,7 +4,6 @@ import com.natasha.foodsaver.exception.EmailNotVerifiedException;
 import com.natasha.foodsaver.exception.InvalidCredentialsException;
 import com.natasha.foodsaver.exception.UserAlreadyExistsException;
 import com.natasha.foodsaver.exception.UserNotFoundException;
-import com.natasha.foodsaver.jwt.JwtTokenProvider;
 import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.repository.UserRepository;
 import org.slf4j.Logger;
@@ -30,6 +29,10 @@ public class AuthService {
 
     @Autowired
     private EmailService emailService; // För att skicka verifieringsmail
+
+    @Autowired
+    private JwtService jwtService;
+
 
     private static final int VERIFICATION_LINK_EXPIRY_MINUTES = 60; // Tidsgräns för verifieringslänken (i minuter)
 
@@ -114,7 +117,7 @@ public class AuthService {
     }
 
     // Inloggning av användare
-    public User login(String email, String password) {
+    public String loginAndGenerateToken(String email, String password) {
         // Hämta användaren baserat på email
         User user = userRepository.findByEmail(email);
         if (user == null) {
@@ -135,8 +138,11 @@ public class AuthService {
         }
 
         logger.info("Användare inloggad framgångsrikt: {}", email);
-        return user; // Returnera den inloggade användaren
+
+        // Generera och returnera JWT-token för användaren
+        return jwtService.generateToken(user);
     }
+
 
     // Generera verifieringstoken
     private String generateVerificationToken() {
