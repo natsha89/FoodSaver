@@ -49,6 +49,17 @@ public class FoodItemController {
         return ResponseEntity.ok(foodItems);
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<FoodItem>> getFoodItemsByUserId(@PathVariable String userId) {
+        List<FoodItem> foodItems = foodItemService.getFoodItemsByUserId(userId);
+        if (foodItems.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null); // Returnera NOT_FOUND om inga matvaror finns för användaren
+        }
+        return ResponseEntity.ok(foodItems);
+    }
+
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateFoodItem(@PathVariable String id, @RequestBody FoodItem foodItem) {
         StringBuilder alertMessage = new StringBuilder();
