@@ -23,4 +23,3 @@ public class NotificationService {
         return alertMessage.toString();
     }
 }
-

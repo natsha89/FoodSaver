@@ -69,7 +69,10 @@ export default {
           // Store the user information and token in Vuex and localStorage
           this.$store.commit('setUser', response.data.user); // Assuming your API returns user data
           this.$store.commit('setAuthToken', response.data.token);
+
+          const expiration = new Date().getTime() + 60 * 60 * 1000; // 1 hour expiration
           localStorage.setItem('authToken', response.data.token);  // Persist the token
+          localStorage.setItem('tokenExpiration', expiration);
           localStorage.setItem('user', JSON.stringify(response.data.user)); // Persist the user info
 
           // Redirect to the home page
@@ -80,7 +83,17 @@ export default {
           this.loading = false;
         }
       }
-    }
+    },
+    checkTokenExpiration() {
+      const tokenExpiration = localStorage.getItem('tokenExpiration');
+      if (tokenExpiration && new Date().getTime() > tokenExpiration) {
+        this.$store.dispatch('logout'); // Logout if token has expired
+        this.$router.push('/login'); // Redirect to login
+      }
+    },
+  },
+  created() {
+    this.checkTokenExpiration(); // Check token expiration on component load
   },
 };
 </script>

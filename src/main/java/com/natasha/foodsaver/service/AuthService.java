@@ -63,19 +63,6 @@ public class AuthService {
         return user; // Returnera den registrerade användaren
     }
 
-    // Radera användarkonto
-    public void deleteAccount(String userId) {
-        // Kontrollera om användaren existerar
-        if (!userRepository.existsById(userId)) {
-            logger.warn("Försök att radera en icke-existerande användare med ID: {}", userId);
-            throw new UserNotFoundException("Användaren finns inte.");
-        }
-
-        // Radera användaren
-        userRepository.deleteById(userId);
-        logger.info("Användarkonto raderat framgångsrikt: {}", userId);
-    }
-
     // Verifiera email med hjälp av token
     public boolean verifyEmail(String token) {
         // Hämta användaren baserat på verifieringstoken
@@ -143,7 +130,6 @@ public class AuthService {
         return jwtService.generateToken(user);
     }
 
-
     // Generera verifieringstoken
     private String generateVerificationToken() {
         // En enkel metod för att generera token (kan ersättas med mer avancerade tekniker som JWT)
@@ -152,5 +138,15 @@ public class AuthService {
 
     public List<User> getAllUsers() {
         return userRepository.findAll(); // Hämta alla användare från databasen
+    }
+
+    // Radera användarkonto
+    public void deleteAccount(String id) {
+        // Kontrollera om användaren existerar med det givna String ID
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+        // Ta bort användaren från databasen
+        userRepository.delete(user);
+        logger.info("Användarkonto raderat framgångsrikt: {}", id);
     }
 }
