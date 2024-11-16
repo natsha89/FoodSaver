@@ -10,12 +10,5 @@ import java.util.List;
 
 public interface FoodItemRepository extends MongoRepository<FoodItem, String> {
     List<FoodItem> findByUserId(String userId); // Spring Data JPA hanterar denna query automatiskt
-    // Vi ärver alla metoder från MongoRepository för att hantera FoodItem-objekt i vår MongoDB-databas.
-    // Den generiska typen <FoodItem, String> innebär att vi arbetar med FoodItem-objekt där id:t är av typen String.
 
-    // Exempel på operationer som är tillgängliga genom MongoRepository:
-    // - save(T entity): Spara ett nytt objekt eller uppdatera ett existerande objekt.
-    // - findById(String id): Hämta ett objekt baserat på id.
-    // - findAll(): Hämta alla objekt.
-    // - deleteById(String id): Ta bort ett objekt baserat på id.
 }

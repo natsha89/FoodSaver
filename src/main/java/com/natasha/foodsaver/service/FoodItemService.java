@@ -19,17 +19,6 @@ public class FoodItemService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<FoodItem> getAllFoodItems() {
-        List<FoodItem> foodItems = foodItemRepository.findAll();
-
-        for (FoodItem foodItem : foodItems) {
-            foodItem.scheduleExpirationNotification();
-            foodItem.checkAllergies(getUserAllergies(foodItem.getUserId()));
-        }
-
-        return foodItems;
-    }
-
     // Method to create a new food item
     public FoodItem createFoodItem(FoodItem foodItem) {
         Optional<User> userOptional = userRepository.findById(foodItem.getUserId());
@@ -54,6 +43,21 @@ public class FoodItemService {
     public List<String> getUserAllergies(String userId) {
         // Exempel på användarallergier (kan ersättas med riktig användardata)
         return List.of("Peanuts", "Dairy");  // Exempel
+    }
+
+    public List<FoodItem> getAllFoodItems() {
+        List<FoodItem> foodItems = foodItemRepository.findAll();
+
+        for (FoodItem foodItem : foodItems) {
+            foodItem.scheduleExpirationNotification();
+            foodItem.checkAllergies(getUserAllergies(foodItem.getUserId()));
+        }
+
+        return foodItems;
+    }
+
+    public List<FoodItem> getFoodItemsByUserId(String userId) {
+        return foodItemRepository.findByUserId(userId);
     }
 
     public void deleteFoodItem(String id) {
