@@ -56,6 +56,10 @@ public class RecipeService {
         return recipeRepository.findById(id).orElse(null);  // Hämta receptet om det finns, annars returnera null
     }
 
+    // Method to get all saved recipes for a specific user
+    public List<Recipe> getRecipesForUser(String userId) {
+        return recipeRepository.findByUserId(userId);  // Fetch recipes by userId
+    }
     // Metod för att spara ett nytt recept till databasen
     public Recipe saveRecipe(Recipe recipe) {
         return recipeRepository.save(recipe);  // Spara det nya receptet via repository

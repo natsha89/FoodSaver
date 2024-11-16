@@ -9,4 +9,5 @@ import java.util.List;
 // MongoRepository tillhandahåller alla grundläggande CRUD-operationer (skapa, läsa, uppdatera, ta bort) för "Recipe"-objekt
 
 public interface RecipeRepository extends MongoRepository<Recipe, String> {
+    List<Recipe> findByUserId(String userId);
 }

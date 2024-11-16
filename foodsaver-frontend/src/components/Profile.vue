@@ -81,7 +81,8 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex';
+import http from '../http'; // Axios instance for API requests
+import {mapActions, mapGetters} from 'vuex';
 
 export default {
   name: 'userProfile',
@@ -91,30 +92,47 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(['user']), // Access user data from Vuex state
+    ...mapGetters(['user']), // Access user data from Vuex
   },
   methods: {
-    ...mapActions(['fetchUser', 'resendVerificationEmail', 'logout']),
+    ...mapActions(['fetchUser', 'logout']),
+    async resendVerificationEmail() {
+      try {
+        this.loading = true;
+        await http.post('/api/auth/resend-verification-email', {email: this.user.email});
+        alert('Verification email sent successfully.');
+      } catch (error) {
+        console.error('Error resending verification email:', error);
+        alert('Failed to resend verification email.');
+      } finally {
+        this.loading = false;
+      }
+    },
+    async deleteAccount() {
+      if (confirm('Are you sure you want to delete your account? This action is irreversible.')) {
+        try {
+          await http.delete(`/api/users/${this.user.id}`);
+          alert('Account deleted successfully.');
+          this.logout(); // Log out the user after account deletion
+        } catch (error) {
+          console.error('Error deleting account:', error);
+          alert('Failed to delete account.');
+        }
+      }
+    },
     editProfile() {
       // Navigate to profile editing view
       this.$router.push('/edit-profile');
     },
-    async deleteAccount() {
-      try {
-        if (confirm('Are you sure you want to delete your account? This action is irreversible.')) {
-          await this.$store.dispatch('deleteAccount', this.user.id);
-          alert('Account deleted successfully.');
-          this.logout(); // Log out the user after account deletion
-        }
-      } catch (error) {
-        console.error('Error deleting account:', error);
-        alert('Failed to delete account.');
-      }
-    },
   },
-  mounted() {
-    // Fetch user data when the component is loaded
-    this.fetchUser();
+  async mounted() {
+    // Fetch user data on component load
+    try {
+      await this.fetchUser(); // Fetch user from the API and update Vuex store
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      alert('Failed to load profile information.');
+    }
   },
 };
 </script>

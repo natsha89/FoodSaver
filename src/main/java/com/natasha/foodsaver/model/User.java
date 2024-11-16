@@ -32,7 +32,9 @@ public class User implements UserDetails {
 
     private List<String> allergies;  // Lista över allergier
     private List<String> dietaryPreferences;  // Kostpreferenser (t.ex. vegetarisk, glutenfri)
-    private List<String> savedRecipes;  // Sparade recept (kan vara referenser)
+    private List<Recipe> recipes;  // or list of Recipe objects
+    private List<FoodItem> foodItems;
+
 
     private String verificationToken;  // Token för e-postverifiering
     private LocalDateTime verificationTokenExpiration;  // Utloppsdatum för verifieringstoken
@@ -54,7 +56,8 @@ public class User implements UserDetails {
         this.password = password;
         this.allergies = allergies;
         this.dietaryPreferences = dietaryPreferences;
-        this.savedRecipes = savedRecipes;
+        this.recipes = recipes;
+        this.foodItems = foodItems;
         this.verificationToken = verificationToken;
         this.verificationTokenExpiration = verificationTokenExpiration;
         this.emailVerified = emailVerified;
@@ -80,8 +83,9 @@ public class User implements UserDetails {
     public List<String> getDietaryPreferences() { return dietaryPreferences; }
     public void setDietaryPreferences(List<String> dietaryPreferences) { this.dietaryPreferences = dietaryPreferences; }
 
-    public List<String> getSavedRecipes() { return savedRecipes; }
-    public void setSavedRecipes(List<String> savedRecipes) { this.savedRecipes = savedRecipes; }
+    public List<Recipe> getRecipes() {return recipes;}
+
+    public void setRecipes(List<Recipe> recipes) {this.recipes = recipes;}
 
     public String getVerificationToken() { return verificationToken; }
     public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
@@ -91,6 +95,10 @@ public class User implements UserDetails {
 
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+
+    public List<FoodItem> getFoodItems() {return foodItems;}
+
+    public void setFoodItems(List<FoodItem> foodItems) {this.foodItems = foodItems;}
 
     // JWT Token getter och setter
     public String getJwtToken() { return jwtToken; }
@@ -105,7 +113,7 @@ public class User implements UserDetails {
                 ", password='" + password + '\'' +
                 ", allergies=" + allergies +
                 ", dietaryPreferences=" + dietaryPreferences +
-                ", savedRecipes=" + savedRecipes +
+                ", savedRecipes=" + recipes +
                 ", verificationToken='" + verificationToken + '\'' +
                 ", verificationTokenExpiration=" + verificationTokenExpiration +
                 ", emailVerified=" + emailVerified +

@@ -1,7 +1,6 @@
 
 package com.natasha.foodsaver.model;
 
-import com.natasha.foodsaver.service.AIService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,9 +12,9 @@ import java.util.List;
 @Document(collection = "foodItems")
 public class FoodItem {
 
-    // Fält för att lagra matobjektets data i databasen
     @Id
-    private String userId;
+    private String id;  // The ID of the food item
+    private String userId;  // User ID to associate the food item with the user
     private String name;
     private double quantity;
     private String unit;
@@ -24,8 +23,16 @@ public class FoodItem {
     private boolean expirationNotificationSent = false;
     private boolean allergenNotificationSent = false;
 
-    // Getters och Setters
+    // Getter and Setter for id
+    public String getId() {
+        return id;
+    }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    // Getter and Setter for userId
     public String getUserId() {
         return userId;
     }
@@ -34,6 +41,7 @@ public class FoodItem {
         this.userId = userId;
     }
 
+    // Getter and Setter for name
     public String getName() {
         return name;
     }
@@ -42,6 +50,7 @@ public class FoodItem {
         this.name = name;
     }
 
+    // Getter and Setter for quantity
     public double getQuantity() {
         return quantity;
     }
@@ -50,6 +59,7 @@ public class FoodItem {
         this.quantity = quantity;
     }
 
+    // Getter and Setter for unit
     public String getUnit() {
         return unit;
     }
@@ -58,6 +68,7 @@ public class FoodItem {
         this.unit = unit;
     }
 
+    // Getter and Setter for expirationDate
     public LocalDate getExpirationDate() {
         return expirationDate;
     }
@@ -66,6 +77,7 @@ public class FoodItem {
         this.expirationDate = expirationDate;
     }
 
+    // Getter and Setter for allergens
     public List<String> getAllergens() {
         return allergens;
     }
@@ -74,6 +86,7 @@ public class FoodItem {
         this.allergens = allergens;
     }
 
+    // Getter and Setter for expirationNotificationSent
     public boolean isExpirationNotificationSent() {
         return expirationNotificationSent;
     }
@@ -82,6 +95,7 @@ public class FoodItem {
         this.expirationNotificationSent = expirationNotificationSent;
     }
 
+    // Getter and Setter for allergenNotificationSent
     public boolean isAllergenNotificationSent() {
         return allergenNotificationSent;
     }
