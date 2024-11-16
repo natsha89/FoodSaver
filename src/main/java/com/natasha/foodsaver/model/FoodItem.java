@@ -13,8 +13,8 @@ import java.util.List;
 public class FoodItem {
 
     @Id
-    private String id;  // The ID of the food item
-    private String userId;  // User ID to associate the food item with the user
+    private String id;
+    private String userId;
     private String name;
     private double quantity;
     private String unit;
@@ -22,8 +22,18 @@ public class FoodItem {
     private List<String> allergens = new ArrayList<>();
     private boolean expirationNotificationSent = false;
     private boolean allergenNotificationSent = false;
+    private User user;
+
 
     // Getter and Setter for id
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
     public String getId() {
         return id;
     }
