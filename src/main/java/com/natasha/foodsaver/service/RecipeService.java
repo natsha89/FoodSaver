@@ -65,24 +65,42 @@ public class RecipeService {
         }
     }
 
-
-    // Metod för att hämta alla recept från databasen
-    public List<Recipe> getAllRecipes() {
-        return recipeRepository.findAll();  // Hämtar alla recept från databasen
-    }
-
     // Metod för att hämta ett specifikt recept baserat på ID
     public Recipe getRecipeById(String id) {
-        return recipeRepository.findById(id).orElse(null);  // Hämtar receptet om det finns, annars returneras null
+        // Hämta receptet från databasen baserat på recept-ID
+        return recipeRepository.findById(id).orElse(null);  // Om receptet inte finns, returneras null
     }
 
     // Metod för att hämta alla recept som är kopplade till en specifik användare
     public List<Recipe> getRecipesForUser(String userId) {
-        return recipeRepository.findByUserId(userId);  // Hämtar alla recept som tillhör användaren med det angivna userId
+        // Hämta alla recept som tillhör användaren med det angivna userId
+        return recipeRepository.findByUserId(userId);
     }
 
     // Metod för att ta bort ett recept från databasen baserat på receptets ID
-    public void deleteRecipe(String id) {
-        recipeRepository.deleteById(id);  // Tar bort receptet från databasen med det angivna ID:t
+    // Metod för att radera recept baserat på användar-ID och recept-ID
+    public boolean deleteRecipe(String userId, String recipeId) {
+        // Hämta receptet från databasen baserat på recept-ID
+        Recipe recipe = recipeRepository.findById(recipeId).orElse(null);
+
+        // Om receptet inte finns, returnera false
+        if (recipe == null) {
+            return false;
+        }
+
+        // Kontrollera om användaren är ägaren av receptet
+        if (!recipe.getUserId().equals(userId)) {
+            return false; // Användaren får inte ta bort recept som inte tillhör dem
+        }
+
+        // Radera receptet från databasen
+        recipeRepository.deleteById(recipeId);
+        return true;  // Returnera true om receptet raderades framgångsrikt
+    }
+
+    // Metod för att hämta alla recept från databasen
+    public List<Recipe> getAllRecipes() {
+        // Hämtar alla recept från databasen
+        return recipeRepository.findAll();
     }
 }
