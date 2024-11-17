@@ -5,7 +5,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document(collection = "recipes")  // Anger att denna klass representerar ett dokument i MongoDB-samlingen "recipes"
+// Markerar att denna klass representerar ett dokument i MongoDB-samlingen "recipes"
+@Document(collection = "recipes")
 public class Recipe {
 
     @Id
@@ -16,15 +17,16 @@ public class Recipe {
     private String userId;  // ID för användaren som har skapat eller äger receptet
 
 
-
-    // Konstruktor för att skapa ett recept med namn, instruktioner och ingredienser
+    // Konstruktor för att skapa ett recept med namn och instruktioner
+    // Notera att ingredienser inte används i denna konstruktor, så det kan behövas en uppdatering
     public Recipe(String name, String instructions) {
         this.name = name;
         this.instructions = instructions;
-        this.ingredients = ingredients;
+        this.ingredients = ingredients; // här borde ingredienser sättas korrekt, men denna konstruktor saknar en parameter för ingredienser
     }
 
     // Getters och setters för alla attribut
+
     public String getId() {
         return id;
     }

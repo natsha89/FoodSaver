@@ -7,7 +7,7 @@ import java.util.List;
 public class AIResponse {
 
     // Listan av "generations" som returneras från Cohere API
-    @JsonProperty("generations")
+    @JsonProperty("generations")  // Jackson annotation för att mappa JSON-egenskapen "generations" till fältet
     private List<Generation> generations;
 
     // Getter för generations (recept genererade av API:t)

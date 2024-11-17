@@ -1,6 +1,7 @@
 package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.Recipe;
+import com.natasha.foodsaver.model.RecipeGenerationRequest;
 import com.natasha.foodsaver.service.RecipeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,18 +19,18 @@ public class RecipeController {
     private static final Logger logger = LoggerFactory.getLogger(RecipeController.class);
 
     @Autowired
-    private RecipeService recipeService;  // Autowired RecipeService för att hantera receptlogik
+    private RecipeService recipeService;  // Injektar RecipeService för att hantera logiken för att skapa och hämta recept
 
-    // Genererar nya recept baserat på angivna ingredienser, allergener, kostpreferenser och antal portioner
+    // Endpoint för att generera nya recept baserat på ingredienser, allergener, kostpreferenser och antal portioner
     @PostMapping("/generate")
     public ResponseEntity<List<Recipe>> generateRecipes(@RequestBody RecipeGenerationRequest request) {
         logger.info("Received request to generate recipes for user with ingredients: {}", request.getIngredients());
 
         try {
-            // Assume the userId is included in the request body or can be extracted from a session or token
-            String userId = request.getUserId();  // You may get this from the request, e.g. via an authenticated session
+            // Hämta userId från request (kan också komma från session eller token)
+            String userId = request.getUserId();
 
-            // Call the RecipeService to generate recipes for the specific user
+            // Anropa RecipeService för att generera recept baserat på de angivna parametrarna
             List<Recipe> generatedRecipes = recipeService.generateRecipes(
                     userId,
                     request.getIngredients(),
@@ -38,93 +39,45 @@ public class RecipeController {
                     request.getServings()
             );
 
-            // Return generated recipes or a 204 No Content response if no recipes were generated
+            // Om inga recept genererades, returnera en 204 No Content-svar
             if (generatedRecipes.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
+
+            // Returnera de genererade recepten som en OK-svar (HTTP 200)
             return ResponseEntity.ok(generatedRecipes);
 
         } catch (IllegalArgumentException e) {
+            // Logga ogiltiga indata och returnera ett bad request-svar med felmeddelande
             logger.error("Invalid input: {}", e.getMessage());
             return ResponseEntity.badRequest().body(List.of(new Recipe("Error", "Invalid input")));
         } catch (Exception e) {
+            // Logga andra fel och returnera ett internal server error-svar (HTTP 500)
             logger.error("An error occurred while generating recipes: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(List.of(new Recipe("Error", "An internal server error occurred")));
         }
     }
 
-
-
-    // Hämtar alla recept från databasen
+    // Endpoint för att hämta alla recept från databasen
     @GetMapping
     public ResponseEntity<List<Recipe>> getAllRecipes() {
-        List<Recipe> recipes = recipeService.getAllRecipes();  // Anropa RecipeService för att hämta alla recept
+        List<Recipe> recipes = recipeService.getAllRecipes();  // Hämta alla recept från RecipeService
         return ResponseEntity.ok(recipes);  // Returnera recepten som en OK-response
     }
 
-    // Hämtar ett specifikt recept baserat på ID
+    // Endpoint för att hämta ett specifikt recept baserat på ID
     @GetMapping("/{id}")
     public ResponseEntity<Recipe> getRecipeById(@PathVariable String id) {
-        Recipe recipe = recipeService.getRecipeById(id);  // Hämta receptet baserat på ID
-        return recipe != null ? ResponseEntity.ok(recipe) : ResponseEntity.notFound().build();  // Returnera receptet om det finns, annars 404 Not Found
+        Recipe recipe = recipeService.getRecipeById(id);  // Hämta receptet baserat på det angivna ID:t
+        // Om receptet finns, returnera det som en OK-svar. Om inte, returnera 404 Not Found
+        return recipe != null ? ResponseEntity.ok(recipe) : ResponseEntity.notFound().build();
     }
 
-    // Tar bort ett recept baserat på ID
+    // Endpoint för att ta bort ett recept baserat på ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable String id) {
         recipeService.deleteRecipe(id);  // Ta bort receptet från databasen
-        return ResponseEntity.noContent().build();  // Returnera en "no content" response efter borttagning
-    }
-
-    // Request body-klass för att generera recept
-    // Denna klass används för att fånga in data som skickas med POST-förfrågan för att generera recept
-    public static class RecipeGenerationRequest {
-        private String userId;  // User ID to associate the recipes with
-        private String ingredients;  // Ingredienser för receptgenerering
-        private List<String> allergens;  // Listan med allergener
-        private String dietaryPreferences;  // Kostpreferenser (t.ex. vegetarisk, glutenfri)
-        private int servings;  // Antal portioner
-
-        // Getters och setters
-        public String getIngredients() {
-            return ingredients;
-        }
-
-        public void setIngredients(String ingredients) {
-            this.ingredients = ingredients;
-        }
-
-        public List<String> getAllergens() {
-            return allergens;
-        }
-
-        public void setAllergens(List<String> allergens) {
-            this.allergens = allergens;
-        }
-
-        public String getDietaryPreferences() {
-            return dietaryPreferences;
-        }
-
-        public void setDietaryPreferences(String dietaryPreferences) {
-            this.dietaryPreferences = dietaryPreferences;
-        }
-
-        public int getServings() {
-            return servings;
-        }
-
-        public void setServings(int servings) {
-            this.servings = servings;
-        }
-
-        public String getUserId() {
-            return userId;
-        }
-
-        public void setUserId(String userId) {
-            this.userId = userId;
-        }
+        return ResponseEntity.noContent().build();  // Returnera en "no content" response (HTTP 204) som bekräftelse på borttagningen
     }
 }
