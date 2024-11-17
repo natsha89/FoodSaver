@@ -34,7 +34,14 @@ public class EmailService {
         String confirmationUrl = "http://localhost:8081/api/auth/verify?token=" + token;
 
         // Meddelandet i textformat
-        String message = "To confirm your account, please click the link below:\n" + confirmationUrl;
+        String message = "👨🏻‍🍳👩🏻‍🍳Welcome to FoodSaver 👩🏻‍🍳👨🏻‍🍳\nJust one step left to be a FoodSaver member!🥘\nTo confirm your account, please click the link below 📩\n" + confirmationUrl;
+
+        // HTML-innehållet för mejlet
+        String htmlMessage = "<p><strong>FoodSaver logo</strong></p>"
+                + "<p>👨🏻‍🍳👩🏻‍🍳<strong>Welcome to FoodSaver</strong> 👩🏻‍🍳👨🏻‍🍳</p>"
+                + "<p>Just one step left to be a FoodSaver member!🥘</p>"
+                + "<p>To confirm your account, please click the link below 📩</p>"
+                + "<a href='" + confirmationUrl + "'>Verify Email</a>";
 
         // Skapa en MailjetRequest med e-postmeddelandets data
         MailjetRequest request = new MailjetRequest(Emailv31.resource)
@@ -53,7 +60,7 @@ public class EmailService {
                                 // Textinnehållet för mejlet
                                 .put(Emailv31.Message.TEXTPART, message)
                                 // HTML-innehållet för mejlet
-                                .put(Emailv31.Message.HTMLPART, "<p>To confirm your account, please click the link below:</p><a href='" + confirmationUrl + "'>Verify Email</a>")));
+                                .put(Emailv31.Message.HTMLPART, htmlMessage))); // HTML-innehåll
 
         try {
             // Skicka förfrågan till Mailjet
