@@ -1,50 +1,68 @@
 package com.natasha.foodsaver.service;
 
 import com.natasha.foodsaver.model.Recipe;
+import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.repository.RecipeRepository;
+import com.natasha.foodsaver.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class RecipeService {
+    private static final Logger logger = LoggerFactory.getLogger(RecipeService.class);
+
 
     @Autowired
     private RecipeRepository recipeRepository;  // Autowired RecipeRepository för att interagera med databasen
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private AIService aiService; // Lägger till AIService för att generera recept via AI
 
-    // Metod för att generera recept baserat på ingredienser, allergener, kostpreferenser och antal portioner
-    public List<Recipe> generateRecipes(String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
-        try {
-            // Generera recept via AIService genom att skicka med ingredienser, allergener, kostpreferenser och antal portioner
-            List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
+        // Method for generating recipes for a specific user based on ingredients, allergens, dietary preferences, and servings
+        public List<Recipe> generateRecipes(String userId, String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isEmpty()) {
+                throw new IllegalArgumentException("User not found with ID: " + userId);
+            }
 
-            // Hämta alla existerande receptnamn från databasen
-            List<String> existingRecipeNames = recipeRepository.findAll().stream()
-                    .map(Recipe::getName)  // Extrahera namn på alla recept
-                    .collect(Collectors.toList());
+            try {
+                // Generate recipes using AI service with provided ingredients, allergens, dietary preferences, and servings
+                List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
 
-            // Filtrera bort recept som redan finns i databasen baserat på namn
-            List<Recipe> newRecipes = generatedRecipes.stream()
-                    .filter(recipe -> !existingRecipeNames.contains(recipe.getName()))  // Bevara endast de recept som inte redan finns i databasen
-                    .collect(Collectors.toList());
+                // Fetch all existing recipe names from the database and store them in a Set for efficient lookups
+                Set<String> existingRecipeNames = recipeRepository.findAll().stream()
+                        .map(Recipe::getName)  // Extract names of all recipes
+                        .collect(Collectors.toSet());
 
-            // Spara nya recept i databasen
-            recipeRepository.saveAll(newRecipes);
+                // Filter out recipes that already exist in the database by name
+                List<Recipe> newRecipes = generatedRecipes.stream()
+                        .filter(newRecipe -> !existingRecipeNames.contains(newRecipe.getName()))  // Keep only non-existing recipes
+                        .collect(Collectors.toList());
 
-            // Returnera de sparade nya recepten
-            return newRecipes;
+                // Set the userId for each new recipe to associate it with the correct user
+                User user = userOptional.get();
+                newRecipes.forEach(newRecipe -> newRecipe.setUserId(user.getId()));
 
-        } catch (Exception e) {
-            // Logga eventuella fel
-            System.err.println("Error generating recipes: " + e.getMessage());
-            throw new RuntimeException("Error generating recipes", e); // Skicka vidare undantaget så det kan hanteras av controller
+                // Save new recipes to the database
+                List<Recipe> savedRecipes = recipeRepository.saveAll(newRecipes);
+
+                return savedRecipes; // Return the list of newly created recipes
+            } catch (Exception e) {
+                logger.error("Error generating recipes for user {}: {}", userId, e.getMessage(), e);
+                throw new RuntimeException("Error generating recipes for user " + userId, e); // Propagate the exception
+            }
         }
-    }
+
 
     // Metod för att hämta alla recept från databasen
     public List<Recipe> getAllRecipes() {
@@ -59,10 +77,6 @@ public class RecipeService {
     // Method to get all saved recipes for a specific user
     public List<Recipe> getRecipesForUser(String userId) {
         return recipeRepository.findByUserId(userId);  // Fetch recipes by userId
-    }
-    // Metod för att spara ett nytt recept till databasen
-    public Recipe saveRecipe(Recipe recipe) {
-        return recipeRepository.save(recipe);  // Spara det nya receptet via repository
     }
 
     // Metod för att ta bort ett recept från databasen baserat på ID

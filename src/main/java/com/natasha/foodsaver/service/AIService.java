@@ -115,7 +115,7 @@ public class AIService {
                 String instructions = parts[2].trim(); // Instruktionerna
 
                 // Skapa och lägg till receptet i listan, använd foodItem istället för foodItems
-                Recipe recipe = new Recipe(name, instructions, List.of(ingredients.split(",\\s*")));
+                Recipe recipe = new Recipe(name, instructions);
                 recipes.add(recipe);
             }
         }

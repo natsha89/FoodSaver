@@ -33,7 +33,6 @@ public class FoodItemService {
         if (hasAllergens || isExpirationNear) {
             throw new IllegalArgumentException("Food item contains allergens or expiration is near.");
         }
-
         // Set the user and save the food item
         User user = userOptional.get();
         foodItem.setUser(user);
