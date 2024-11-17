@@ -53,9 +53,11 @@ public class FoodItemController {
     public ResponseEntity<List<FoodItem>> getFoodItemsByUserId(@PathVariable String userId) {
         List<FoodItem> foodItems = foodItemService.getFoodItemsByUserId(userId);
         if (foodItems.isEmpty()) {
+            System.out.println("No food items found for user: " + userId);  // Lägg till logg
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(null); // Returnera NOT_FOUND om inga matvaror finns för användaren
         }
+        System.out.println("Found food items: " + foodItems);  // Lägg till logg
         return ResponseEntity.ok(foodItems);
     }
 

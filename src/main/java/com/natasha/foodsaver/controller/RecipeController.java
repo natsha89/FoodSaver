@@ -2,6 +2,8 @@ package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.Recipe;
 import com.natasha.foodsaver.service.RecipeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,45 +15,46 @@ import java.util.List;
 @RequestMapping("/api/recipes")
 public class RecipeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(RecipeController.class);
+
     @Autowired
     private RecipeService recipeService;  // Autowired RecipeService för att hantera receptlogik
 
     // Genererar nya recept baserat på angivna ingredienser, allergener, kostpreferenser och antal portioner
     @PostMapping("/generate")
     public ResponseEntity<List<Recipe>> generateRecipes(@RequestBody RecipeGenerationRequest request) {
+        logger.info("Received request to generate recipes for user with ingredients: {}", request.getIngredients());
+
         try {
-            // Logga för att kontrollera mottagna ingredienser
-            System.out.println("Received request with ingredients: " + request.getIngredients());
-            // Generera recept via RecipeService
+            // Assume the userId is included in the request body or can be extracted from a session or token
+            String userId = request.getUserId();  // You may get this from the request, e.g. via an authenticated session
+
+            // Call the RecipeService to generate recipes for the specific user
             List<Recipe> generatedRecipes = recipeService.generateRecipes(
+                    userId,
                     request.getIngredients(),
                     request.getAllergens(),
                     request.getDietaryPreferences(),
                     request.getServings()
             );
-            // Returnera de genererade recepten, eller en "no content" response om inga recept hittades
-            return generatedRecipes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(generatedRecipes);
+
+            // Return generated recipes or a 204 No Content response if no recipes were generated
+            if (generatedRecipes.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(generatedRecipes);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid input: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(List.of(new Recipe("Error", "Invalid input")));
         } catch (Exception e) {
-            // Logga eventuella fel och returnera en serverfel-respons
-            System.err.println("An error occurred: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("An error occurred while generating recipes: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(List.of(new Recipe("Error", "An internal server error occurred")));
         }
     }
 
-    // Skapar och sparar ett nytt recept
-    @PostMapping
-    public ResponseEntity<Recipe> saveRecipe(@RequestBody Recipe recipe) {
-        try {
-            // Spara receptet via RecipeService
-            Recipe savedRecipe = recipeService.saveRecipe(recipe);
-            // Returnera det sparade receptet med en OK-respons
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedRecipe);
-        } catch (Exception e) {
-            // Logga eventuella fel och returnera en serverfel-respons
-            System.err.println("An error occurred while saving the recipe: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+
 
     // Hämtar alla recept från databasen
     @GetMapping
@@ -77,6 +80,7 @@ public class RecipeController {
     // Request body-klass för att generera recept
     // Denna klass används för att fånga in data som skickas med POST-förfrågan för att generera recept
     public static class RecipeGenerationRequest {
+        private String userId;  // User ID to associate the recipes with
         private String ingredients;  // Ingredienser för receptgenerering
         private List<String> allergens;  // Listan med allergener
         private String dietaryPreferences;  // Kostpreferenser (t.ex. vegetarisk, glutenfri)
@@ -113,6 +117,14 @@ public class RecipeController {
 
         public void setServings(int servings) {
             this.servings = servings;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
         }
     }
 }

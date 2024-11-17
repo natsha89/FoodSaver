@@ -3,6 +3,8 @@ package com.natasha.foodsaver.repository;
 import com.natasha.foodsaver.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Optional;
+
 public interface UserRepository extends MongoRepository<User, String> {
     // Den här interfacet definierar databasoperationer för User-objekt i MongoDB
 
@@ -22,4 +24,5 @@ public interface UserRepository extends MongoRepository<User, String> {
     // Vi använder den här metoden för att hantera e-postverifiering, när vi behöver hitta användaren som har ett specifikt verifieringstoken.
     User findByVerificationToken(String token);
 
+    Optional<User> findByUsername(String username);
 }

@@ -41,7 +41,7 @@ public class AIResponse {
 
             // Omvandla ingredienser till en lista och skapa ett Recipe objekt
             List<String> ingredientList = List.of(ingredients.split(",\\s*"));  // Dela ingredienserna vid kommatecken
-            Recipe recipe = new Recipe(name, instructions, ingredientList);  // Skapa Recipe objektet
+            Recipe recipe = new Recipe(name, instructions);  // Skapa Recipe objektet
             return List.of(recipe);  // Returnera en lista med ett enda recept
         }
         return List.of();  // Om formatet inte är som förväntat, returnera en tom lista

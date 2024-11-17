@@ -26,8 +26,9 @@ const routes = [
 ];
 
 const router = createRouter({
-    history: createWebHistory(process.env.BASE_URL), // Se till att detta är korrekt
+    history: createWebHistory(process.env.BASE_URL),
     routes,
 });
+
 
 export default router;

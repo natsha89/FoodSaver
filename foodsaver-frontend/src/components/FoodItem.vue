@@ -69,6 +69,7 @@
               required
           ></v-select>
 
+          <!-- Expiration Date -->
           <v-text-field
               v-model="newItem.expirationDate"
               :rules="expirationDateRules"
@@ -76,11 +77,15 @@
               type="date"
               required
           ></v-text-field>
-          <v-text-field
+
+          <!-- Allergens selection dropdown -->
+          <v-select
               v-model="newItem.allergens"
-              :rules="allergenRules"
-              label="Allergens (comma separated)"
-          ></v-text-field>
+              :items="allergenOptions"
+              label="Allergens"
+              multiple
+              required
+          ></v-select>
         </v-form>
         <v-alert v-if="responseMessage" type="error" dismissible>
           {{ responseMessage }}
@@ -116,14 +121,16 @@ export default {
         quantity: 1,
         unit: '',
         expirationDate: '',
-        allergens: []
+        allergens: [] // List of selected allergens
       },
-      unitOptions: ['kg', 'g', 'liters', 'ml', 'pieces'],  // Example unit options
+      unitOptions: ['kg', 'g', 'liters', 'ml', 'pieces'], // Example unit options
+      allergenOptions: ['Gluten', 'Peanuts', 'Dairy', 'Soy', 'Shellfish', 'Eggs'], // Example allergens
       formValid: false,
       loading: false,
       responseMessage: '',
-      allergenAlert: '',  // Varning för allergener
-      expirationAlert: '', // Varning för utgångsdatum
+      allergenAlert: '', // Alert for allergens
+      expirationAlert: '', // Alert for expiration
+      userAllergens: [], // User-specific allergens
       nameRules: [
         v => !!v || 'Name is required',
         v => v.length <= 50 || 'Name must be less than 50 characters'
@@ -132,18 +139,10 @@ export default {
         v => !!v || 'Quantity is required',
         v => v > 0 || 'Quantity must be a positive number'
       ],
-      unitRules: [
-        v => !!v || 'Unit is required',
-        v => v.length <= 20 || 'Unit must be less than 20 characters'
-      ],
       expirationDateRules: [
         v => !!v || 'Expiration Date is required',
         v => /\d{4}-\d{2}-\d{2}/.test(v) || 'Invalid date format'
-      ],
-      allergenRules: [
-        v => Array.isArray(v) && v.every(allergen => typeof allergen === 'string') || 'Allergens must be a comma separated list'
-      ],
-      userAllergens: []  // Allergener som användaren är känslig mot
+      ]
     };
   },
   methods: {
@@ -167,13 +166,18 @@ export default {
       this.responseMessage = '';
       if (this.$refs.form.validate()) {
         this.loading = true;
-        const allergensInFood = this.newItem.allergens.split(',').map(a => a.trim());
-        const matchedAllergens = allergensInFood.filter(allergen => this.userAllergens.includes(allergen));
+
+        // Check for allergen matches
+        const matchedAllergens = this.newItem.allergens.filter(allergen =>
+            this.userAllergens.includes(allergen)
+        );
         if (matchedAllergens.length > 0) {
           this.allergenAlert = `This food item contains allergens you are allergic to: ${matchedAllergens.join(', ')}`;
         } else {
           this.allergenAlert = '';
         }
+
+        // Check expiration date
         const expirationDate = new Date(this.newItem.expirationDate);
         const today = new Date();
         const daysUntilExpiration = Math.floor((expirationDate - today) / (1000 * 60 * 60 * 24));
@@ -182,11 +186,13 @@ export default {
         } else {
           this.expirationAlert = '';
         }
+
+        // Add new food item
         try {
           const response = await http.post('/api/foodItems', this.newItem);
           if (response.status === 201) {
             this.foodItems.push(response.data.foodItem);
-            this.newItem = {};
+            this.newItem = { name: '', quantity: 1, unit: '', expirationDate: '', allergens: [] };
             this.allergenAlert = '';
             this.expirationAlert = '';
           }
