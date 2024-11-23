@@ -2,19 +2,16 @@ package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.exception.GlobalExceptionHandler;
 import com.natasha.foodsaver.exception.UserAlreadyExistsException;
-import com.natasha.foodsaver.model.FoodItem;
-import com.natasha.foodsaver.model.Recipe;
 import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.repository.UserRepository;
 import com.natasha.foodsaver.service.AuthService;
-import com.natasha.foodsaver.service.JwtService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
@@ -22,113 +19,100 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@RestController  // Denna klass hanterar REST API-anrop och är en controller för autentisering
-@RequestMapping("/api/auth")  // Definierar basvägen för alla endpoints i denna controller
+@RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;  // Injektionspunkt för autentiseringstjänsten
+    private final AuthService authService;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    public AuthController(AuthService authService, UserRepository userRepository) {
+        this.authService = authService;
+        this.userRepository = userRepository;
+    }
 
-
-
-    // Endpoint för att registrera en ny användare
     @PostMapping("/register")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> register(@Valid @RequestBody User user) {
         try {
-            // Försök att registrera användaren
             User savedUser = authService.register(user);
-            return ResponseEntity.status(HttpStatus.CREATED)  // Om registreringen lyckas, returnera status 201 (skapat)
+            return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new GlobalExceptionHandler.ResponseMessage("User registered successfully!", savedUser));
-        } catch (UserAlreadyExistsException e) {
-            // Om användaren redan finns, returnera status 409 (konflikt)
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new GlobalExceptionHandler.ResponseMessage(e.getMessage(), null));
-        } catch (RuntimeException e) {
-            // Hantera andra fel, som systemfel, och returnera status 500 (serverfel)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new GlobalExceptionHandler.ResponseMessage("User registration failed.", null));
+        }
+        catch (UserAlreadyExistsException e) {
+            return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+        }
+        catch (Exception e) {
+            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "User registration failed.");
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> login(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
-        String password = payload.get("password");
+    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> login(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
 
         try {
-            // Försök att logga in användaren och få tillbaka JWT-token
             String token = authService.loginAndGenerateToken(email, password);
-
-            // Hämta användaren baserat på email för att kunna returnera användarinformation
-            User user = userRepository.findByEmail(email); // Assuming this is available via a repository
+            User user = userRepository.findByEmail(email);
             if (user == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new GlobalExceptionHandler.ResponseMessage("Invalid email or password.", null));
+                return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
             }
-
-            // Returnera JWT-token tillsammans med användarinformation
-            return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Welcome, " + user.getFullName() + "!", Map.of("user", user, "token", token)));
-        } catch (RuntimeException e) {
-            // Om inloggningen misslyckas, returnera status 401 (obehörig)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new GlobalExceptionHandler.ResponseMessage("Invalid email or password.", null));
+            return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Welcome, " + user.getFullName() + "!",
+                    Map.of("user", user, "token", token)));
+        }
+        catch (Exception e) {
+            return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
         }
     }
 
     @PostMapping("/logout")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // Invalidate the user's session and clear the security context
             new SecurityContextLogoutHandler().logout(request, response, SecurityContextHolder.getContext().getAuthentication());
+
             return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("Successfully logged out.", null));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new GlobalExceptionHandler.ResponseMessage("Error logging out: " + e.getMessage(), null));
+        }
+        catch (Exception e) {
+            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error logging out: " + e.getMessage());
         }
     }
 
-    // Endpoint för att ta bort en specifik användare
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> deleteUserById(@PathVariable String id) {
         try {
-            // Anropa AuthService för att radera användaren baserat på deras ID
-            authService.deleteAccount(id);  // Skicka id som String till AuthService
+            authService.deleteAccount(id);
+
             return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("User with ID " + id + " has been deleted successfully.", null));
-        } catch (RuntimeException e) {
-            // Om det uppstår ett fel vid radering av kontot, returnera status 500 (serverfel)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new GlobalExceptionHandler.ResponseMessage("Error deleting user: " + e.getMessage(), null));
+        }
+        catch (Exception e) {
+            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting user: " + e.getMessage());
         }
     }
 
     @GetMapping("/users")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> getAllUsers() {
         try {
-            // Hämta alla användare från AuthService
             List<User> users = authService.getAllUsers();
             return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("All users fetched successfully.", users));
-        } catch (RuntimeException e) {
-            // Om det uppstår ett fel vid hämtning av användare, returnera status 500 (serverfel)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new GlobalExceptionHandler.ResponseMessage("Error fetching users: " + e.getMessage(), null));
+        }
+        catch (Exception e) {
+            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching users: " + e.getMessage());
         }
     }
 
     @GetMapping("/user/{id}")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> getUserById(@PathVariable String id) {
         try {
-            // Försök att hämta användaren baserat på ID
             User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-
-            // Returnera användarens information om det finns
             return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("User found successfully.", user));
-        } catch (RuntimeException e) {
-            // Om användaren inte finns eller något annat fel inträffar, returnera status 404 (ej funnen)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new GlobalExceptionHandler.ResponseMessage("Error fetching user: " + e.getMessage(), null));
         }
+        catch (Exception e) {
+            return buildErrorResponse(HttpStatus.NOT_FOUND, "Error fetching user: " + e.getMessage());
+        }
+    }
+
+    private ResponseEntity<GlobalExceptionHandler.ResponseMessage> buildErrorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .body(new GlobalExceptionHandler.ResponseMessage(message, null));
     }
 }

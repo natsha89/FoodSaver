@@ -28,10 +28,10 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
-    // Hämtar användarnamnet (subject) från en given JWT-token
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    public String extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", String.class));
     }
+
 
     // Extraherar en specifik claim (information) från token genom en funktion som definieras av anroparen
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -44,10 +44,15 @@ public class JwtService {
         return generateToken(new HashMap<>(), user);
     }
 
-    // Genererar en JWT-token för en användare, med möjlighet att lägga till extra claims
+    // Generera en JWT-token med användarens ID som en custom claim
     public String generateToken(Map<String, Object> extraClaims, User user) {
+        // Lägg till användarens ID som en claim
+        extraClaims.put("userId", user.getId()); // Lägg till användarens ID i token
+
         return buildToken(extraClaims, user, jwtExpiration);
     }
+
+
 
     // Hämtar utgångstiden för JWT-token
     public long getExpirationTime() {
@@ -56,13 +61,13 @@ public class JwtService {
 
     // Bygger och signer en JWT-token baserat på användarinformation och extra claims
     private String buildToken(
-            Map<String, Object> extraClaims,       // Extra data som kan inkluderas i token
-            UserDetails userDetails,               // Användarens detaljer (t.ex. namn, roller)
-            long expiration                        // Tokenens utgångstid i millisekunder
+            Map<String, Object> extraClaims, // Extra data som kan inkluderas i token
+            UserDetails userDetails, // Användarens detaljer (t.ex. namn, roller)
+            long expiration // Tokenens utgångstid i millisekunder
     ) {
         return Jwts
                 .builder()
-                .setClaims(extraClaims) // Lägg till eventuella extra claims
+                .setClaims(extraClaims) // Lägg till eventuella extra claims, som userId
                 .setSubject(userDetails.getUsername()) // Sätt användarnamnet som "subject"
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Sätt utfärdandedatum
                 .setExpiration(new Date(System.currentTimeMillis() + expiration)) // Sätt utgångsdatum baserat på expiration
@@ -70,9 +75,10 @@ public class JwtService {
                 .compact(); // Skapa den färdiga token
     }
 
+
     // Kontrollerar om en JWT-token är giltig genom att jämföra användarnamnet och kolla om den har gått ut
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token); // Extrahera användarnamnet från token
+        final String username = extractUserId(token); // Extrahera användarnamnet från token
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token); // Token är giltig om användarnamnet matchar och token inte har gått ut
     }
 
