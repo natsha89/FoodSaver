@@ -1,11 +1,12 @@
+// src/http.js eller src/services/http.js
 import axios from 'axios';
 
-// Dynamiskt hämta token
+// Funktion för att hämta token från localStorage
 const getAuthToken = () => localStorage.getItem('token') || '';
 
 // Skapa Axios-instans
 const http = axios.create({
-    baseURL: 'http://localhost:8081',
+    baseURL: 'http://localhost:8081', // Ändra bas-URL om nödvändigt
     headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getAuthToken()}`,
@@ -13,7 +14,7 @@ const http = axios.create({
     timeout: 5000,
 });
 
-// Interceptor för att dynamiskt lägga till token
+// Interceptor för att dynamiskt lägga till token till alla begärningar
 http.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -22,7 +23,9 @@ http.interceptors.request.use(
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        return Promise.reject(error);
+    }
 );
 
 // Interceptor för att hantera API-responsfel

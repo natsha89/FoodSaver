@@ -52,11 +52,12 @@ export default createStore({
         },
 
         // Logout-funktion
-        async logout({ commit }) {
+        async logout({ commit, state }) {
             try {
                 await axios.post('/api/auth/logout', null, {
-                    headers: { Authorization: `Bearer ${this.state.authToken}` },
+                    headers: { Authorization: `Bearer ${state.authToken}` },
                 });
+
                 commit('setAuthenticated', false);
                 commit('clearUser');
                 commit('clearAuthToken');
@@ -83,15 +84,15 @@ export default createStore({
         // Hämta matvaror
         async fetchFoodItems({ commit, state }) {
             try {
-                const response = await axios.get('/api/foodItems/user/{userid}', {
+                const response = await axios.get(`/api/foodItems/user/${state.user.id}`, {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
-                commit('setFoodItems', response.data); // Uppdatera state med matvarorna
+                commit('setFoodItems', response.data);
             } catch (error) {
                 console.error('Error fetching food items:', error.response?.data?.message || error.message);
             }
-        },
     },
+},
 
     getters: {
         isAuthenticated(state) {

@@ -148,17 +148,42 @@ export default {
   methods: {
     async fetchUserData() {
       try {
-        const response = await http.get('/api/user');
-        this.userAllergens = response.data.allergens;
+        const response = await http.get('/api/auth/users');
+        console.log('User data response:', response.data); // Logga för att se API-svaret
+
+        // Hämta användarens ID från localStorage eller någon annan källa
+        const userId = localStorage.getItem('userId'); // Exempel: om användarens ID finns i localStorage
+
+        // Hitta användaren i listan
+        const user = response.data.find(user => user.id === userId);
+
+        if (user) {
+          // Om användaren hittades, sätt allergenerna
+          if (Array.isArray(user.allergies)) {
+            this.userAllergens = user.allergies; // Hämta allergener för rätt användare
+          } else {
+            this.userAllergens = []; // Om allergener är felaktigt formaterade
+            this.responseMessage = 'Allergies are missing or in wrong format.';
+          }
+        } else {
+          // Om ingen användare hittades
+          this.responseMessage = 'User not found in the list.';
+        }
       } catch (error) {
-        this.responseMessage = error.response?.data.message || 'Failed to fetch user data.';
+        this.responseMessage = error.response?.data.message || error.message || 'Failed to fetch user data.';
       }
-    },
+  },
     async fetchFoodItems() {
+      const userId = localStorage.getItem('userId'); // Hämta userId från localStorage
+      if (!userId) {
+        this.responseMessage = 'User ID is not available in localStorage.';
+        return;
+      }
       try {
-        const response = await http.get('/api/foodItems');
+        const response = await http.get(`/api/foodItems/user/${userId}`);
         this.foodItems = response.data;
       } catch (error) {
+        console.error('Error fetching food items:', error.message);
         this.responseMessage = error.response?.data.message || 'Failed to fetch food items.';
       }
     },
