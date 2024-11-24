@@ -64,8 +64,10 @@ public class FoodItemController {
 
 
     // Metod för att hämta alla matvaror för en specifik användare baserat på användar-ID
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<FoodItem>> getFoodItemsByUserId(@PathVariable String userId) {
+    @GetMapping("/user")
+    public ResponseEntity<List<FoodItem>> getFoodItemsByUserId(@RequestHeader("Authorization") String token) {
+        String userId = jwtService.extractUserIdFromToken(token);
+
         List<FoodItem> foodItems = foodItemService.getFoodItemsByUserId(userId);
 
         if (foodItems.isEmpty()) {
@@ -80,14 +82,15 @@ public class FoodItemController {
 
     // Metod för att uppdatera en matvara baserat på matvarans ID
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateFoodItem(@PathVariable String id, @RequestBody FoodItem foodItem) {
-        StringBuilder alertMessage = new StringBuilder();
+    public ResponseEntity<?> updateFoodItem(@PathVariable String id, @RequestHeader("Authorization") String token, @RequestBody FoodItem foodItem) {
+        // Extrahera userId från token via JwtService
+        String userId = jwtService.extractUserIdFromToken(token);
 
-        // Kontrollera om allergener finns och om utgångsdatumet är nära
-        boolean hasAllergens = foodItem.checkAllergies(foodItemService.getUserAllergies(foodItem.getUserId()));
+        // Lägg till varningsmeddelanden för allergener och utgångsdatum
+        StringBuilder alertMessage = new StringBuilder();
+        boolean hasAllergens = foodItem.checkAllergies(foodItemService.getUserAllergies(userId));
         boolean isExpirationNear = foodItem.scheduleExpirationNotification();
 
-        // Lägg till varnings- och notismeddelanden
         if (hasAllergens) {
             alertMessage.append("Warning: The food item contains allergens you are allergic to. ");
         }
@@ -98,39 +101,31 @@ public class FoodItemController {
         // Uppdatera matvaran och returnera resultatet
         FoodItem updatedFoodItem = foodItemService.updateFoodItem(id, foodItem);
         if (updatedFoodItem != null) {
-            // Om uppdateringen lyckades, returnera den uppdaterade matvaran med varningsmeddelande
             return ResponseEntity.ok(new AlertResponse(updatedFoodItem, alertMessage.toString()));
         } else {
-            // Returnera NOT_FOUND om matvaran med det angivna ID:t inte hittades
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Food item with ID: " + id + " was not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Food item with ID: " + id + " was not found.");
         }
     }
 
     // Metod för att ta bort en matvara baserat på användar-ID och matvara-ID
-    @DeleteMapping("/user/{userId}/{foodItemId}")
-    public ResponseEntity<String> deleteFoodItem(@PathVariable String userId, @PathVariable String foodItemId) {
+    @DeleteMapping("/{foodItemId}")
+    public ResponseEntity<String> deleteFoodItem(@RequestHeader("Authorization") String token, @PathVariable String foodItemId) {
         try {
-            // Logga borttagningsbegäran
+            // Extrahera userId från token via JwtService
+            String userId = jwtService.extractUserIdFromToken(token);
+
             logger.info("Received request to delete food item with ID: {} for user with ID: {}", foodItemId, userId);
 
-            // Anropa FoodItemService för att kontrollera om användaren äger matvaran
             boolean deleted = foodItemService.deleteFoodItem(userId, foodItemId);
 
             if (deleted) {
-                // Om matvaran raderas, returnera en 200 OK-svar
                 return ResponseEntity.ok("Food item deleted successfully.");
             } else {
-                // Om användaren inte har rätt att ta bort matvaran, returnera 403 Forbidden
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("User is not authorized to delete this food item.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User is not authorized to delete this food item.");
             }
-
         } catch (Exception e) {
-            // Logga fel och returnera ett internal server error-svar (HTTP 500)
-            logger.error("An error occurred while deleting food item {} for user {}: {}", foodItemId, userId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An internal server error occurred while deleting the food item.");
+            logger.error("An error occurred while deleting food item {} for user {}: {}", foodItemId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An internal server error occurred while deleting the food item.");
         }
     }
 
@@ -138,6 +133,6 @@ public class FoodItemController {
     @GetMapping
     public ResponseEntity<List<FoodItem>> getAllFoodItems() {
         List<FoodItem> foodItems = foodItemService.getAllFoodItems();
-        return (ResponseEntity<List<FoodItem>>) foodItemService.getAllFoodItems(); // Returnerar alla matvaror inklusive alertMessage
+        return ResponseEntity.ok(foodItems);
     }
 }
