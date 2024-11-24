@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import http from '../http';
+import { getUserIdFromToken } from '../http'; // Importera din funktion för att hämta userId
 
 export default {
   name: 'FoodItems',
@@ -146,41 +146,14 @@ export default {
     };
   },
   methods: {
-    async fetchUserData() {
-      try {
-        const response = await http.get('/api/auth/users');
-        console.log('User data response:', response.data); // Logga för att se API-svaret
-
-        // Hämta användarens ID från localStorage eller någon annan källa
-        const userId = localStorage.getItem('userId'); // Exempel: om användarens ID finns i localStorage
-
-        // Hitta användaren i listan
-        const user = response.data.find(user => user.id === userId);
-
-        if (user) {
-          // Om användaren hittades, sätt allergenerna
-          if (Array.isArray(user.allergies)) {
-            this.userAllergens = user.allergies; // Hämta allergener för rätt användare
-          } else {
-            this.userAllergens = []; // Om allergener är felaktigt formaterade
-            this.responseMessage = 'Allergies are missing or in wrong format.';
-          }
-        } else {
-          // Om ingen användare hittades
-          this.responseMessage = 'User not found in the list.';
-        }
-      } catch (error) {
-        this.responseMessage = error.response?.data.message || error.message || 'Failed to fetch user data.';
-      }
-  },
     async fetchFoodItems() {
-      const userId = localStorage.getItem('userId'); // Hämta userId från localStorage
+      const userId = getUserIdFromToken(); // Hämta userId från JWT-token
       if (!userId) {
-        this.responseMessage = 'User ID is not available in localStorage.';
+        this.responseMessage = 'User ID is not available.';
         return;
       }
       try {
-        const response = await http.get(`/api/foodItems/user/${userId}`);
+        const response = await this.$http.get(`/api/foodItems/user/${userId}`);
         this.foodItems = response.data;
       } catch (error) {
         console.error('Error fetching food items:', error.message);
@@ -213,8 +186,18 @@ export default {
         }
 
         // Add new food item
+        const userId = getUserIdFromToken(); // Get userId from token
+        if (!userId) {
+          this.responseMessage = 'User ID is missing.';
+          this.loading = false;
+          return;
+        }
+
         try {
-          const response = await http.post('/api/foodItems', this.newItem);
+          const response = await this.$http.post('/api/foodItems', {
+            ...this.newItem,
+            userId: userId // Include userId in the request
+          });
           if (response.status === 201) {
             this.foodItems.push(response.data.foodItem);
             this.newItem = { name: '', quantity: 1, unit: '', expirationDate: '', allergens: [] };
@@ -235,7 +218,7 @@ export default {
     },
     deleteFoodItem(index) {
       const itemToDelete = this.foodItems[index];
-      http.delete(`/api/foodItems/${itemToDelete.id}`).then(() => {
+      this.$http.delete(`/api/foodItems/${itemToDelete.id}`).then(() => {
         this.foodItems.splice(index, 1);
       }).catch(error => {
         this.responseMessage = error.response?.data.message || 'Failed to delete food item.';
@@ -243,8 +226,7 @@ export default {
     }
   },
   mounted() {
-    this.fetchUserData();
-    this.fetchFoodItems();
+    this.fetchFoodItems(); // Fetch food items on mount
   }
 };
 </script>

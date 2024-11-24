@@ -9,6 +9,6 @@ import java.util.List;
 // MongoRepository tillhandahåller alla grundläggande CRUD-operationer (skapa, läsa, uppdatera, ta bort) för "FoodItem"-objekt
 
 public interface FoodItemRepository extends MongoRepository<FoodItem, String> {
-    List<FoodItem> findByUserId(String userId); // Spring Data JPA hanterar denna query automatiskt
+    List<FoodItem> findByUserId(String userId);
 
 }

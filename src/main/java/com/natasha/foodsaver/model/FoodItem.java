@@ -19,6 +19,7 @@ public class FoodItem {
     private double quantity;
     private String unit;
     private LocalDate expirationDate;
+    private String alertMessage;
     private List<String> allergens = new ArrayList<>();
     private boolean expirationNotificationSent = false;
     private boolean allergenNotificationSent = false;
@@ -43,13 +44,9 @@ public class FoodItem {
     }
 
     // Getter and Setter for userId
-    public String getUserId() {
-        return userId;
-    }
+    public String getUserId() {return userId;}
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
+   public void setUserId(String userId) {this.userId = userId;}
 
     // Getter and Setter for name
     public String getName() {
@@ -86,6 +83,13 @@ public class FoodItem {
     public void setExpirationDate(LocalDate expirationDate) {
         this.expirationDate = expirationDate;
     }
+    public String getAlertMessage() {
+        return alertMessage;
+    }
+
+    public void setAlertMessage(String alertMessage) {
+        this.alertMessage = alertMessage;
+    }
 
     // Getter and Setter for allergens
     public List<String> getAllergens() {
@@ -115,9 +119,10 @@ public class FoodItem {
     }
 
     // Kontrollera om matvarans utgångsdatum är nära (inom ett visst antal dagar)
-    public boolean isExpirationNear(int daysBefore) {
-        LocalDate notificationDate = expirationDate.minusDays(daysBefore);
-        return !expirationNotificationSent && LocalDate.now().isAfter(notificationDate.minusDays(1));
+    public boolean isExpirationNear() {
+        // Kontrollera om utgångsdatumet är mindre än 3 dagar bort
+        long daysBetween = ChronoUnit.DAYS.between(LocalDate.now(), expirationDate);
+        return daysBetween <= 3;
     }
 
     // Kontrollera om matvaran innehåller allergener som användaren är allergisk mot
