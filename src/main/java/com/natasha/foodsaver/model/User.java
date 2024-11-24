@@ -3,12 +3,14 @@ package com.natasha.foodsaver.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Collections;
@@ -32,9 +34,12 @@ public class User implements UserDetails {
 
     private List<String> allergies;  // Lista över allergier
     private List<String> dietaryPreferences;  // Kostpreferenser (t.ex. vegetarisk, glutenfri)
-    private List<Recipe> recipes;  // or list of Recipe objects
-    private List<FoodItem> foodItems;
 
+    @DBRef(lazy = false)
+    private List<Recipe> recipes= new ArrayList<>();  // or list of Recipe objects
+
+    @DBRef(lazy = false)
+    private List<FoodItem> foodItems = new ArrayList<>();
 
     private String verificationToken;  // Token för e-postverifiering
     private LocalDateTime verificationTokenExpiration;  // Utloppsdatum för verifieringstoken

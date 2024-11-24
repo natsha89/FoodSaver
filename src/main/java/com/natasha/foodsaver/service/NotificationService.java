@@ -8,18 +8,23 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
 
     public String processNotifications(FoodItem foodItem, User user) {
-        StringBuilder alertMessage = new StringBuilder();
+        StringBuilder notificationMessage = new StringBuilder();
 
-        // Kontrollera allergier
+        checkAllergies(foodItem, user, notificationMessage);
+        checkExpiration(foodItem, notificationMessage);
+
+        return notificationMessage.toString();
+    }
+
+    private void checkAllergies(FoodItem foodItem, User user, StringBuilder notificationMessage) {
         if (foodItem.checkAllergies(user.getAllergies())) {
-            alertMessage.append("Varning: Matvaran innehåller allergener som du är allergisk mot. ");
+            notificationMessage.append("Warning: The food item contains allergens you are allergic to. ");
         }
+    }
 
-        // Kontrollera utgångsdatum
+    private void checkExpiration(FoodItem foodItem, StringBuilder notificationMessage) {
         if (foodItem.scheduleExpirationNotification()) {
-            alertMessage.append("Notis: Matvarans utgångsdatum är nära.");
+            notificationMessage.append("Notice: The food item is nearing its expiration date.");
         }
-
-        return alertMessage.toString();
     }
 }

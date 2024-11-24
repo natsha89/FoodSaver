@@ -6,7 +6,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -28,8 +27,14 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
-    public String extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", String.class));
+    //public String extractUserId(String token) {return extractClaim(token, claims -> claims.get("userId", String.class));}
+
+    public String extractUserIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token.replace("Bearer ", ""))
+                .getBody();
+        return claims.get("userId", String.class);  // Här får du användarens riktiga userId
     }
 
 
@@ -51,8 +56,6 @@ public class JwtService {
 
         return buildToken(extraClaims, user, jwtExpiration);
     }
-
-
 
     // Hämtar utgångstiden för JWT-token
     public long getExpirationTime() {
@@ -78,7 +81,7 @@ public class JwtService {
 
     // Kontrollerar om en JWT-token är giltig genom att jämföra användarnamnet och kolla om den har gått ut
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUserId(token); // Extrahera användarnamnet från token
+        final String username = extractUserIdFromToken(token); // Extrahera användarnamnet från token
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token); // Token är giltig om användarnamnet matchar och token inte har gått ut
     }
 

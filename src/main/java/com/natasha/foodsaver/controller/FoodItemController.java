@@ -1,7 +1,10 @@
 package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.FoodItem;
+import com.natasha.foodsaver.model.User;
+import com.natasha.foodsaver.repository.UserRepository;
 import com.natasha.foodsaver.service.FoodItemService;
+import com.natasha.foodsaver.service.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,36 +22,46 @@ public class FoodItemController {
     @Autowired
     private FoodItemService foodItemService;  // Tjänst för att hantera matvaror
 
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserRepository userRepository;
+
     // Metod för att skapa en ny matvara
     @PostMapping
-    public ResponseEntity<?> createFoodItem(@RequestBody FoodItem foodItem) {
+    public ResponseEntity<?> createFoodItem(@RequestHeader("Authorization") String token, @RequestBody FoodItem foodItem) {
+        // 1. Extrahera userId från token via JwtService
+        String userId = jwtService.extractUserIdFromToken(token);  // Anropa metoden här
+
+        // 2. Sätt userId i foodItem innan det sparas
+        foodItem.setUserId(userId);  // Sätt userId till matvaran från token
+
+        // 3. Spara matvaran via service
+        FoodItem savedFoodItem = foodItemService.createFoodItem(foodItem);
+
+        // Kontrollera om matvaran innehåller allergener som användaren är allergisk mot
         StringBuilder alertMessage = new StringBuilder();
-
-        // Kontrollera om allergener finns och om utgångsdatumet är nära
-        boolean hasAllergens = foodItem.checkAllergies(foodItemService.getUserAllergies(foodItem.getUserId()));
-        boolean isExpirationNear = foodItem.scheduleExpirationNotification();
-
-        // Lägg till varnings- och notismeddelanden
+        boolean hasAllergens = foodItem.checkAllergies(foodItemService.getUserAllergies(userId));
         if (hasAllergens) {
-            alertMessage.append("Varning: Matvaran innehåller allergener som du är allergisk mot. ");
+            alertMessage.append("Warning: The food item contains allergens you are allergic to. ");
         }
 
+        // Kontrollera om utgångsdatumet är nära
+        boolean isExpirationNear = foodItem.scheduleExpirationNotification();
         if (isExpirationNear) {
-            alertMessage.append("Notis: Matvarans utgångsdatum är nära.");
+            alertMessage.append("Notice: The food item is nearing its expiration date.");
         }
 
-        // Spara matvaran och skapa ett AlertResponse med varningsmeddelande
-        FoodItem createdFoodItem = foodItemService.createFoodItem(foodItem);
-        if (createdFoodItem != null) {
-            // Skicka tillbaka skapad matvara med varningsmeddelande
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new AlertResponse(createdFoodItem, alertMessage.toString()));
-        } else {
-            // Returnera felmeddelande om matvaran inte kunde sparas
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Matvaran kunde inte sparas.");
+        // Om några varningsmeddelanden finns, inkludera dem i svaret
+        if (alertMessage.length() > 0) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AlertResponse(savedFoodItem, alertMessage.toString()));
         }
+
+        // Om inga meddelanden, returnera den sparade matvaran utan varning
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedFoodItem);
     }
+
 
     // Metod för att hämta alla matvaror för en specifik användare baserat på användar-ID
     @GetMapping("/user/{userId}")
@@ -76,10 +89,10 @@ public class FoodItemController {
 
         // Lägg till varnings- och notismeddelanden
         if (hasAllergens) {
-            alertMessage.append("Varning: Matvaran innehåller allergener som du är allergisk mot. ");
+            alertMessage.append("Warning: The food item contains allergens you are allergic to. ");
         }
         if (isExpirationNear) {
-            alertMessage.append("Notis: Matvarans utgångsdatum är nära.");
+            alertMessage.append("Notice: The food item is nearing its expiration date.");
         }
 
         // Uppdatera matvaran och returnera resultatet
@@ -90,7 +103,7 @@ public class FoodItemController {
         } else {
             // Returnera NOT_FOUND om matvaran med det angivna ID:t inte hittades
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Matvaran med ID: " + id + " hittades inte.");
+                    .body("Food item with ID: " + id + " was not found.");
         }
     }
 
@@ -125,6 +138,6 @@ public class FoodItemController {
     @GetMapping
     public ResponseEntity<List<FoodItem>> getAllFoodItems() {
         List<FoodItem> foodItems = foodItemService.getAllFoodItems();
-        return ResponseEntity.ok(foodItems);  // Returnera alla matvaror
+        return (ResponseEntity<List<FoodItem>>) foodItemService.getAllFoodItems(); // Returnerar alla matvaror inklusive alertMessage
     }
 }

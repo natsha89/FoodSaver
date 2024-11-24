@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             // Extrahera userId från token
-            String userId = jwtService.extractUserId(token);
+            String userId = jwtService.extractUserIdFromToken(token);
 
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Ladda användardetaljer baserat på userId

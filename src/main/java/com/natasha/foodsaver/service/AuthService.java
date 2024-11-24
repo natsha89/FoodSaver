@@ -127,7 +127,16 @@ public class AuthService {
         logger.info("Användare inloggad framgångsrikt: {}", email);
 
         // Generera och returnera JWT-token för användaren
-        return jwtService.generateToken(user);
+        String token = jwtService.generateToken(user);
+
+        // Här kan du lägga till att hämta användarens fullständiga data (t.ex. allergier, kostpreferenser, recept, matvaror)
+        user.getAllergies();  // Hämta allergier
+        user.getDietaryPreferences();  // Hämta kostpreferenser
+        user.getRecipes();  // Hämta sparade recept
+        user.getFoodItems();  // Hämta sparade matvaror
+
+        // Det här är vad du kommer att returnera till klienten
+        return token;
     }
 
     // Generera verifieringstoken
