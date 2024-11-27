@@ -1,8 +1,8 @@
 package com.natasha.foodsaver.controller;
 
-import com.natasha.foodsaver.model.FoodItem;
 import com.natasha.foodsaver.model.Recipe;
 import com.natasha.foodsaver.model.RecipeGenerationRequest;
+import com.natasha.foodsaver.service.JwtService;
 import com.natasha.foodsaver.service.RecipeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +22,18 @@ public class RecipeController {
     @Autowired
     private RecipeService recipeService;  // Injektar RecipeService för att hantera logiken för att skapa och hämta recept
 
+    @Autowired
+    private JwtService jwtService;
+
     // Endpoint för att generera nya recept baserat på ingredienser, allergener, kostpreferenser och antal portioner
     @PostMapping("/generate")
-    public ResponseEntity<List<Recipe>> generateRecipes(@RequestBody RecipeGenerationRequest request) {
+    public ResponseEntity<List<Recipe>> generateRecipes(@RequestHeader("Authorization") String token, @RequestBody RecipeGenerationRequest request) {
         logger.info("Received request to generate recipes for user with ingredients: {}", request.getIngredients());
 
         try {
-            // Hämta userId från request (kan också komma från session eller token)
-            String userId = request.getUserId();
+            // 1. Extrahera användar-ID från token
+            String userId = jwtService.extractUserIdFromToken(token);
+            logger.info("Generating recipes for userId: {}", userId);
 
             // Anropa RecipeService för att generera recept baserat på de angivna parametrarna
             List<Recipe> generatedRecipes = recipeService.generateRecipes(
@@ -46,7 +50,7 @@ public class RecipeController {
             }
 
             // Returnera de genererade recepten som en OK-svar (HTTP 200)
-            return ResponseEntity.ok(generatedRecipes);
+            return ResponseEntity.status(HttpStatus.CREATED).body(generatedRecipes);
 
         } catch (IllegalArgumentException e) {
             // Logga ogiltiga indata och returnera ett bad request-svar med felmeddelande
@@ -60,26 +64,33 @@ public class RecipeController {
         }
     }
 
-    // Ny metod för att hämta alla recept för en specifik användare
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Recipe>> getRecipesForUser(@PathVariable String userId) {
+    @GetMapping("/user")
+    public ResponseEntity<?> getRecipesForUser(@RequestHeader("Authorization") String token) {
+        // Extrahera användar-ID från JWT-token
+        String userId = jwtService.extractUserIdFromToken(token);
+
+        logger.info("Fetching recipes for user with ID: {}", userId);
+
         try {
-            // Anropa RecipeService för att hämta alla recept för en specifik användare
+            // Hämta recepten för användaren från RecipeService
             List<Recipe> recipes = recipeService.getRecipesForUser(userId);
 
-            // Om inga recept hittades för användaren, returnera en 204 No Content-svar
+            // Om inga recept hittas, returnera No Content (HTTP 204)
             if (recipes.isEmpty()) {
+                logger.info("No recipes found for user with ID: {}", userId);
                 return ResponseEntity.noContent().build();
             }
 
-            // Returnera recepten som en OK-svar (HTTP 200)
-            return ResponseEntity.ok(recipes);
+            // Om recept hittades, returnera dem som OK (HTTP 200)
+            return ResponseEntity.ok(recipes); // Spring serialiserar objekten som JSON automatiskt
 
         } catch (Exception e) {
-            // Logga eventuella fel och returnera ett internal server error-svar (HTTP 500)
-            logger.error("Error occurred while fetching recipes for user {}: {}", userId, e.getMessage(), e);
+            // Logga och hantera fel vid hämtning av recepten
+            logger.error("Error fetching recipes for user {}: {}", userId, e.getMessage(), e);
+
+            // Returnera ett internt serverfel (HTTP 500) med ett felmeddelande
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(List.of(new Recipe("Error", "An internal server error occurred")));
+                    .body("An internal server error occurred while fetching recipes.");
         }
     }
 
@@ -94,9 +105,11 @@ public class RecipeController {
     }
 
     // Ny metod för att radera ett specifikt recept baserat på användar-ID och recept-ID
-    @DeleteMapping("/user/{userId}/{recipeId}")
-    public ResponseEntity<String> deleteRecipe(@PathVariable String userId, @PathVariable String recipeId) {
+    @DeleteMapping("/{recipeId}")
+    public ResponseEntity<String> deleteRecipe(@RequestHeader("Authorization") String token, @PathVariable String recipeId) {
         try {
+            String userId = jwtService.extractUserIdFromToken(token);
+
             // Logga begäran om att radera receptet
             logger.info("Received request to delete recipe with ID: {} for user with ID: {}", recipeId, userId);
 
@@ -114,19 +127,9 @@ public class RecipeController {
 
         } catch (Exception e) {
             // Logga andra fel och returnera ett internal server error-svar (HTTP 500)
-            logger.error("An error occurred while deleting recipe {} for user {}: {}", recipeId, userId, e.getMessage(), e);
+            logger.error("An error occurred while deleting recipe {} for user {}: {}", recipeId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An internal server error occurred while deleting the recipe.");
         }
-    }
-
-    // Endpoint för att hämta alla recept från databasen
-    @GetMapping
-    public ResponseEntity<List<Recipe>> getAllRecipes() {
-        // Hämta alla recept från RecipeService
-        List<Recipe> recipes = recipeService.getAllRecipes();
-
-        // Returnera recepten som en OK-response (HTTP 200)
-        return ResponseEntity.ok(recipes);
     }
 }

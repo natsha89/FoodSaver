@@ -2,17 +2,23 @@ package com.natasha.foodsaver.controller;
 
 import com.natasha.foodsaver.model.FoodItem;
 
+import java.util.List;
+
 public class AlertResponse {
-
     private FoodItem foodItem;
-    private String alertMessage;
+    private List<String> alerts; // List of alerts
 
-    public AlertResponse(FoodItem foodItem, String alertMessage) {
+    public AlertResponse(FoodItem foodItem, String... alerts) {
         this.foodItem = foodItem;
-        this.alertMessage = alertMessage;
+        this.alerts = List.of(alerts);
     }
 
-    // Getters och Setters
+    public AlertResponse(FoodItem foodItem, List<String> alerts) {
+        this.foodItem = foodItem;
+        this.alerts = alerts;
+    }
+
+    // Getters and Setters
     public FoodItem getFoodItem() {
         return foodItem;
     }
@@ -21,11 +27,12 @@ public class AlertResponse {
         this.foodItem = foodItem;
     }
 
-    public String getAlertMessage() {
-        return alertMessage;
+    public List<String> getAlerts() {
+        return alerts;
     }
 
-    public void setAlertMessage(String alertMessage) {
-        this.alertMessage = alertMessage;
+    public void setAlerts(List<String> alerts) {
+        this.alerts = alerts;
     }
 }
+
