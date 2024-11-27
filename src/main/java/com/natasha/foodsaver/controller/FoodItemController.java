@@ -58,31 +58,21 @@ public class FoodItemController {
     }
 
 
+    // Metod för att hämta alla matvaror för en specifik användare baserat på användar-ID
     @GetMapping("/user")
-    public ResponseEntity<?> getFoodItemsByUserId(@RequestHeader("Authorization") String token) {
-        // 1. Extrahera användar-ID från token
+    public ResponseEntity<List<FoodItem>> getFoodItemsByUserId(@RequestHeader("Authorization") String token) {
         String userId = jwtService.extractUserIdFromToken(token);
 
-        // 2. Hämta alla matvaror för användaren
         List<FoodItem> foodItems = foodItemService.getFoodItemsByUserId(userId);
 
         if (foodItems.isEmpty()) {
-            logger.info("No food items found for user: {}", userId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No food items found for this user.");
+            System.out.println("No food items found for user: " + userId);  // Logga om inga matvaror hittades
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);  // Returnera NOT_FOUND om inga matvaror finns för användaren
         }
 
-        // 3. Generera notifikationer för varje matvara
-        List<AlertResponse> alertResponses = foodItems.stream().map(foodItem -> {
-            String allergyAlert = foodItemAlertService.getAllergyAlert(foodItem, foodItemService.getUserAllergies(userId));
-            String expirationAlert = foodItemAlertService.getExpirationAlert(foodItem);
-
-            // Skapa en AlertResponse för varje matvara
-            return new AlertResponse(foodItem, allergyAlert, expirationAlert);
-        }).toList();
-
-        // 4. Returnera listan av AlertResponse-objekt
-        logger.info("Found food items with alerts for user: {}", userId);
-        return ResponseEntity.ok(alertResponses);
+        System.out.println("Found food items: " + foodItems);  // Logga om matvaror hittades
+        return ResponseEntity.ok(foodItems);  // Returnera listan av matvaror
     }
 
 
