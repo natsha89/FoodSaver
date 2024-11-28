@@ -30,11 +30,12 @@ public class JwtService {
     //public String extractUserId(String token) {return extractClaim(token, claims -> claims.get("userId", String.class));}
 
     public String extractUserIdFromToken(String token) {
+        System.out.println("Token: " + token);  // Log the token
         Claims claims = Jwts.parser()
                 .setSigningKey(secretKey)
                 .parseClaimsJws(token.replace("Bearer ", ""))
                 .getBody();
-        return claims.get("userId", String.class);  // Här får du användarens riktiga userId
+        return claims.get("userId", String.class);
     }
 
 

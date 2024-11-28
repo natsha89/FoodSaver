@@ -6,10 +6,11 @@ axios.defaults.baseURL = 'http://localhost:8081'; // Byt till din backend-URL
 
 export default createStore({
     state: {
-        isAuthenticated: false, // Användarens inloggningsstatus
-        user: null, // Information om den inloggade användaren
-        authToken: localStorage.getItem('authToken') || null, // Token lagrad i localStorage
-        foodItems: [], // Ny state för att lagra matvaror
+        isAuthenticated: false,
+        user: null,
+        authToken: localStorage.getItem('authToken') || null,
+        foodItems: [],
+        recipes: [], // Ny state för recept
     },
 
     mutations: {
@@ -32,6 +33,9 @@ export default createStore({
         },
         setFoodItems(state, items) {
             state.foodItems = items; // Uppdatera foodItems i state
+        },
+        setRecipes(state, recipes) {
+            state.recipes = recipes;
         },
     },
 
@@ -69,7 +73,7 @@ export default createStore({
         // Hämta användarinformation
         async fetchUser({ commit, state }) {
             try {
-                const response = await axios.get('/api/auth/users', {
+                const response = await axios.get('/api/auth/user', {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
                 commit('setUser', response.data);
@@ -91,8 +95,19 @@ export default createStore({
             } catch (error) {
                 console.error('Error fetching food items:', error.response?.data?.message || error.message);
             }
+        },
+
+        async fetchRecipes({ commit, state }) {
+            try {
+                const response = await axios.get(`/api/recipes/user/${state.user.id}`, {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+                commit('setRecipes', response.data);
+            } catch (error) {
+                console.error('Error fetching recipes:', error.response?.data?.message || error.message);
+            }
+        },
     },
-},
 
     getters: {
         isAuthenticated(state) {
