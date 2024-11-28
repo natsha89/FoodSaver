@@ -18,7 +18,6 @@
               <v-list-item-title>{{ item.name }}</v-list-item-title>
               <v-list-item-subtitle>Quantity: {{ item.quantity }} {{ item.unit }}</v-list-item-subtitle>
               <v-list-item-subtitle>Expiration Date: {{ item.expirationDate }}</v-list-item-subtitle>
-              <v-list-item-subtitle>Allergens: {{ item.allergens.join(', ') }}</v-list-item-subtitle>
             </v-list-item-content>
             <v-list-item-action>
               <v-btn @click="deleteFoodItem(index)" color="red">
@@ -77,15 +76,6 @@
               type="date"
               required
           ></v-text-field>
-
-          <!-- Allergens selection dropdown -->
-          <v-select
-              v-model="newItem.allergens"
-              :items="allergenOptions"
-              label="Allergens"
-              multiple
-              required
-          ></v-select>
         </v-form>
         <v-alert v-if="responseMessage" type="error" dismissible>
           {{ responseMessage }}
@@ -109,7 +99,7 @@
 </template>
 
 <script>
-import { getUserIdFromToken } from '../http'; // Importera din funktion för att hämta userId
+import http from '../http';
 
 export default {
   name: 'FoodItems',
@@ -121,10 +111,8 @@ export default {
         quantity: 1,
         unit: '',
         expirationDate: '',
-        allergens: [] // List of selected allergens
       },
       unitOptions: ['kg', 'g', 'liters', 'ml', 'pieces'], // Example unit options
-      allergenOptions: ['Gluten', 'Peanuts', 'Dairy', 'Soy', 'Shellfish', 'Eggs'], // Example allergens
       formValid: false,
       loading: false,
       responseMessage: '',
@@ -146,17 +134,19 @@ export default {
     };
   },
   methods: {
-    async fetchFoodItems() {
-      const userId = getUserIdFromToken(); // Hämta userId från JWT-token
-      if (!userId) {
-        this.responseMessage = 'User ID is not available.';
-        return;
-      }
+    async fetchUserData() {
       try {
-        const response = await this.$http.get(`/api/foodItems/user/${userId}`);
+        const response = await http.get('/api/user');
+        this.userAllergens = response.data.allergens;
+      } catch (error) {
+        this.responseMessage = error.response?.data.message || 'Failed to fetch user data.';
+      }
+    },
+    async fetchFoodItems() {
+      try {
+        const response = await http.get('/api/foodItems');
         this.foodItems = response.data;
       } catch (error) {
-        console.error('Error fetching food items:', error.message);
         this.responseMessage = error.response?.data.message || 'Failed to fetch food items.';
       }
     },
@@ -186,18 +176,8 @@ export default {
         }
 
         // Add new food item
-        const userId = getUserIdFromToken(); // Get userId from token
-        if (!userId) {
-          this.responseMessage = 'User ID is missing.';
-          this.loading = false;
-          return;
-        }
-
         try {
-          const response = await this.$http.post('/api/foodItems', {
-            ...this.newItem,
-            userId: userId // Include userId in the request
-          });
+          const response = await http.post('/api/foodItems', this.newItem);
           if (response.status === 201) {
             this.foodItems.push(response.data.foodItem);
             this.newItem = { name: '', quantity: 1, unit: '', expirationDate: '', allergens: [] };
@@ -218,7 +198,7 @@ export default {
     },
     deleteFoodItem(index) {
       const itemToDelete = this.foodItems[index];
-      this.$http.delete(`/api/foodItems/${itemToDelete.id}`).then(() => {
+      http.delete(`/api/foodItems/${itemToDelete.id}`).then(() => {
         this.foodItems.splice(index, 1);
       }).catch(error => {
         this.responseMessage = error.response?.data.message || 'Failed to delete food item.';
@@ -226,7 +206,8 @@ export default {
     }
   },
   mounted() {
-    this.fetchFoodItems(); // Fetch food items on mount
+    this.fetchUserData();
+    this.fetchFoodItems();
   }
 };
 </script>
