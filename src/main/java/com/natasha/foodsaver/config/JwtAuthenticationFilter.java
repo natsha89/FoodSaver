@@ -30,33 +30,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = extractToken(request);
 
-        if (token != null) {
-            // Extrahera userId från token
-            String userId = jwtService.extractUserIdFromToken(token);
+        try {
+            if (token != null) {
+                String userId = jwtService.extractUserIdFromToken(token);
 
-            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Ladda användardetaljer baserat på userId
-                UserDetails userDetails = userDetailsService.loadUserById(userId);
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserById(userId);
 
-                // Kontrollera om token är giltig
-                if (jwtService.isTokenValid(token, userDetails)) {
-                    // Skapa och sätt autentisering i säkerhetskontexten
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    if (jwtService.isTokenValid(token, userDetails)) {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
             }
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            // Logga felet eller hantera det på ett lämpligt sätt
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token has expired. Please log in again.");
+            return; // Stoppa filterkedjan
+        }catch (io.jsonwebtoken.MalformedJwtException ex) {
+            // Handle malformed token
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Malformed token.");
+            return; // Stop the filter chain
+        } catch (io.jsonwebtoken.SignatureException ex) {
+            // Handle invalid signature
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid token signature.");
+            return; // Stop the filter chain
+        } catch (Exception ex) {
+            // Handle any other exceptions
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("An error occurred while processing the token.");
+            return; // Stop the filter chain
         }
 
-        // Fortsätt med filterkedjan
         filterChain.doFilter(request, response);
     }
+
 
     private String extractToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");

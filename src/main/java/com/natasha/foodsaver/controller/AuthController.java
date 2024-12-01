@@ -6,10 +6,12 @@ import com.natasha.foodsaver.model.User;
 import com.natasha.foodsaver.repository.UserRepository;
 import com.natasha.foodsaver.service.AuthService;
 
+import com.natasha.foodsaver.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,13 +25,15 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService;
-    private final UserRepository userRepository;
+    @Autowired
+    private AuthService authService;
 
-    public AuthController(AuthService authService, UserRepository userRepository) {
-        this.authService = authService;
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private  UserRepository userRepository;
+
+    @Autowired
+    private JwtService jwtService;
+
 
     @PostMapping("/register")
     public ResponseEntity<GlobalExceptionHandler.ResponseMessage> register(@Valid @RequestBody User user) {
@@ -100,13 +104,21 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/user/{id}")
-    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> getUserById(@PathVariable String id) {
+    @GetMapping("/user")
+    public ResponseEntity<GlobalExceptionHandler.ResponseMessage> getUserById(@RequestHeader("Authorization") String token) {
         try {
-            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+            // Extrahera användar-ID från JWT-tokenet
+            String userId = jwtService.extractUserIdFromToken(token);
+
+            // Hämta användaren baserat på användar-ID från databasen
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+            // Returnera användarinformationen i svaret
             return ResponseEntity.ok(new GlobalExceptionHandler.ResponseMessage("User found successfully.", user));
         }
         catch (Exception e) {
+            // Returnera felmeddelande om något går fel
             return buildErrorResponse(HttpStatus.NOT_FOUND, "Error fetching user: " + e.getMessage());
         }
     }
