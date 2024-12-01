@@ -1,4 +1,4 @@
-/*const { defineConfig } = require('@vue/cli-service');
+const { defineConfig } = require('@vue/cli-service');
 const webpack = require('webpack');  // Import webpack
 
 module.exports = defineConfig({
@@ -13,9 +13,9 @@ module.exports = defineConfig({
       })
     ]
   }
-});*/
+});
 
-module.exports = {
+/*module.exports = {
   devServer: {
     port: 3000,
     proxy: {
@@ -26,4 +26,4 @@ module.exports = {
       }
     }
   }
-}
+}*/

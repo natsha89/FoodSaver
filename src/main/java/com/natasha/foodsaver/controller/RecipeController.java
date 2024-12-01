@@ -132,4 +132,21 @@ public class RecipeController {
                     .body("An internal server error occurred while deleting the recipe.");
         }
     }
+    @GetMapping
+    public ResponseEntity<List<Recipe>> getAllRecipes(@RequestHeader("Authorization") String token) {
+        // Hämta userId från token
+        String userId = jwtService.extractUserIdFromToken(token);
+
+        // Hämta recept för den specifika användaren
+        List<Recipe> recipes = recipeService.getRecipesForUser(userId);
+
+        // Kontrollera om listan är tom och returnera lämpligt svar
+        if (recipes.isEmpty()) {
+            logger.info("No recipes found for user with ID: {}", userId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        logger.info("Found {} recipes for user with ID: {}", recipes.size(), userId);
+        return ResponseEntity.ok(recipes);
+    }
 }

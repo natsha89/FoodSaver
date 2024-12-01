@@ -6,11 +6,10 @@ axios.defaults.baseURL = 'http://localhost:8081'; // Byt till din backend-URL
 
 export default createStore({
     state: {
-        isAuthenticated: false,
-        user: null,
-        authToken: localStorage.getItem('authToken') || null,
-        foodItems: [],
-        recipes: [], // Ny state för recept
+        isAuthenticated: false, // Användarens inloggningsstatus
+        user: null, // Information om den inloggade användaren
+        authToken: localStorage.getItem('authToken') || null, // Token lagrad i localStorage
+        foodItems: [], // Ny state för att lagra matvaror
     },
 
     mutations: {
@@ -34,9 +33,6 @@ export default createStore({
         setFoodItems(state, items) {
             state.foodItems = items; // Uppdatera foodItems i state
         },
-        setRecipes(state, recipes) {
-            state.recipes = recipes;
-        },
     },
 
     actions: {
@@ -56,12 +52,11 @@ export default createStore({
         },
 
         // Logout-funktion
-        async logout({ commit, state }) {
+        async logout({ commit }) {
             try {
                 await axios.post('/api/auth/logout', null, {
-                    headers: { Authorization: `Bearer ${state.authToken}` },
+                    headers: { Authorization: `Bearer ${this.state.authToken}` },
                 });
-
                 commit('setAuthenticated', false);
                 commit('clearUser');
                 commit('clearAuthToken');
@@ -88,23 +83,12 @@ export default createStore({
         // Hämta matvaror
         async fetchFoodItems({ commit, state }) {
             try {
-                const response = await axios.get(`/api/foodItems/user/${state.user.id}`, {
+                const response = await axios.get('/api/foodItems/user/{userid}', {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
-                commit('setFoodItems', response.data);
+                commit('setFoodItems', response.data); // Uppdatera state med matvarorna
             } catch (error) {
                 console.error('Error fetching food items:', error.response?.data?.message || error.message);
-            }
-        },
-
-        async fetchRecipes({ commit, state }) {
-            try {
-                const response = await axios.get(`/api/recipes/user/${state.user.id}`, {
-                    headers: { Authorization: `Bearer ${state.authToken}` },
-                });
-                commit('setRecipes', response.data);
-            } catch (error) {
-                console.error('Error fetching recipes:', error.response?.data?.message || error.message);
             }
         },
     },
