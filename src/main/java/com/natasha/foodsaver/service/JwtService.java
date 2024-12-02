@@ -30,13 +30,15 @@ public class JwtService {
     //public String extractUserId(String token) {return extractClaim(token, claims -> claims.get("userId", String.class));}
 
     public String extractUserIdFromToken(String token) {
-        System.out.println("Token: " + token);  // Log the token
-        Claims claims = Jwts.parser()
-                .setSigningKey(secretKey)
+        System.out.println("Token: " + token); // Log the token
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
                 .parseClaimsJws(token.replace("Bearer ", ""))
                 .getBody();
         return claims.get("userId", String.class);
     }
+
 
 
     // Extraherar en specifik claim (information) från token genom en funktion som definieras av anroparen
@@ -47,7 +49,15 @@ public class JwtService {
 
     // Genererar en JWT-token för en användare, utan några extra claims
     public String generateToken(User user) {
-        return generateToken(new HashMap<>(), user);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("userId", user.getId());
+
+        String token = buildToken(extraClaims, user, jwtExpiration);
+
+        System.out.println("Generated Token: " + token);
+        System.out.println("User ID in Token: " + user.getId());
+
+        return token;
     }
 
     // Generera en JWT-token med användarens ID som en custom claim
@@ -108,7 +118,7 @@ public class JwtService {
 
     // Hämtar den hemliga nyckeln för signering av JWT
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey); // Dekodera den hemliga nyckeln från base64
-        return Keys.hmacShaKeyFor(keyBytes); // Skapa en nyckel från den dekodade base64-strängen
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

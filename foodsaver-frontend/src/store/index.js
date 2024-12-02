@@ -36,18 +36,21 @@ export default createStore({
     },
 
     actions: {
-        // Login-funktion
         async login({ commit }, credentials) {
             try {
                 const response = await axios.post('/api/auth/login', credentials);
-                if (response.data.success) {
+                const token = response.data.data.token;
+
+                if (token) {
+                    commit('setAuthToken', token);
                     commit('setAuthenticated', true);
-                    commit('setUser', response.data.user);
-                    commit('setAuthToken', response.data.token);
+                    commit('setUser', response.data.data.user);
+                } else {
+                    throw new Error('No token received');
                 }
             } catch (error) {
-                console.error('Login failed:', error.response?.data?.message || error.message);
-                throw new Error(error.response?.data?.message || 'Login failed.');
+                console.error('Login Error:', error);
+                throw error;
             }
         },
 
@@ -83,7 +86,7 @@ export default createStore({
         // Hämta matvaror
         async fetchFoodItems({ commit, state }) {
             try {
-                const response = await axios.get('/api/foodItems/user/{userid}', {
+                const response = await axios.get('/api/foodItems', {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
                 commit('setFoodItems', response.data); // Uppdatera state med matvarorna
@@ -111,7 +114,10 @@ axios.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('authToken');
         if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+            // Remove 'Bearer ' prefix if already present in stored token
+            config.headers['Authorization'] = token.startsWith('Bearer ')
+                ? token
+                : `Bearer ${token}`;
         }
         return config;
     },

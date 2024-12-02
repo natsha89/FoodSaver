@@ -59,7 +59,7 @@ public class FoodItemController {
 
 
     // Metod för att hämta alla matvaror för en specifik användare baserat på användar-ID
-    @GetMapping("/user")
+   @GetMapping("/user")
     public ResponseEntity<String> getFoodItemsByUserId(@RequestHeader("Authorization") String token) {
         // Log the incoming token to ensure it's being received
         logger.info("Received token: {}", token);

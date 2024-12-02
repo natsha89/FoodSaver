@@ -17,4 +17,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     // Metod för att hitta en användare baserat på en verifieringstoken
     User findByVerificationToken(String token);
 
+    Optional<User> findById(String id);       // Ensure this also returns Optional<User>
+
+
 }
