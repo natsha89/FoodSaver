@@ -23,7 +23,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll() // Alla anrop tillåts för nu (kan ändras)
                 )
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Lägger till CORS-konfigurationen
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**") // Ignorera CSRF för API
                 );
@@ -33,20 +32,6 @@ public class SecurityConfig {
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    // CORS-konfigurationen
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://192.168.0.88:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
     }
 
     @Bean

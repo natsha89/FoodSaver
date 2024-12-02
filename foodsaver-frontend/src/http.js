@@ -1,4 +1,3 @@
-// src/http.js eller src/services/http.js
 import axios from 'axios';
 
 // Funktion för att hämta token från localStorage
@@ -12,6 +11,8 @@ const http = axios.create({
         Authorization: `Bearer ${getAuthToken()}`,
     },
     timeout: 5000,
+    withCredentials: true, // Om cookies krävs
+
 });
 
 // Interceptor för att dynamiskt lägga till token till alla begärningar

@@ -66,14 +66,15 @@ export default {
             password: this.password
           });
 
-          // Store the user information and token in Vuex and localStorage
-          this.$store.commit('setUser', response.data.user); // Assuming your API returns user data
-          this.$store.commit('setAuthToken', response.data.token);
-          localStorage.setItem('authToken', response.data.token);  // Persist the token
-          localStorage.setItem('user', JSON.stringify(response.data.user)); // Persist the user info
+          console.log('Token after login:', response.data.data.token);
 
-          // Redirect to the home page
-          this.$router.push('/welcome');  // Redirect to home after successful login
+          // Store the user information and token in Vuex and localStorage
+          this.$store.commit('setUser', response.data.data.user);
+          this.$store.commit('setAuthToken', response.data.data.token);
+          localStorage.setItem('authToken', response.data.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.data.user));
+
+          this.$router.push('/welcome');
         } catch (error) {
           this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
         } finally {
