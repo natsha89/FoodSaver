@@ -4,7 +4,7 @@
     <v-progress-circular v-if="loading" indeterminate></v-progress-circular>
     <v-list v-else-if="foodItems.length">
       <v-list-item v-for="item in foodItems" :key="item.id">
-        {{ item.name }} - Quantity: {{ item.quantity }}
+        {{ item.name }} - Quantity: {{ item.quantity }} {{ item.unit }}
       </v-list-item>
     </v-list>
     <p v-else>No food items found.</p>
@@ -33,7 +33,6 @@ export default {
         await this.$store.dispatch('fetchFoodItems');
       } catch (error) {
         console.error('Failed to load food items:', error);
-        // Optionally show an error message to the user
       } finally {
         this.loading = false;
       }
