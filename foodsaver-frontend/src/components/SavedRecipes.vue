@@ -2,34 +2,64 @@
   <div>
     <h2>My Saved Recipes</h2>
     <v-progress-circular v-if="loading" indeterminate></v-progress-circular>
-    <v-list v-else-if="recipes.length">
-      <v-list-item v-for="recipe in recipes" :key="recipe.id" class="mb-2">
-        <v-list-item-content>
-          <v-list-item-title>{{ recipe.name }}</v-list-item-title>
-          <v-list-item-subtitle>
-            {{ recipe.description || 'No description available' }}
-          </v-list-item-subtitle>
-        </v-list-item-content>
-        <v-list-item-action>
-          <v-btn icon @click="viewRecipeDetails(recipe.id)">
-            <v-icon>mdi-eye</v-icon>
-          </v-btn>
-          <v-btn icon color="error" @click="deleteRecipe(recipe.id)">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
-        </v-list-item-action>
-      </v-list-item>
-    </v-list>
-    <p v-else>No recipes found.</p>
+
+    <template v-else>
+      <v-container v-if="recipes.length">
+        <v-row>
+          <v-col
+              v-for="recipe in recipes"
+              :key="recipe.id"
+              cols="12"
+              sm="6"
+              md="4"
+              lg="3"
+          >
+            <v-card outlined>
+              <v-card-title>{{ recipe.name }}</v-card-title>
+              <v-card-actions>
+                <!-- Buttons placed next to each other -->
+                <v-btn color="primary" @click="openRecipeDialog(recipe)">
+                  View Recipe
+                </v-btn>
+                <v-btn color="error" @click="deleteRecipe(recipe.id)">
+                  Delete
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+      <p v-else>No recipes found.</p>
+    </template>
+
+    <!-- Dialog for showing recipe details -->
+    <v-dialog v-model="dialog" max-width="600px">
+      <v-card>
+        <v-card-title>{{ selectedRecipe?.name }}</v-card-title>
+        <v-card-text>
+          <p v-if="selectedRecipe?.instructions">
+            {{ selectedRecipe.instructions }}
+          </p>
+          <p v-else>No instructions available for this recipe.</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" text @click="dialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
+
+
 
 <script>
 export default {
   name: 'SavedRecipes',
   data() {
     return {
-      loading: true
+      loading: true,
+      dialog: false,
+      selectedRecipe: null // For storing the recipe to display in the dialog
     };
   },
   computed: {
@@ -56,9 +86,9 @@ export default {
         this.loading = false;
       }
     },
-    viewRecipeDetails(recipeId) {
-      // Navigate to recipe details page
-      this.$router.push(`/recipes/${recipeId}`);
+    openRecipeDialog(recipe) {
+      this.selectedRecipe = recipe;
+      this.dialog = true; // Open the dialog
     },
     async deleteRecipe(recipeId) {
       try {
