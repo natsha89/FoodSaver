@@ -81,15 +81,13 @@ export default createStore({
         // Hämta användarinformation
         async fetchUser({ commit, state }) {
             try {
-                const response = await axios.get('/api/auth/user', {
+                const response = await axios.get('/api/users/me', {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
-                commit('setUser', response.data);
+                // Note the change in how you extract user data
+                commit('setUser', response.data.data);
             } catch (error) {
                 console.error('Error fetching user data:', error.response?.data?.message || error.message);
-                commit('setAuthenticated', false);
-                commit('clearUser');
-                commit('clearAuthToken');
             }
         },
         // Hämta matvaror
