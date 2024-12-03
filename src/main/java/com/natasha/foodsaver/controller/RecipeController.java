@@ -55,12 +55,12 @@ public class RecipeController {
         } catch (IllegalArgumentException e) {
             // Logga ogiltiga indata och returnera ett bad request-svar med felmeddelande
             logger.error("Invalid input: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(List.of(new Recipe("Error", "Invalid input")));
+            return ResponseEntity.badRequest().body(List.of(new Recipe("Error", "Invalid input", List.of())));
         } catch (Exception e) {
             // Logga andra fel och returnera ett internal server error-svar (HTTP 500)
             logger.error("An error occurred while generating recipes: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(List.of(new Recipe("Error", "An internal server error occurred")));
+                    .body(List.of(new Recipe("Error", "An internal server error occurred", List.of())));
         }
     }
 

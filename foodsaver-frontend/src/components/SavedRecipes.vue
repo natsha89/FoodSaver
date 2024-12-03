@@ -1,133 +1,90 @@
 <template>
-  <v-container>
-    <!-- Card for Saved Recipes -->
-    <v-card class="mb-4">
-      <v-card-title>Saved Recipes</v-card-title>
-      <v-card-text>
-        <!-- Loading indicator -->
-        <v-progress-circular v-if="isLoading" indeterminate color="primary" size="30" class="my-2"></v-progress-circular>
-
-        <!-- Message for no saved recipes -->
-        <v-alert v-else-if="savedRecipes.length === 0" type="info" class="mt-3">
-          You don't have any saved recipes yet.
-        </v-alert>
-
-        <!-- Grid of recipe boxes -->
-        <v-row v-else class="saved-recipes-grid">
-          <v-col
-              v-for="recipe in savedRecipes"
-              :key="recipe.id"
-              cols="12"
-              sm="6"
-              md="4"
-          >
-            <!-- Recipe box showing only the title -->
-            <v-card
-                class="recipe-tile"
-                @click="openRecipeDialog(recipe)"
-            >
-              <v-card-title class="truncate">{{ recipe.name }}</v-card-title>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
-
-    <!-- Recipe Dialog displaying full recipe content -->
-    <v-dialog v-model="isDialogOpen" max-width="600px">
-      <v-card>
-        <v-card-title>{{ selectedRecipe.name }}</v-card-title>
-        <v-card-text v-if="selectedRecipe.description">
-          {{ selectedRecipe.description }}
-        </v-card-text>
-        <v-card-text v-else>
-          <em>No description available for this recipe.</em>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="isDialogOpen = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+  <div>
+    <h2>My Saved Recipes</h2>
+    <v-progress-circular v-if="loading" indeterminate></v-progress-circular>
+    <v-list v-else-if="recipes.length">
+      <v-list-item v-for="recipe in recipes" :key="recipe.id" class="mb-2">
+        <v-list-item-content>
+          <v-list-item-title>{{ recipe.name }}</v-list-item-title>
+          <v-list-item-subtitle>
+            {{ recipe.description || 'No description available' }}
+          </v-list-item-subtitle>
+        </v-list-item-content>
+        <v-list-item-action>
+          <v-btn icon @click="viewRecipeDetails(recipe.id)">
+            <v-icon>mdi-eye</v-icon>
+          </v-btn>
+          <v-btn icon color="error" @click="deleteRecipe(recipe.id)">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+        </v-list-item-action>
+      </v-list-item>
+    </v-list>
+    <p v-else>No recipes found.</p>
+  </div>
 </template>
 
 <script>
-import http from '../http';
-
 export default {
+  name: 'SavedRecipes',
   data() {
     return {
-      savedRecipes: [],
-      isLoading: false,
-      isDialogOpen: false,
-      selectedRecipe: {}
+      loading: true
     };
   },
+  computed: {
+    recipes() {
+      return this.$store.getters.recipes; // Update to use recipes getter
+    }
+  },
+  created() {
+    this.loadRecipes();
+  },
   methods: {
-    async fetchSavedRecipes() {
-      this.isLoading = true;
+    async loadRecipes() {
       try {
-        const response = await http.get('/api/recipes');
-        console.log(response.data);  // Logga svaret för att kontrollera om beskrivningen finns.
-        this.savedRecipes = response.data;
+        this.loading = true;
+        await this.$store.dispatch('fetchRecipes');
       } catch (error) {
-        console.error('Error fetching saved recipes:', error);
-        this.$notify.error('Failed to load saved recipes.');
+        console.error('Failed to load recipes:', error);
+        // Show error message to user
+        this.$store.dispatch('showSnackbar', {
+          message: 'Failed to load recipes. Please try again.',
+          color: 'error'
+        });
       } finally {
-        this.isLoading = false;
+        this.loading = false;
       }
     },
-    openRecipeDialog(recipe) {
-      this.selectedRecipe = recipe;
-      this.isDialogOpen = true;
+    viewRecipeDetails(recipeId) {
+      // Navigate to recipe details page
+      this.$router.push(`/recipes/${recipeId}`);
     },
-    async removeRecipe(recipeId, index) {
+    async deleteRecipe(recipeId) {
       try {
-        await http.delete(`/api/recipes/${recipeId}`);
-        this.savedRecipes.splice(index, 1);
-        this.$notify.success('Recipe removed successfully!');
+        // Confirm deletion
+        const confirm = await this.$dialog.confirm({
+          text: 'Are you sure you want to delete this recipe?',
+          title: 'Confirm Deletion'
+        });
+
+        if (confirm) {
+          await this.$store.dispatch('deleteRecipe', recipeId);
+          // Optional: show success message
+          this.$store.dispatch('showSnackbar', {
+            message: 'Recipe deleted successfully',
+            color: 'success'
+          });
+        }
       } catch (error) {
-        console.error('Error removing recipe:', error);
-        this.$notify.error('Failed to remove recipe.');
+        console.error('Failed to delete recipe:', error);
+        // Show error message
+        this.$store.dispatch('showSnackbar', {
+          message: 'Failed to delete recipe. Please try again.',
+          color: 'error'
+        });
       }
-    },
-  },
-  mounted() {
-    this.fetchSavedRecipes();
-  },
+    }
+  }
 };
 </script>
-
-<style scoped>
-.saved-recipes-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.recipe-tile {
-  background-color: #e0f7fa;
-  border-radius: 8px;
-  padding: 16px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.recipe-tile:hover {
-  transform: scale(1.02);
-}
-
-.v-card-title {
-  color: #004d40;
-}
-
-.truncate {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: #00796b;
-}
-</style>
