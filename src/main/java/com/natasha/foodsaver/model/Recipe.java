@@ -19,7 +19,7 @@ public class Recipe {
 
     // Konstruktor för att skapa ett recept med namn och instruktioner
     // Notera att ingredienser inte används i denna konstruktor, så det kan behövas en uppdatering
-    public Recipe(String name, String instructions) {
+    public Recipe(String name, String instructions, List<String> ingredients) {
         this.name = name;
         this.instructions = instructions;
         this.ingredients = ingredients; // här borde ingredienser sättas korrekt, men denna konstruktor saknar en parameter för ingredienser

@@ -10,6 +10,7 @@ export default createStore({
         user: null, // Information om den inloggade användaren
         authToken: localStorage.getItem('authToken') || null, // Token lagrad i localStorage
         foodItems: [], // Ny state för att lagra matvaror
+        recipes: [],
     },
 
     mutations: {
@@ -32,6 +33,15 @@ export default createStore({
         },
         setFoodItems(state, items) {
             state.foodItems = items; // Uppdatera foodItems i state
+        },
+        removeFoodItems(state, foodItemId) {
+            state.foodItems = state.foodItems.filter(foodItem => foodItem.id !== foodItemId);
+        },
+        setRecipes(state, items) {
+            state.recipes = items;
+        },
+        removeRecipe(state, recipeId) {
+            state.recipes = state.recipes.filter(recipe => recipe.id !== recipeId);
         },
     },
 
@@ -82,6 +92,28 @@ export default createStore({
                 commit('clearAuthToken');
             }
         },
+        // Hämta matvaror
+        async fetchRecipes({ commit, state }) {
+            try {
+                const response = await axios.get('/api/recipes', {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+                commit('setRecipes', response.data); // Uppdatera state med matvarorna
+            } catch (error) {
+                console.error('Error fetching recipes:', error.response?.data?.message || error.message);
+            }
+        },
+        async deleteRecipe({ commit, state }, recipeId) {
+            try {
+                await axios.delete(`/api/recipes/${recipeId}`, {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+                commit('removeRecipe', recipeId);
+            } catch (error) {
+                console.error('Error deleting recipe:', error.response?.data?.message || error.message);
+                throw error; // Rethrow to allow component to handle
+            }
+        },
 
         // Hämta matvaror
         async fetchFoodItems({ commit, state }) {
@@ -92,6 +124,24 @@ export default createStore({
                 commit('setFoodItems', response.data); // Uppdatera state med matvarorna
             } catch (error) {
                 console.error('Error fetching food items:', error.response?.data?.message || error.message);
+            }
+        },
+
+        // Delete a food item
+        async deleteFoodItem({ commit, state }, foodItemId) {
+            try {
+                await axios.delete(`/api/foodItems/${foodItemId}`, {
+                    headers: { Authorization: `Bearer ${state.authToken}` }
+                });
+
+                // Optionally, you can remove the item from the local state
+                const updatedFoodItems = state.foodItems.filter(item => item.id !== foodItemId);
+                commit('setFoodItems', updatedFoodItems);
+
+                return true;
+            } catch (error) {
+                console.error('Error deleting food item:', error.response?.data?.message || error.message);
+                throw error;
             }
         },
     },
@@ -105,6 +155,9 @@ export default createStore({
         },
         foodItems(state) {
             return state.foodItems; // Getter för att hämta matvaror
+        },
+        recipes(state) {
+            return state.recipes;
         },
     },
 });

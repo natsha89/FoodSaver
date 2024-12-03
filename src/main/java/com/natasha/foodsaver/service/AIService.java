@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -115,7 +116,7 @@ public class AIService {
                 String instructions = parts[2].trim(); // Instruktionerna
 
                 // Skapa och lägg till receptet i listan, använd foodItem istället för foodItems
-                Recipe recipe = new Recipe(name, instructions);
+                Recipe recipe = new Recipe(name, instructions, Collections.singletonList(ingredients));
                 recipes.add(recipe);
             }
         }

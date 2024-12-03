@@ -32,20 +32,43 @@ public class AIResponse {
 
     // Enkel metod för att parsa recepttexten och skapa en lista med Recipe objekt
     private List<Recipe> parseRecipes(String recipeText) {
-        // Exempel: Dela upp recipeText i delar och skapa Recipe objekt (förväntar formatet: namn, ingredienser, instruktioner)
-        String[] parts = recipeText.split("\n", 3); // Dela upp texten vid radbrytningar i tre delar
-        if (parts.length == 3) {
-            String name = parts[0].trim();  // Receptets namn
-            String ingredients = parts[1].trim();  // Ingredienserna
-            String instructions = parts[2].trim();  // Instruktionerna
+        String[] lines = recipeText.split("\n");
+        StringBuilder nameBuilder = new StringBuilder();
+        StringBuilder ingredientsBuilder = new StringBuilder();
+        StringBuilder instructionsBuilder = new StringBuilder();
 
-            // Omvandla ingredienser till en lista och skapa ett Recipe objekt
-            List<String> ingredientList = List.of(ingredients.split(",\\s*"));  // Dela ingredienserna vid kommatecken
-            Recipe recipe = new Recipe(name, instructions);  // Skapa Recipe objektet
-            return List.of(recipe);  // Returnera en lista med ett enda recept
+        boolean isIngredients = false;
+        boolean isInstructions = false;
+
+        for (String line : lines) {
+            if (line.trim().toLowerCase().startsWith("ingredients:")) {
+                isIngredients = true;
+                isInstructions = false;
+                continue;
+            } else if (line.trim().toLowerCase().startsWith("instructions:")) {
+                isInstructions = true;
+                isIngredients = false;
+                continue;
+            }
+
+            if (isIngredients) {
+                ingredientsBuilder.append(line.trim()).append(", ");
+            } else if (isInstructions) {
+                instructionsBuilder.append(line.trim()).append("\n");
+            } else {
+                nameBuilder.append(line.trim()).append(" ");
+            }
         }
-        return List.of();  // Om formatet inte är som förväntat, returnera en tom lista
+
+        // Skapa receptet
+        String name = nameBuilder.toString().trim();
+        List<String> ingredients = List.of(ingredientsBuilder.toString().split(",\\s*"));
+        String instructions = instructionsBuilder.toString().trim();
+
+        Recipe recipe = new Recipe(name, instructions, ingredients);
+        return List.of(recipe);
     }
+
 
     // Inre klass som representerar en generation (recept) från Cohere:s API-svar
     public static class Generation {
