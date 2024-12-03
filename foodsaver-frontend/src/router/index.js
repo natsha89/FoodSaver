@@ -7,7 +7,7 @@ const RecipeGenerator = () => import('../components/RecipeGenerator.vue');
 const SavedRecipes = () => import('../components/SavedRecipes.vue');
 const LoginForm = () => import("../components/LoginForm.vue");
 const SignUpForm = () => import("../components/SignUpForm.vue");
-const UserProfile = () => import('../components/Profile.vue');
+const UserProfile = () => import('../components/UserProfile.vue');
 const WelcomeView = () => import('../components/WelcomeView.vue'); // Optional welcome view
 const VerifyPage = () => import('../components/VerifyPage.vue'); // Add the VerifyPage component
 
@@ -22,7 +22,7 @@ const routes = [
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes, meta: { requiresAuth: true } },
     { path: '/login', name: 'Login', component: LoginForm },
     { path: '/signup', name: 'SignUp', component: SignUpForm },
-    { path: '/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
+    { path: '/user-profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
