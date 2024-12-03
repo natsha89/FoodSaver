@@ -19,7 +19,7 @@
               <v-card-actions>
                 <!-- Buttons placed next to each other -->
                 <v-btn color="primary" @click="openRecipeDialog(recipe)">
-                  View Recipe
+                  <v-btn @click="confirmDelete(item.id)" small color="error">Delete</v-btn>
                 </v-btn>
                 <v-btn color="error" @click="deleteRecipe(recipe.id)">
                   Delete
@@ -90,29 +90,17 @@ export default {
       this.selectedRecipe = recipe;
       this.dialog = true; // Open the dialog
     },
+    confirmDelete(recipeId) {
+      if (confirm('Are you sure you want to delete this recipe?')) {
+        this.deleteRecipe(recipeId);
+      }
+    },
     async deleteRecipe(recipeId) {
       try {
-        // Confirm deletion
-        const confirm = await this.$dialog.confirm({
-          text: 'Are you sure you want to delete this recipe?',
-          title: 'Confirm Deletion'
-        });
-
-        if (confirm) {
-          await this.$store.dispatch('deleteRecipe', recipeId);
-          // Optional: show success message
-          this.$store.dispatch('showSnackbar', {
-            message: 'Recipe deleted successfully',
-            color: 'success'
-          });
-        }
+        await this.$store.dispatch('deleteRecipe', recipeId);
+        this.$toast.success('Recipe deleted');
       } catch (error) {
-        console.error('Failed to delete recipe:', error);
-        // Show error message
-        this.$store.dispatch('showSnackbar', {
-          message: 'Failed to delete recipe. Please try again.',
-          color: 'error'
-        });
+        this.$toast.error('Failed to delete recipe');
       }
     }
   }

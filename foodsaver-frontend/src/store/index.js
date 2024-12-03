@@ -37,8 +37,8 @@ export default createStore({
         removeFoodItems(state, foodItemId) {
             state.foodItems = state.foodItems.filter(foodItem => foodItem.id !== foodItemId);
         },
-        setRecipes(state, items) {
-            state.recipes = items;
+        setRecipes(state, recipes) {
+            state.recipes = recipes;
         },
         removeRecipe(state, recipeId) {
             state.recipes = state.recipes.filter(recipe => recipe.id !== recipeId);
@@ -106,7 +106,10 @@ export default createStore({
                 await axios.delete(`/api/recipes/${recipeId}`, {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
-                commit('removeRecipe', recipeId);
+                const updatedRecipes = state.recipes.filter(recipe => recipe.id !== recipeId);
+                commit('setRecipes', updatedRecipes);
+
+                return true;
             } catch (error) {
                 console.error('Error deleting recipe:', error.response?.data?.message || error.message);
                 throw error; // Rethrow to allow component to handle
@@ -122,6 +125,37 @@ export default createStore({
                 commit('setFoodItems', response.data); // Uppdatera state med matvarorna
             } catch (error) {
                 console.error('Error fetching food items:', error.response?.data?.message || error.message);
+            }
+        },
+        async createFoodItem({ commit, state }, foodItem) {
+            try {
+                const response = await axios.post('/api/foodItems', foodItem, {
+                    headers: { Authorization: `Bearer ${state.authToken}` }
+                });
+
+                // Commit the new food item to the state
+                commit('setFoodItems', response.data);
+
+                return response.data;
+            } catch (error) {
+                console.error('Error creating food item:', error.response?.data?.message || error.message);
+                throw error;
+            }
+        },
+
+        async updateFoodItem({ commit, state }, { id, foodItem }) {
+            try {
+                const response = await axios.put(`/api/foodItems/${id}`, foodItem, {
+                    headers: { Authorization: `Bearer ${state.authToken}` }
+                });
+
+                // Update the food items in the state
+                commit('setFoodItems', response.data);
+
+                return response.data;
+            } catch (error) {
+                console.error('Error updating food item:', error.response?.data?.message || error.message);
+                throw error;
             }
         },
 
