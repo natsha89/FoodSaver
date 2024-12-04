@@ -115,7 +115,24 @@ export default createStore({
                 throw error; // Rethrow to allow component to handle
             }
         },
+        async generateRecipe({ commit, state }, recipeData) {
+            try {
+                const response = await axios.post('/api/recipes/generate', {
+                    ingredients: recipeData.ingredients,
+                    allergens: recipeData.allergens || [],
+                    dietaryPreferences: recipeData.dietaryPreferences || '',
+                    servings: recipeData.servings || 1
+                }, {
+                    headers: { Authorization: `Bearer ${state.authToken}` }
+                });
 
+                commit('setRecipes', response.data);
+                return response.data;
+            } catch (error) {
+                console.error('Error creating recipe:', error.response?.data?.message || error.message);
+                throw error;
+            }
+        },
         // Hämta matvaror
         async fetchFoodItems({ commit, state }) {
             try {

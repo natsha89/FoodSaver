@@ -17,11 +17,10 @@
             <v-card outlined>
               <v-card-title>{{ recipe.name }}</v-card-title>
               <v-card-actions>
-                <!-- Buttons placed next to each other -->
                 <v-btn color="primary" @click="openRecipeDialog(recipe)">
-                  <v-btn @click="confirmDelete(item.id)" small color="error">Delete</v-btn>
+                  View
                 </v-btn>
-                <v-btn color="error" @click="deleteRecipe(recipe.id)">
+                <v-btn color="error" @click="confirmDelete(recipe.id)">
                   Delete
                 </v-btn>
               </v-card-actions>
@@ -37,10 +36,21 @@
       <v-card>
         <v-card-title>{{ selectedRecipe?.name }}</v-card-title>
         <v-card-text>
-          <p v-if="selectedRecipe?.instructions">
-            {{ selectedRecipe.instructions }}
-          </p>
-          <p v-else>No instructions available for this recipe.</p>
+          <div v-if="selectedRecipe">
+            <h3>Ingredients:</h3>
+            <ul v-if="selectedRecipe.ingredients?.length">
+              <li v-for="(ingredient, index) in selectedRecipe.ingredients" :key="index">
+                {{ ingredient }}
+              </li>
+            </ul>
+            <p v-else>No ingredients listed.</p>
+
+            <h3>Instructions:</h3>
+            <p v-if="selectedRecipe.instructions">
+              {{ selectedRecipe.instructions }}
+            </p>
+            <p v-else>No instructions available for this recipe.</p>
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" text @click="dialog = false">Close</v-btn>
@@ -50,8 +60,6 @@
   </div>
 </template>
 
-
-
 <script>
 export default {
   name: 'SavedRecipes',
@@ -59,12 +67,12 @@ export default {
     return {
       loading: true,
       dialog: false,
-      selectedRecipe: null // For storing the recipe to display in the dialog
+      selectedRecipe: null
     };
   },
   computed: {
     recipes() {
-      return this.$store.getters.recipes; // Update to use recipes getter
+      return this.$store.getters.recipes;
     }
   },
   created() {
@@ -77,7 +85,6 @@ export default {
         await this.$store.dispatch('fetchRecipes');
       } catch (error) {
         console.error('Failed to load recipes:', error);
-        // Show error message to user
         this.$store.dispatch('showSnackbar', {
           message: 'Failed to load recipes. Please try again.',
           color: 'error'
@@ -88,12 +95,17 @@ export default {
     },
     openRecipeDialog(recipe) {
       this.selectedRecipe = recipe;
-      this.dialog = true; // Open the dialog
+      this.dialog = true;
     },
     confirmDelete(recipeId) {
-      if (confirm('Are you sure you want to delete this recipe?')) {
-        this.deleteRecipe(recipeId);
-      }
+      this.$dialog.confirm({
+        title: 'Delete Recipe',
+        message: 'Are you sure you want to delete this recipe?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'warning',
+        onConfirm: () => this.deleteRecipe(recipeId)
+      });
     },
     async deleteRecipe(recipeId) {
       try {
