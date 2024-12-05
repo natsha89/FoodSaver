@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <h2>My Saved Recipes</h2>
@@ -51,6 +50,13 @@
               {{ selectedRecipe.instructions }}
             </p>
             <p v-else>No instructions available for this recipe.</p>
+
+            <!-- Serving Size Section -->
+            <h3>Serving:</h3>
+            <p v-if="selectedRecipe.serving">
+              {{ selectedRecipe.serving }} Serving
+            </p>
+            <p v-else>No serving information available.</p>
           </div>
         </v-card-text>
         <v-card-actions>
