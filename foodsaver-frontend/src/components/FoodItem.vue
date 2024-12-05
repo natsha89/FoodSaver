@@ -16,7 +16,14 @@
                   <v-text-field v-model.number="newFoodItem.quantity" type="number" label="Quantity" outlined required></v-text-field>
                 </v-col>
                 <v-col cols="6" md="3">
-                  <v-text-field v-model="newFoodItem.unit" label="Unit" outlined required></v-text-field>
+                  <!-- Updated v-select for Unit -->
+                  <v-select
+                      v-model="newFoodItem.unit"
+                      :items="unitOptions"
+                      label="Unit"
+                      outlined
+                      required
+                  ></v-select>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field v-model="newFoodItem.expirationDate" type="date" label="Expiration Date" outlined></v-text-field>
@@ -64,7 +71,13 @@
             <v-card-text>
               <v-text-field v-model="selectedItem.name" label="Name" outlined></v-text-field>
               <v-text-field v-model.number="selectedItem.quantity" type="number" label="Quantity" outlined></v-text-field>
-              <v-text-field v-model="selectedItem.unit" label="Unit" outlined></v-text-field>
+              <!-- Updated v-select for Unit -->
+              <v-select
+                  v-model="selectedItem.unit"
+                  :items="unitOptions"
+                  label="Unit"
+                  outlined
+              ></v-select>
               <v-text-field v-model="selectedItem.expirationDate" type="date" label="Expiration Date" outlined></v-text-field>
             </v-card-text>
             <v-card-actions>
@@ -86,6 +99,7 @@ export default {
       editDialog: false,
       selectedItem: null,
       alerts: [],
+      unitOptions: ['gram', 'kg', 'liter', 'pieces'], // Predefined list of units
       newFoodItem: {
         name: '',
         quantity: null,
