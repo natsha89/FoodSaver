@@ -1,10 +1,10 @@
 <template>
   <div>
-    <h2>My Saved Recipes</h2>
-    <v-progress-circular v-if="loading" indeterminate></v-progress-circular>
+    <h2 class="page-title">My Saved Recipes</h2>
+    <v-progress-circular v-if="loading" indeterminate class="loading-spinner"></v-progress-circular>
 
     <template v-else>
-      <v-container v-if="recipes.length">
+      <v-container v-if="recipes.length" class="recipe-container">
         <v-row>
           <v-col
               v-for="recipe in recipes"
@@ -13,14 +13,15 @@
               sm="6"
               md="4"
               lg="3"
+              class="recipe-col"
           >
-            <v-card outlined>
-              <v-card-title>{{ recipe.name }}</v-card-title>
-              <v-card-actions>
-                <v-btn color="primary" @click="openRecipeDialog(recipe)">
+            <v-card outlined class="recipe-card">
+              <v-card-title class="recipe-title">{{ recipe.name }}</v-card-title>
+              <v-card-actions class="card-actions">
+                <v-btn color="primary" @click="openRecipeDialog(recipe)" class="view-btn">
                   View
                 </v-btn>
-                <v-btn color="error" @click="confirmDelete(recipe.id)">
+                <v-btn color="error" @click="confirmDelete(recipe.id)" class="delete-btn">
                   Delete
                 </v-btn>
               </v-card-actions>
@@ -28,39 +29,39 @@
           </v-col>
         </v-row>
       </v-container>
-      <p v-else>No recipes found.</p>
+      <p v-else class="no-recipes-text">No recipes found.</p>
     </template>
 
     <!-- Dialog for showing recipe details -->
     <v-dialog v-model="dialog" max-width="600px">
       <v-card>
-        <v-card-title>{{ selectedRecipe?.name }}</v-card-title>
+        <v-card-title class="dialog-title">{{ selectedRecipe?.name }}</v-card-title>
         <v-card-text>
           <div v-if="selectedRecipe">
-            <h3>Ingredients:</h3>
+            <h3 class="dialog-subheading">Ingredients:</h3>
             <ul v-if="selectedRecipe.ingredients?.length">
               <li v-for="(ingredient, index) in selectedRecipe.ingredients" :key="index">
                 {{ ingredient }}
               </li>
             </ul>
-            <p v-else>No ingredients listed.</p>
+            <p v-else class="no-ingredients">No ingredients listed.</p>
 
-            <h3>Instructions:</h3>
-            <p v-if="selectedRecipe.instructions">
+            <h3 class="dialog-subheading">Instructions:</h3>
+            <p v-if="selectedRecipe.instructions" class="dialog-content">
               {{ selectedRecipe.instructions }}
             </p>
-            <p v-else>No instructions available for this recipe.</p>
+            <p v-else class="no-instructions">No instructions available for this recipe.</p>
 
             <!-- Serving Size Section -->
-            <h3>Serving:</h3>
-            <p v-if="selectedRecipe.serving">
+            <h3 class="dialog-subheading">Serving:</h3>
+            <p v-if="selectedRecipe.serving" class="dialog-content">
               {{ selectedRecipe.serving }} Serving
             </p>
-            <p v-else>No serving information available.</p>
+            <p v-else class="dialog-content">No serving information available.</p>
           </div>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" text @click="dialog = false">Close</v-btn>
+          <v-btn color="primary" text @click="dialog = false" class="close-btn">Close</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -120,3 +121,83 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.page-title {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #388E3C;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.loading-spinner {
+  display: block;
+  margin: 100px auto;
+}
+
+.recipe-container {
+  margin-top: 20px;
+}
+
+.recipe-col {
+  margin-bottom: 20px;
+}
+
+.recipe-card {
+  transition: transform 0.2s, box-shadow 0.3s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #388E3C;
+}
+
+.card-actions {
+  justify-content: space-between;
+}
+
+.view-btn, .delete-btn {
+  font-weight: 600;
+}
+
+.no-recipes-text {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+}
+
+.recipe-dialog .dialog-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #388E3C;
+}
+
+.dialog-subheading {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #388E3C;
+  margin-top: 20px;
+}
+
+.dialog-content {
+  font-size: 1rem;
+  color: #333;
+}
+
+.no-ingredients, .no-instructions {
+  font-style: italic;
+  color: #888;
+}
+
+.close-btn {
+  font-weight: 600;
+}
+</style>
