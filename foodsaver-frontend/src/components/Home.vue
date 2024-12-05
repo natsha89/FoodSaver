@@ -9,7 +9,7 @@
             alt="FoodSaver Intro Image"
             class="intro-image"
         ></v-img>
-        <v-btn color="secondary" @click="navigateTo('IngredientList')" large>
+        <v-btn color="primary" @click="navigateTo('IngredientList')" large class="cta-btn">
           View My Ingredients
         </v-btn>
       </v-col>
@@ -19,7 +19,7 @@
 
     <v-row justify="center" class="features">
       <v-col v-for="feature in features" :key="feature.title" cols="12" md="4">
-        <v-card class="feature-card">
+        <v-card class="feature-card" hover>
           <v-img :src="feature.image" height="400px" alt="Feature Image"></v-img>
           <v-card-title class="feature-title">
             <v-icon left>{{ feature.icon }}</v-icon>
@@ -35,9 +35,9 @@
         <v-card class="engagement-card">
           <v-card-title>Join the FoodWaste Revolution!</v-card-title>
           <v-card-text>
-            Start cooking creatively and sustainably with the ingredients you already have. Our mission is to minimize food waste while maximizing flavor.
+            Start cooking creatively and sustainably with the ingredients you already have.
           </v-card-text>
-          <v-btn color="green" @click="navigateTo('RecipeGenerator')">Start Cooking</v-btn>
+          <v-btn color="green" @click="navigateTo('RecipeGenerator')" class="cta-btn">Start Cooking</v-btn>
         </v-card>
       </v-col>
     </v-row>
@@ -97,36 +97,48 @@ export default {
 }
 
 .headline {
-  font-size: 2.5em;
+  font-size: 3em;
   color: #2E7D32;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
 .slogan {
-  font-size: 1.5em;
+  font-size: 1.6em;
   color: #388E3C;
-  margin-bottom: 20px;
+  font-style: italic;
+  margin-bottom: 30px;
+}
+
+.cta-btn {
+  border-radius: 25px;
+  font-weight: bold;
 }
 
 .feature-card {
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .feature-card:hover {
   transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .feature-title {
-  font-size: 1.2em; /* Smaller font size for feature titles */
+  font-size: 1.3em;
   font-weight: bold;
-}
-
-.engagement {
-  margin-top: 40px;
+  color: #388E3C;
 }
 
 .engagement-card {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.engagement-card v-btn {
+  width: 100%;
+  padding: 15px;
 }
 </style>

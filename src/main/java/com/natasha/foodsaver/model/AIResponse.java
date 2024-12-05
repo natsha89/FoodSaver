@@ -52,7 +52,11 @@ public class AIResponse {
             }
 
             if (isIngredients) {
-                ingredientsBuilder.append(line.trim()).append(", ");
+                // Avoid extra commas at the end
+                if (!ingredientsBuilder.isEmpty()) {
+                    ingredientsBuilder.append(" - ");
+                }
+                ingredientsBuilder.append(line.trim());
             } else if (isInstructions) {
                 instructionsBuilder.append(line.trim()).append("\n");
             } else {
@@ -62,7 +66,7 @@ public class AIResponse {
 
         // Skapa receptet
         String name = nameBuilder.toString().trim();
-        List<String> ingredients = List.of(ingredientsBuilder.toString().split(",\\s*"));
+        List<String> ingredients = List.of(ingredientsBuilder.toString().split("\n"));
         String instructions = instructionsBuilder.toString().trim();
 
         Recipe recipe = new Recipe(name, instructions, ingredients);

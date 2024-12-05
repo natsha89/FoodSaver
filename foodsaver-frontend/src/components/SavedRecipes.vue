@@ -1,3 +1,4 @@
+
 <template>
   <div>
     <h2>My Saved Recipes</h2>
@@ -98,14 +99,9 @@ export default {
       this.dialog = true;
     },
     confirmDelete(recipeId) {
-      this.$dialog.confirm({
-        title: 'Delete Recipe',
-        message: 'Are you sure you want to delete this recipe?',
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-        type: 'warning',
-        onConfirm: () => this.deleteRecipe(recipeId)
-      });
+      if (confirm('Are you sure you want to delete this recipe?')) {
+        this.deleteRecipe(recipeId);
+      }
     },
     async deleteRecipe(recipeId) {
       try {

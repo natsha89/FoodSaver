@@ -27,6 +27,9 @@ export default createStore({
         clearUser(state) {
             state.user = null;
         },
+        updateUser(state, user) {
+            state.user = { ...state.user, ...user };
+        },
         clearAuthToken(state) {
             state.authToken = null;
             localStorage.removeItem('authToken'); // Rensa token från localStorage
@@ -84,10 +87,39 @@ export default createStore({
                 const response = await axios.get('/api/users/me', {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
-                // Note the change in how you extract user data
-                commit('setUser', response.data.data);
+                commit('setUser', response.data); // Uppdatera användardata i Vuex store
             } catch (error) {
-                console.error('Error fetching user data:', error.response?.data?.message || error.message);
+                console.error('Error fetching user:', error.response?.data?.message || error.message);
+                throw error; // Kasta om felet för att hanteras i komponenten
+            }
+        },
+
+        async updateUser({ commit, state }, updatedUser) {
+            try {
+                const response = await axios.put('/api/users/me', updatedUser, {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+                commit('updateUser', response.data); // Uppdatera användaren i Vuex store
+                return response.data;
+            } catch (error) {
+                console.error('Error updating user:', error.response?.data?.message || error.message);
+                throw error;
+            }
+        },
+        async deleteUser({ commit, state }) {
+            try {
+                await axios.delete('/api/users/me', {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+                commit('clearUser'); // Remove user data from Vuex
+                commit('setAuthenticated', false); // Log out the user
+                commit('clearAuthToken'); // Clear auth token
+                localStorage.removeItem('authToken'); // Remove token from localStorage
+                // Optionally, you could redirect to the login page or home page after deletion
+                return true; // Return a success status
+            } catch (error) {
+                console.error('Error deleting user:', error.response?.data?.message || error.message);
+                throw error; // Rethrow error to be handled in the component
             }
         },
         // Hämta matvaror
