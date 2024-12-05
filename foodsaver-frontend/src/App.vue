@@ -10,7 +10,7 @@
             </span>
             <span class="overlay-slogan">
               <span class="green-text">Reduce</span> Waste,
-              <span class="green-text">Save</span> <span >Taste</span>
+              <span class="green-text">Save</span> <span>Taste</span>
             </span>
           </div>
         </div>
@@ -34,6 +34,13 @@
         </router-link>
         <router-link to="/profile" class="nav-link">
           <v-btn text class="nav-btn">My Account</v-btn>
+        </router-link>
+
+        <!-- Notifications button -->
+        <router-link to="/notifications" class="nav-link">
+          <v-btn text class="nav-btn">
+            <img src="/notification.png" alt="Notifications" class="notification-icon" />
+          </v-btn>
         </router-link>
 
         <v-btn text @click="logout" class="nav-btn">Log Out</v-btn>
@@ -68,17 +75,19 @@ export default {
 .v-toolbar {
   background-color: white;
   color: black;
-  padding: 0 16px;
+  padding: 0 8px;  /* Reduced padding */
+  min-height: 48px;  /* Reduced height */
 }
 
 .logo-container {
   display: flex;
   align-items: center;
+  gap: 8px; /* Reduced gap between logo and text */
 }
 
 .logo-image {
-  height: 45px;
-  margin-right: 8px;
+  height: 30px;  /* Reduced logo size */
+  margin-right: 4px; /* Reduced margin */
 }
 
 .title-text-container {
@@ -87,13 +96,13 @@ export default {
 }
 
 .title-text {
-  font-size: 1em;
+  font-size: 0.9em;  /* Reduced font size */
   font-weight: bold;
   color: #333;
 }
 
 .overlay-slogan {
-  font-size: 0.7em;
+  font-size: 0.6em;  /* Reduced font size */
   font-weight: bold;
   color: #4CAF50;
 }
@@ -101,15 +110,22 @@ export default {
 .nav-btn {
   font-weight: 600;
   color: #333;
+  font-size: 0.8em;  /* Reduced font size for buttons */
 }
 
 .toolbar-buttons {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;  /* Reduced gap between buttons */
 }
 
 .nav-link {
   text-decoration: none;
+}
+
+/* Style for the notifications icon */
+.notification-icon {
+  height: 24px;  /* Reduced icon size */
+  width: 24px;  /* Reduced icon size */
 }
 </style>
