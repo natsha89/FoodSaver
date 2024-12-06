@@ -3,7 +3,13 @@
     <v-row justify="center">
       <v-col cols="12" md="8">
         <h2 class="page-title">My Food Items</h2>
-
+        <v-img
+            src="/myfooditems.png"
+            alt="My Food Items Image"
+            class="my-food-items-image"
+            aspect-ratio="2/1"
+            contain
+        ></v-img>
         <v-card class="form-card">
           <v-card-title class="form-title">Add a New Food Item</v-card-title>
           <v-card-text>
@@ -179,6 +185,11 @@ export default {
 <style scoped>
 .my-food-items {
   margin-top: 40px;
+}
+.my-food-items-image {
+  border-radius: 8px;
+  margin-top: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .page-title {
