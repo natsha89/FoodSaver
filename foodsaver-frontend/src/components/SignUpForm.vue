@@ -84,14 +84,16 @@
     </v-dialog>
   </v-container>
 </template>
+
 <script>
-import http from '../http'; // Importera din Axios-instans
+import http from '../http';
 
 export default {
   data() {
     return {
       valid: false,
       isSubmitting: false,
+      dialogVisible: false,
       fullName: '',
       email: '',
       password: '',
@@ -131,8 +133,8 @@ export default {
           this.responseMessage = response.data.message || 'Account created successfully!';
           this.responseType = 'success';
 
-          // Omdirigera användaren till inloggningssidan
-          this.$router.push('/login');
+          // Visa dialog istället för omdirigering
+          this.dialogVisible = true;
         } catch (error) {
           // Hantera eventuella fel vid registrering
           this.responseMessage = error.response?.data.message || 'An unknown error occurred.';
@@ -140,6 +142,10 @@ export default {
           this.isSubmitting = false;
         }
       }
+    },
+    closeDialog() {
+      this.dialogVisible = false;
+      this.$router.push('/login');
     }
   },
 };
