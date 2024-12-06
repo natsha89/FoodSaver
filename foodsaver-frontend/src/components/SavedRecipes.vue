@@ -1,6 +1,15 @@
 <template>
   <div>
     <h2 class="page-title">My Saved Recipes</h2>
+    <!-- Bild för My Recipes -->
+    <v-img
+        src="/myrecipe.png"
+        alt="My Recipes Image"
+        class="my-recipes-image"
+        aspect-ratio="16/9"
+        max-height="400px"
+    ></v-img>
+
     <v-progress-circular v-if="loading" indeterminate class="loading-spinner"></v-progress-circular>
 
     <template v-else>
@@ -32,7 +41,7 @@
       <p v-else class="no-recipes-text">No recipes found.</p>
     </template>
 
-    <!-- Dialog for showing recipe details -->
+    <!-- Dialog för att visa detaljer om recept -->
     <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title class="dialog-title">{{ selectedRecipe?.name }}</v-card-title>
@@ -52,7 +61,6 @@
             </p>
             <p v-else class="no-instructions">No instructions available for this recipe.</p>
 
-            <!-- Serving Size Section -->
             <h3 class="dialog-subheading">Serving:</h3>
             <p v-if="selectedRecipe.serving" class="dialog-content">
               {{ selectedRecipe.serving }} Serving
@@ -131,6 +139,12 @@ export default {
   margin-bottom: 20px;
 }
 
+.my-recipes-image {
+  border-radius: 8px;
+  margin-top: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .loading-spinner {
   display: block;
   margin: 100px auto;
@@ -174,7 +188,7 @@ export default {
   color: #888;
 }
 
-.recipe-dialog .dialog-title {
+.dialog-title {
   font-size: 1.6rem;
   font-weight: bold;
   color: #388E3C;
