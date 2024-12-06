@@ -31,7 +31,7 @@ public class NotificationController {
         String userId = jwtService.extractUserIdFromToken(token);
         if (userId == null) {
             logger.error("Token extraction failed");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GlobalExceptionHandler.ResponseMessage("Invalid token"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GlobalExceptionHandler.ResponseMessage("Invalid token", null));
         }
 
         List<Notification> notifications = notificationService.getAllNotifications(userId);
@@ -50,14 +50,15 @@ public class NotificationController {
     ) {
         String userId = jwtService.extractUserIdFromToken(token);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GlobalExceptionHandler.ResponseMessage("Invalid token"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GlobalExceptionHandler.ResponseMessage("Invalid token", null));
+
         }
 
         try {
             Notification updatedNotification = notificationService.markAsRead(notificationId, userId);
             return ResponseEntity.ok(updatedNotification);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GlobalExceptionHandler.ResponseMessage("Notification not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GlobalExceptionHandler.ResponseMessage("Notification not found", null));
         }
     }
 }
