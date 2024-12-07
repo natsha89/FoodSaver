@@ -1,43 +1,65 @@
 package com.natasha.foodsaver.service;
 
-import com.natasha.foodsaver.exception.ResourceNotFoundException;
+import com.natasha.foodsaver.model.FoodItem;
 import com.natasha.foodsaver.model.Notification;
+import com.natasha.foodsaver.model.User;
+import com.natasha.foodsaver.repository.FoodItemRepository;
 import com.natasha.foodsaver.repository.NotificationRepository;
 import com.natasha.foodsaver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class NotificationService {
+
     @Autowired
-    private NotificationRepository notificationRepository;
+    private FoodItemRepository foodItemRepository;
+
     @Autowired
     private UserRepository userRepository;
 
-    public List<Notification> getAllNotifications(String userId) {
-        return notificationRepository.findByUserIdOrderByTimestampDesc(userId);
-    }
+    @Autowired
+    private NotificationRepository notificationRepository;
 
-    public Notification markAsRead(String notificationId, String userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+    @Scheduled(cron = "0 0 8 * * ?") // Körs varje dag kl. 08:00
+    public void checkFoodItemExpirations() {
+        List<FoodItem> allFoodItems = foodItemRepository.findAll();
+        LocalDate today = LocalDate.now();
 
-        notification.setRead(true);
-        return notificationRepository.save(notification);
-    }
+        for (FoodItem foodItem : allFoodItems) {
+            User user = userRepository.findById(foodItem.getUserId()).orElse(null);
+            if (user == null) continue;
 
-    public void createNotification(String userId, String message) {
-        if (userId == null || message == null) {
-            throw new IllegalArgumentException("User ID and message cannot be null");
+            LocalDate expirationDate = foodItem.getExpirationDate();
+
+            // Om matvaran har gått ut och ingen notifikation skickats
+            if (expirationDate.isBefore(today) && !foodItem.isExpiredNotified()) {
+                createNotification(user.getId(), "Food Expired: " + foodItem.getName(),
+                        "The food item '" + foodItem.getName() + "' has expired.");
+                foodItem.setExpiredNotified(true);
+                foodItemRepository.save(foodItem);
+            }
+
+            // Om matvaran går ut imorgon
+            if (expirationDate.isEqual(today.plusDays(1))) {
+                createNotification(user.getId(), "Food Expiration Reminder: " + foodItem.getName(),
+                        "The food item '" + foodItem.getName() + "' is expiring tomorrow.");
+            }
         }
-        Notification notification = new Notification(message, userId);
+    }
+
+    private void createNotification(String userId, String title, String message) {
+        Notification notification = new Notification(userId, title, message, LocalDateTime.now());
         notificationRepository.save(notification);
     }
 
-    public void addNotification(String expirationMessage) {
-        
+    public List<Notification> getNotificationByUserId(String userId) {
+        return notificationRepository.findByUserId(userId);  // Hämtar alla matvaror som tillhör användaren
+
     }
 }

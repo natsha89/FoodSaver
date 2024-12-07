@@ -1,4 +1,3 @@
-
 package com.natasha.foodsaver.model;
 
 import org.springframework.data.annotation.Id;
@@ -21,12 +20,11 @@ public class FoodItem {
     private LocalDate expirationDate;
     private String alertMessage;
     private List<String> allergens = new ArrayList<>();
-    private boolean expirationNotificationSent = false;
     private boolean allergenNotificationSent = false;
+    private boolean expiredNotified = false; // Nytt fält för att spåra utgångsnotifieringar
     private User user;
 
-
-    // Getter and Setter for id
+    // Getters och Setters
 
     public User getUser() {
         return user;
@@ -35,6 +33,7 @@ public class FoodItem {
     public void setUser(User user) {
         this.user = user;
     }
+
     public String getId() {
         return id;
     }
@@ -43,12 +42,14 @@ public class FoodItem {
         this.id = id;
     }
 
-    // Getter and Setter for userId
-    public String getUserId() {return userId;}
+    public String getUserId() {
+        return userId;
+    }
 
-   public void setUserId(String userId) {this.userId = userId;}
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-    // Getter and Setter for name
     public String getName() {
         return name;
     }
@@ -57,7 +58,6 @@ public class FoodItem {
         this.name = name;
     }
 
-    // Getter and Setter for quantity
     public double getQuantity() {
         return quantity;
     }
@@ -66,7 +66,6 @@ public class FoodItem {
         this.quantity = quantity;
     }
 
-    // Getter and Setter for unit
     public String getUnit() {
         return unit;
     }
@@ -75,7 +74,6 @@ public class FoodItem {
         this.unit = unit;
     }
 
-    // Getter and Setter for expirationDate
     public LocalDate getExpirationDate() {
         return expirationDate;
     }
@@ -83,6 +81,7 @@ public class FoodItem {
     public void setExpirationDate(LocalDate expirationDate) {
         this.expirationDate = expirationDate;
     }
+
     public String getAlertMessage() {
         return alertMessage;
     }
@@ -91,7 +90,6 @@ public class FoodItem {
         this.alertMessage = alertMessage;
     }
 
-    // Getter and Setter for allergens
     public List<String> getAllergens() {
         return allergens;
     }
@@ -100,16 +98,6 @@ public class FoodItem {
         this.allergens = allergens;
     }
 
-    // Getter and Setter for expirationNotificationSent
-    public boolean isExpirationNotificationSent() {
-        return expirationNotificationSent;
-    }
-
-    public void setExpirationNotificationSent(boolean expirationNotificationSent) {
-        this.expirationNotificationSent = expirationNotificationSent;
-    }
-
-    // Getter and Setter for allergenNotificationSent
     public boolean isAllergenNotificationSent() {
         return allergenNotificationSent;
     }
@@ -118,48 +106,49 @@ public class FoodItem {
         this.allergenNotificationSent = allergenNotificationSent;
     }
 
-    // Kontrollera om matvarans utgångsdatum är nära (inom ett visst antal dagar)
+    public boolean isExpiredNotified() {
+        return expiredNotified;
+    }
+
+    public void setExpiredNotified(boolean expiredNotified) {
+        this.expiredNotified = expiredNotified;
+    }
+
+    // Metoder
+
     public boolean isExpirationNear() {
-        // Kontrollera om utgångsdatumet är mindre än 3 dagar bort
+        // Kontrollera om utgångsdatum är nära (3 dagar eller mindre)
         long daysBetween = ChronoUnit.DAYS.between(LocalDate.now(), expirationDate);
         return daysBetween <= 3;
     }
 
-    // Kontrollera om matvaran innehåller allergener som användaren är allergisk mot
     public boolean checkAllergies(List<String> userAllergies) {
         for (String allergen : allergens) {
-            for (String userAllergy : userAllergies) {
-                // Om användarens allergi matchar en allergen i matvaran och notifikation ej skickats
-                if (userAllergy.equalsIgnoreCase(allergen) && !allergenNotificationSent) {
-                    sendAllergenNotification(allergen); // Skicka allergenvarning
-                    allergenNotificationSent = true;
-                    return true; // Returnera true om allergen hittas
-                }
+            if (userAllergies.contains(allergen) && !allergenNotificationSent) {
+                sendAllergenNotification(allergen);
+                allergenNotificationSent = true;
+                return true;
             }
         }
-        return false; // Ingen allergen hittades
+        return false;
     }
 
-    // Skicka notifiering om allergen finns
     private void sendAllergenNotification(String allergen) {
         System.out.println("Varning: " + name + " innehåller " + allergen + ", som du är allergisk mot.");
     }
 
-    // Schemalägg utgångsdatum-notifiering
     public boolean scheduleExpirationNotification() {
         LocalDate notificationDate = expirationDate.minusDays(3);
         long daysUntilNotification = ChronoUnit.DAYS.between(LocalDate.now(), notificationDate);
 
-        // Om det är tre dagar eller färre till utgångsdatum och notifiering ej skickats
-        if (daysUntilNotification <= 3 && !expirationNotificationSent) {
+        if (daysUntilNotification <= 0 && !expiredNotified) {
             sendExpirationNotification();
-            expirationNotificationSent = true;
-            return true; // Returnera true om notifiering skickas
+            expiredNotified = true;
+            return true;
         }
-        return false; // Ingen notifiering behövs
+        return false;
     }
 
-    // Skicka notifiering om att matvaran snart går ut
     private void sendExpirationNotification() {
         System.out.println(name + " går ut om 3 dagar. Använd den snart!");
     }
