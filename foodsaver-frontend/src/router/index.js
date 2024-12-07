@@ -10,6 +10,7 @@ const SignUpForm = () => import("../components/SignUpForm.vue");
 const UserProfile = () => import('../components/UserProfile.vue');
 const WelcomeView = () => import('../components/WelcomeView.vue'); // Optional welcome view
 const VerifyPage = () => import('../components/VerifyPage.vue'); // Add the VerifyPage component
+const UserNotifications = () => import('../components/UserNotifications.vue');
 
 // Define routes
 const routes = [
@@ -23,6 +24,7 @@ const routes = [
     { path: '/login', name: 'Login', component: LoginForm },
     { path: '/signup', name: 'SignUp', component: SignUpForm },
     { path: '/user-profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
+    {path: '/user-notifications', name: 'UserNotifications', component: UserNotifications, meta: {requiresAuth: true} },
 ];
 
 const router = createRouter({

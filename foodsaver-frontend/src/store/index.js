@@ -11,6 +11,7 @@ export default createStore({
         authToken: localStorage.getItem('authToken') || null, // Token lagrad i localStorage
         foodItems: [], // Ny state för att lagra matvaror
         recipes: [],
+        notifications: [],
     },
 
     mutations: {
@@ -45,6 +46,15 @@ export default createStore({
         },
         removeRecipe(state, recipeId) {
             state.recipes = state.recipes.filter(recipe => recipe.id !== recipeId);
+        },
+        addNotification(state, notification) {
+            state.notifications.push(notification);
+        },
+        removeNotification(state, index) {
+            state.notifications.splice(index, 1);
+        },
+        clearNotifications(state) {
+            state.notifications = [];
         },
     },
 
@@ -225,6 +235,36 @@ export default createStore({
                 throw error;
             }
         },
+        async fetchNotifications({ commit, state }) {
+            try {
+                const response = await axios.get('/api/notifications/user', {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+
+                // Assuming response.data is an array of notifications
+                response.data.forEach(notification => {
+                    commit('addNotification', {
+                        id: notification.id,
+                        message: notification.message,
+                        read: notification.read
+                    });
+                });
+            } catch (error) {
+                console.error('Error fetching notifications:', error.response?.data?.message || error.message);
+            }
+        },
+        // In the actions section
+        async markNotificationAsRead({ state }, notificationId) {
+            try {
+                await axios.post(`/api/notifications/markAsRead/${notificationId}`, null, {
+                    headers: { Authorization: `Bearer ${state.authToken}` },
+                });
+                // Optionally, you can update local state here if needed
+            } catch (error) {
+                console.error('Error marking notification as read:', error.response?.data?.message || error.message);
+                throw error;
+            }
+        },
     },
 
     getters: {
@@ -239,6 +279,9 @@ export default createStore({
         },
         recipes(state) {
             return state.recipes;
+        },
+        notifications(state) {
+            return state.notifications;
         },
     },
 });
