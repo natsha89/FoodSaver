@@ -1,131 +1,162 @@
 <template>
-  <div>
-    <h2>My Account</h2>
+  <v-container class="user-profile">
+    <v-row justify="center">
+      <v-col cols="12" md="8">
+        <!-- Tidigare kod är densamma -->
 
-    <!-- Loading Spinner -->
-    <v-progress-circular v-if="loading" indeterminate></v-progress-circular>
+        <!-- Edit Dialog med nya tillägg -->
+        <v-dialog v-model="editDialog" max-width="500px">
+          <v-card v-if="selectedUser">
+            <!-- Tidigare innehåll -->
 
-    <!-- User Details -->
-    <div v-else-if="user" class="user-details">
-      <v-card class="pa-4 mb-4">
-        <v-data-table
-            :items="[user]"
-            :headers="headers"
-            class="elevation-1"
-            dense
-        >
-          <template v-slot:[`item.allergies`]="{ item }">
-            {{ item.allergies && item.allergies.length ? item.allergies.join(', ') : 'None' }}
-          </template>
-          <template v-slot:[`item.dietaryPreferences`]="{ item }">
-            {{ item.dietaryPreferences && item.dietaryPreferences.length ? item.dietaryPreferences.join(', ') : 'None' }}
-          </template>
-        </v-data-table>
-      </v-card>
+            <v-card-subtitle class="pa-0 mt-4">Dietary Preferences</v-card-subtitle>
+            <v-chip-group column>
+              <v-chip
+                  v-for="(preference, index) in selectedUser.dietaryPreferences"
+                  :key="index"
+                  small
+                  close
+                  @click:close="selectedUser.dietaryPreferences.splice(index, 1)"
+              >
+                {{ preference }}
+              </v-chip>
+              <v-chip small outlined @click="openDietaryPreferenceDialog">
+                + Add
+              </v-chip>
+            </v-chip-group>
 
-      <v-card-actions>
-        <!-- Edit Profile Button -->
-        <v-btn @click="openEditDialog" color="primary">Edit Profile</v-btn>
+            <v-card-subtitle class="pa-0 mt-4">Allergies</v-card-subtitle>
+            <v-chip-group column>
+              <v-chip
+                  v-for="(allergy, index) in selectedUser.allergies"
+                  :key="index"
+                  small
+                  close
+                  color="red"
+                  text-color="white"
+                  @click:close="selectedUser.allergies.splice(index, 1)"
+              >
+                {{ allergy }}
+              </v-chip>
+              <v-chip small outlined color="red" text-color="red" @click="openAllergyDialog">
+                + Add
+              </v-chip>
+            </v-chip-group>
+          </v-card>
+        </v-dialog>
 
-        <!-- My Food Items Button -->
-        <v-btn @click="goToFoodItems" color="secondary">My Food Items</v-btn>
+        <!-- Dietary Preferences Dialog -->
+        <v-dialog v-model="dietaryPreferenceDialog" max-width="300px">
+          <v-card>
+            <v-card-title>Select Dietary Preference</v-card-title>
+            <v-list>
+              <v-list-item
+                  v-for="preference in filteredDietaryPreferences"
+                  :key="preference"
+                  @click="addSelectedDietaryPreference(preference)"
+              >
+                <v-list-item-title>{{ preference }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+        </v-dialog>
 
-        <!-- My Recipes Button -->
-        <v-btn @click="goToRecipes" color="secondary">My Recipes</v-btn>
-
-        <!-- Generate Recipe Button -->
-        <v-btn @click="goToRecipeGenerator" color="primary">Generate Recipe</v-btn>
-      </v-card-actions>
-    </div>
-
-    <p v-else>No user data found.</p>
-
-    <!-- Edit Profile Dialog -->
-    <v-dialog v-model="editDialog" max-width="500px">
-      <v-card v-if="selectedItem">
-        <v-card-title>Edit Profile</v-card-title>
-        <v-card-text>
-          <v-text-field v-model="selectedItem.fullName" label="Full Name"></v-text-field>
-          <v-text-field v-model="selectedItem.email" label="Email"></v-text-field>
-          <v-textarea
-              v-model="selectedItem.allergies"
-              label="Allergies (comma-separated)"
-          ></v-textarea>
-          <v-textarea
-              v-model="selectedItem.dietaryPreferences"
-              label="Dietary Preferences (comma-separated)"
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="updateUser" color="primary">Save</v-btn>
-          <v-btn @click="editDialog = false" color="secondary">Cancel</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
+        <!-- Allergies Dialog -->
+        <v-dialog v-model="allergyDialog" max-width="300px">
+          <v-card>
+            <v-card-title>Select Allergy</v-card-title>
+            <v-list>
+              <v-list-item
+                  v-for="allergy in filteredAllergies"
+                  :key="allergy"
+                  @click="addSelectedAllergy(allergy)"
+              >
+                <v-list-item-title>{{ allergy }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+        </v-dialog>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
 export default {
+  name: 'UserProfile',
   data() {
     return {
       loading: true,
+      error: null,
       editDialog: false,
-      selectedItem: null,
-      headers: [
-        {text: 'Full Name', value: 'fullName'},
-        {text: 'Email', value: 'email'},
-        {text: 'Allergies', value: 'allergies'},
-        {text: 'Dietary Preferences', value: 'dietaryPreferences'}
+      selectedUser: null,
+      dietaryPreferenceDialog: false,
+      allergyDialog: false,
+      availableDietaryPreferences: [
+        'Vegetarian',
+        'Vegan',
+        'Gluten-free',
+        'Lactose-free',
+        'Keto',
+        'Paleo',
+        'Halal',
+        'Kosher'
+      ],
+      availableAllergies: [
+        'Nuts',
+        'Milk',
+        'Eggs',
+        'Fish',
+        'Shellfish',
+        'Soy',
+        'Wheat',
+        'Peanuts'
       ]
     };
   },
   computed: {
-    user() {
-      return this.$store.getters.user; // Fetch user data from Vuex store
+    filteredDietaryPreferences() {
+      return this.availableDietaryPreferences.filter(
+          pref => !this.selectedUser.dietaryPreferences.includes(pref)
+      );
+    },
+    filteredAllergies() {
+      return this.availableAllergies.filter(
+          allergy => !this.selectedUser.allergies.includes(allergy)
+      );
     }
   },
-  created() {
-    this.loadUser(); // Load user data when component is created
-  },
   methods: {
-    async loadUser() {
-      try {
-        this.loading = true;
-        await this.$store.dispatch('fetchUser'); // Fetch user from Vuex store
-      } catch (error) {
-        console.error('Failed to load user', error);
-        this.$toast.error(`Failed to load user: ${error.message}`);
-      } finally {
-        this.loading = false;
-      }
+    // ... tidigare metoder ...
+
+    openDietaryPreferenceDialog() {
+      this.dietaryPreferenceDialog = true;
     },
-    openEditDialog() {
-      this.selectedItem = {...this.user}; // Copy user data for editing
-      this.editDialog = true;
+
+    openAllergyDialog() {
+      this.allergyDialog = true;
     },
-    async updateUser() {
-      try {
-        await this.$store.dispatch('updateUser', this.selectedItem); // Update user via Vuex action
-        this.editDialog = false;
-        this.$toast.success('User updated successfully');
-      } catch (error) {
-        this.$toast.error('Failed to update user');
-      }
+
+    addSelectedDietaryPreference(preference) {
+      this.selectedUser.dietaryPreferences.push(preference);
+      this.dietaryPreferenceDialog = false;
     },
-    goToFoodItems() {
-      this.$router.push('/fooditems'); // Navigate to the Food Items page
-    },
-    goToRecipes() {
-      this.$router.push('/recipes'); // Navigate to the Recipes page
-    },
-    goToRecipeGenerator() {
-      this.$router.push('/recipe-generator'); // Navigate to the Recipe Generator page
+
+    addSelectedAllergy(allergy) {
+      this.selectedUser.allergies.push(allergy);
+      this.allergyDialog = false;
     }
   }
 };
 </script>
 
 <style scoped>
-/* Optional: Add custom styles for the profile page */
+.profile-card {
+  margin-top: 20px;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
 </style>

@@ -144,18 +144,4 @@ public class AuthService {
         // En enkel metod för att generera token (kan ersättas med mer avancerade tekniker som JWT)
         return Long.toHexString(System.currentTimeMillis()); // En token baserat på systemets nuvarande tid
     }
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll(); // Hämta alla användare från databasen
-    }
-
-    // Radera användarkonto
-    public void deleteAccount(String id) {
-        // Kontrollera om användaren existerar med det givna String ID
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-        // Ta bort användaren från databasen
-        userRepository.delete(user);
-        logger.info("Användarkonto raderat framgångsrikt: {}", id);
-    }
 }
