@@ -10,7 +10,6 @@ const SignUpForm = () => import("../components/SignUpForm.vue");
 const UserProfile = () => import('../components/UserProfile.vue');
 const WelcomeView = () => import('../components/WelcomeView.vue'); // Optional welcome view
 const VerifyPage = () => import('../components/VerifyPage.vue'); // Add the VerifyPage component
-const UserNotifications = () => import('../components/UserNotifications.vue');
 
 // Define routes
 const routes = [
@@ -18,13 +17,12 @@ const routes = [
     { path: '/home', name: 'Home', component: HomeView },
     { path: '/verify', name: 'VerifyPage', component: VerifyPage }, // Add this route for verification status page
     { path: '/welcome', name: 'WelcomeView', component: WelcomeView, meta: { requiresAuth: true } },
-    { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
+    { path: '/foodItem', name: 'FoodItem', component: FoodItem },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes, meta: { requiresAuth: true } },
     { path: '/login', name: 'Login', component: LoginForm },
     { path: '/signup', name: 'SignUp', component: SignUpForm },
     { path: '/user-profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
-    {path: '/user-notifications', name: 'UserNotifications', component: UserNotifications, meta: {requiresAuth: true} },
 ];
 
 const router = createRouter({

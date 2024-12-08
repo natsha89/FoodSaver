@@ -2,6 +2,13 @@
   <v-container class="my-food-items">
     <v-row justify="center">
       <v-col cols="12" md="8">
+        <!-- Alert for expiring food items, placed above the title -->
+        <v-alert v-if="alerts.length" :type="alertsType" class="mt-4 mb-4">
+          <div v-for="(alert, index) in alerts" :key="index">
+            {{ alert }}
+          </div>
+        </v-alert>
+
         <h2 class="page-title">My Food Items</h2>
         <v-img
             src="/myfooditems.png"
@@ -22,7 +29,6 @@
                   <v-text-field v-model.number="newFoodItem.quantity" type="number" label="Quantity" outlined required></v-text-field>
                 </v-col>
                 <v-col cols="6" md="3">
-                  <!-- Updated v-select for Unit -->
                   <v-select
                       v-model="newFoodItem.unit"
                       :items="unitOptions"
@@ -39,12 +45,6 @@
             </v-form>
           </v-card-text>
         </v-card>
-
-        <v-alert v-if="alerts.length" type="warning" class="mt-4">
-          <div v-for="(alert, index) in alerts" :key="index">
-            {{ alert }}
-          </div>
-        </v-alert>
 
         <v-progress-circular v-if="loading" indeterminate color="primary" class="mt-4"></v-progress-circular>
 
@@ -77,7 +77,6 @@
             <v-card-text>
               <v-text-field v-model="selectedItem.name" label="Name" outlined></v-text-field>
               <v-text-field v-model.number="selectedItem.quantity" type="number" label="Quantity" outlined></v-text-field>
-              <!-- Updated v-select for Unit -->
               <v-select
                   v-model="selectedItem.unit"
                   :items="unitOptions"
@@ -105,6 +104,7 @@ export default {
       editDialog: false,
       selectedItem: null,
       alerts: [],
+      alertsType: 'warning', // Default to warning
       unitOptions: ['gram', 'kg', 'liter', 'pieces'], // Predefined list of units
       newFoodItem: {
         name: '',
@@ -130,6 +130,8 @@ export default {
       try {
         this.loading = true;
         await this.$store.dispatch('fetchFoodItems');
+        const foodItems = this.foodItems;
+        this.checkExpiringItems(foodItems);
       } catch (error) {
         this.$toast.error('Failed to load food items');
       } finally {
@@ -162,7 +164,7 @@ export default {
       }
     },
     openEditDialog(item) {
-      this.selectedItem = {...item};
+      this.selectedItem = { ...item };
       this.editDialog = true;
     },
     confirmDelete(foodItemId) {
@@ -177,6 +179,24 @@ export default {
       } catch (error) {
         this.$toast.error('Failed to delete food item');
       }
+    },
+    checkExpiringItems(foodItems) {
+      const now = new Date();
+      const alerts = [];
+
+      foodItems.forEach(item => {
+        const expiryDate = new Date(item.expirationDate);
+        const diffInDays = (expiryDate - now) / (1000 * 60 * 60 * 24);
+
+        if (diffInDays < 3 && diffInDays > 0) {
+          alerts.push({ message: `${item.name} expires in ${Math.ceil(diffInDays)} days!`, type: 'warning' });
+        } else if (diffInDays <= 0) {
+          alerts.push({ message: `${item.name} has expired!`, type: 'error' });
+        }
+      });
+
+      this.alerts = alerts.map(alert => alert.message);
+      this.alertsType = alerts.length && alerts[0].type === 'error' ? 'error' : 'warning'; // Determine alert type
     },
   },
 };
