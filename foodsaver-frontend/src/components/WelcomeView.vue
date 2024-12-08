@@ -57,6 +57,14 @@ export default {
     // Check for expiring food items when the component is created
     this.checkExpiringItems();
   },
+  watch: {
+    // Watch for changes in the store (e.g., after a login)
+    '$store.state.isLoggedIn': function(newVal) {
+      if (newVal) {
+        this.checkExpiringItems(); // Recheck on login
+      }
+    }
+  },
   methods: {
     // Navigate to different pages
     navigateTo(page) {
