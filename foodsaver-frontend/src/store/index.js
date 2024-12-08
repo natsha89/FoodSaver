@@ -83,19 +83,23 @@ export default createStore({
             }
         },
 
-        // Hämta användarinformation
         async fetchUser({ commit, state }) {
             try {
                 const response = await axios.get('/api/users/me', {
                     headers: { Authorization: `Bearer ${state.authToken}` },
                 });
-                commit('setUser', response.data); // Uppdatera användardata i Vuex store
+
+                // Extract the actual user data from the response
+                // Assuming the response structure is { data: { message: '...', data: { user } } }
+                const userData = response.data.data;
+
+                commit('setUser', userData); // Update user data in Vuex store
+                return userData;
             } catch (error) {
                 console.error('Error fetching user:', error.response?.data?.message || error.message);
-                throw error; // Kasta om felet för att hanteras i komponenten
+                throw error; // Throw to be handled in the component
             }
         },
-
         async updateUser({ commit, state }, updatedUser) {
             try {
                 const response = await axios.put('/api/users/me', updatedUser, {

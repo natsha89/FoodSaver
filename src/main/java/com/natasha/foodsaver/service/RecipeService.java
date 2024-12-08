@@ -29,7 +29,7 @@ public class RecipeService {
     private AIService aiService; // Lägger till AIService för att generera recept via AI
 
 
-    // Metod för att generera recept för en specifik användare baserat på ingredienser, allergener, kostpreferenser och portioner
+    // Metod för att generera recept för en specifik användare baserat på ingredienser, allergener, kost preferenser och portioner
     public List<Recipe> generateRecipes(String userId, String ingredients, List<String> allergens, String dietaryPreferences, int servings) {
         // Hämtar användaren baserat på userId
         Optional<User> userOptional = userRepository.findById(userId);
@@ -38,7 +38,7 @@ public class RecipeService {
         }
 
         try {
-            // Anropar AI-tjänsten för att generera recept med de angivna ingredienserna, allergenerna, kostpreferenserna och portionerna
+            // Anropar AI-tjänsten för att generera recept med de angivna ingredienserna, allergenerna, kost preferenserna och portionerna
             List<Recipe> generatedRecipes = aiService.generateAIRecipes(ingredients, allergens, dietaryPreferences, servings);
 
             // Hämtar alla befintliga receptnamn från databasen för att göra en effektiv uppslagning
@@ -78,7 +78,7 @@ public class RecipeService {
     }
 
     // Metod för att ta bort ett recept från databasen baserat på receptets ID
-    // Metod för att radera recept baserat på användar-ID och recept-ID
+    // Metod för att radera recept baserat på User-ID och recept-ID
     public boolean deleteRecipe(String userId, String recipeId) {
         // Hämta receptet från databasen baserat på recept-ID
         Recipe recipe = recipeRepository.findById(recipeId).orElse(null);

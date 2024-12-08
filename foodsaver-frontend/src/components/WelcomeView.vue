@@ -12,7 +12,7 @@
         <v-btn color="green" class="mr-4" @click="navigateTo('RecipeGenerator')" large>
           Get Recipes
         </v-btn>
-        <v-btn color="blue" class="mr-4" @click="navigateTo('FoodItem')" large>
+        <v-btn color="blue" class="mr-4" @click="navigateTo('IngredientList')" large>
           Handle your groceries
         </v-btn>
       </v-col>

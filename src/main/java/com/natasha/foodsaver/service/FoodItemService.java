@@ -5,7 +5,7 @@ import com.natasha.foodsaver.repository.FoodItemRepository;
 import com.natasha.foodsaver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.natasha.foodsaver.model.User; // Add this import statement
+import com.natasha.foodsaver.model.User;
 
 
 import java.util.List;

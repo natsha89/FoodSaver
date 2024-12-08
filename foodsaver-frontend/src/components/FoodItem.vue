@@ -2,14 +2,13 @@
   <v-container class="my-food-items">
     <v-row justify="center">
       <v-col cols="12" md="8">
+        <h2 class="page-title">My Food Items</h2>
         <!-- Alert for expiring food items, placed above the title -->
         <v-alert v-if="alerts.length" :type="alertsType" class="mt-4 mb-4">
           <div v-for="(alert, index) in alerts" :key="index">
             {{ alert }}
           </div>
         </v-alert>
-
-        <h2 class="page-title">My Food Items</h2>
         <v-img
             src="/myfooditems.png"
             alt="My Food Items Image"
@@ -183,25 +182,21 @@ export default {
     checkExpiringItems(foodItems) {
       const now = new Date();
       const alerts = [];
-
       foodItems.forEach(item => {
         const expiryDate = new Date(item.expirationDate);
         const diffInDays = (expiryDate - now) / (1000 * 60 * 60 * 24);
-
         if (diffInDays < 3 && diffInDays > 0) {
           alerts.push({ message: `${item.name} expires in ${Math.ceil(diffInDays)} days!`, type: 'warning' });
         } else if (diffInDays <= 0) {
           alerts.push({ message: `${item.name} has expired!`, type: 'error' });
         }
       });
-
       this.alerts = alerts.map(alert => alert.message);
       this.alertsType = alerts.length && alerts[0].type === 'error' ? 'error' : 'warning'; // Determine alert type
     },
   },
 };
 </script>
-
 <style scoped>
 .my-food-items {
   margin-top: 40px;
@@ -210,7 +205,12 @@ export default {
   border-radius: 8px;
   margin-top: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 50%; /* Reduce the width of the image */
+  height: auto; /* Maintain the aspect ratio */
+  margin-left: auto; /* Center the image horizontally */
+  margin-right: auto;
 }
+
 
 .page-title {
   font-size: 2em;
