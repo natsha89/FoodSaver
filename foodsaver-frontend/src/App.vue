@@ -36,14 +36,8 @@
           <v-btn text class="nav-btn">My Account</v-btn>
         </router-link>
 
-        <!-- Notifications button -->
-        <router-link to="/notifications" class="nav-link">
-          <v-btn text class="nav-btn">
-            <img src="/notification.png" alt="Notifications" class="notification-icon" />
-          </v-btn>
-        </router-link>
-
-        <v-btn text @click="logout" class="nav-btn">Log Out</v-btn>
+        <!-- Röd Logout-knapp -->
+        <v-btn text @click="logout" class="nav-btn" color="red">Log Out</v-btn>
       </v-toolbar-items>
     </v-toolbar>
 
@@ -123,9 +117,4 @@ export default {
   text-decoration: none;
 }
 
-/* Style for the notifications icon */
-.notification-icon {
-  height: 24px;  /* Reduced icon size */
-  width: 24px;  /* Reduced icon size */
-}
 </style>
