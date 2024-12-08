@@ -17,12 +17,13 @@ const routes = [
     { path: '/home', name: 'Home', component: HomeView },
     { path: '/verify', name: 'VerifyPage', component: VerifyPage }, // Add this route for verification status page
     { path: '/welcome', name: 'WelcomeView', component: WelcomeView, meta: { requiresAuth: true } },
+    { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
     { path: '/foodItem', name: 'FoodItem', component: FoodItem },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes, meta: { requiresAuth: true } },
     { path: '/login', name: 'Login', component: LoginForm },
     { path: '/signup', name: 'SignUp', component: SignUpForm },
-    { path: '/user-profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
+    { path: '/profile', name: 'Profile', component: UserProfile, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
