@@ -127,7 +127,7 @@ public class AuthService {
         // Generera och returnera JWT-token för användaren
         String token = jwtService.generateToken(user);
 
-        // Här kan du lägga till att hämta användarens fullständiga data (t.ex. allergier, kostpreferenser, recept, matvaror)
+        // Här kan du lägga till att hämta användarens fullständiga data (t.ex. Allergier, kost preferenser, recept, matvaror)
         user.getAllergies();  // Hämta allergier
         user.getDietaryPreferences();  // Hämta kostpreferenser
         user.getRecipes();  // Hämta sparade recept
