@@ -9,9 +9,7 @@
             alt="FoodSaver Intro Image"
             class="intro-image"
         ></v-img>
-        <v-btn color="primary" @click="navigateTo('IngredientList')" large class="cta-btn">
-          View My Ingredients
-        </v-btn>
+
       </v-col>
     </v-row>
 
@@ -35,11 +33,15 @@
         <v-card class="engagement-card">
           <v-card-title>Join the FoodWaste Revolution!</v-card-title>
           <v-card-text>
-            Start cooking creatively and sustainably with the ingredients you already have.
+            Start cooking creatively and sustainably with the ingredients you have.
           </v-card-text>
           <v-btn color="green" @click="navigateTo('RecipeGenerator')" class="cta-btn">Start Cooking</v-btn>
+          <v-btn color="primary" @click="navigateTo('IngredientList')" large class="cta-btn">
+            View My Ingredients
+          </v-btn>
         </v-card>
       </v-col>
+
     </v-row>
   </v-container>
 </template>
@@ -91,9 +93,10 @@ export default {
 }
 
 .intro-image {
-  max-width: 700px;
   height: auto;
   margin: 0 auto 20px;
+  max-width: 50%; /* Reduce the width of the image */
+
 }
 
 .headline {

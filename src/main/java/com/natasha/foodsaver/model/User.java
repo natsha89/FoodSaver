@@ -36,17 +36,16 @@ public class User implements UserDetails {
     private List<String> dietaryPreferences;  // Kostpreferenser (t.ex. vegetarisk, glutenfri)
 
     @DBRef(lazy = false)
-    private List<Recipe> recipes= new ArrayList<>();  // or list of Recipe objects
+    private List<Recipe> recipes = new ArrayList<>();  // Lista över recept som användaren har sparat
 
     @DBRef(lazy = false)
-    private List<FoodItem> foodItems = new ArrayList<>();
+    private List<FoodItem> foodItems = new ArrayList<>();  // Lista över matvaror som användaren har sparat
 
     private String verificationToken;  // Token för e-postverifiering
     private LocalDateTime verificationTokenExpiration;  // Utloppsdatum för verifieringstoken
     private boolean emailVerified = false;  // Flagga för att markera om e-post är verifierad
 
-    // JWT token (om du vill spara den för session eller åtkomst)
-    private String jwtToken;
+    private String jwtToken;  // JWT-token för autentisering
 
     // Konstruktor utan argument (krävs för databindning)
     public User() {}
@@ -69,7 +68,7 @@ public class User implements UserDetails {
         this.jwtToken = jwtToken;
     }
 
-    // Getters och setters
+    // Getters och setters för alla fält
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -88,9 +87,9 @@ public class User implements UserDetails {
     public List<String> getDietaryPreferences() { return dietaryPreferences; }
     public void setDietaryPreferences(List<String> dietaryPreferences) { this.dietaryPreferences = dietaryPreferences; }
 
-    public List<Recipe> getRecipes() {return recipes;}
+    public List<Recipe> getRecipes() { return recipes; }
 
-    public void setRecipes(List<Recipe> recipes) {this.recipes = recipes;}
+    public void setRecipes(List<Recipe> recipes) { this.recipes = recipes; }
 
     public String getVerificationToken() { return verificationToken; }
     public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
@@ -101,9 +100,9 @@ public class User implements UserDetails {
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
 
-    public List<FoodItem> getFoodItems() {return foodItems;}
+    public List<FoodItem> getFoodItems() { return foodItems; }
 
-    public void setFoodItems(List<FoodItem> foodItems) {this.foodItems = foodItems;}
+    public void setFoodItems(List<FoodItem> foodItems) { this.foodItems = foodItems; }
 
     // JWT Token getter och setter
     public String getJwtToken() { return jwtToken; }

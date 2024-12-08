@@ -19,7 +19,6 @@ const routes = [
     { path: '/welcome', name: 'WelcomeView', component: WelcomeView, meta: { requiresAuth: true } },
     { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
-    { path: '/foodItem', name: 'FoodItem', component: FoodItem },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes, meta: { requiresAuth: true } },
     { path: '/login', name: 'Login', component: LoginForm },
     { path: '/signup', name: 'SignUp', component: SignUpForm },
