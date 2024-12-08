@@ -18,6 +18,4 @@ public interface UserRepository extends MongoRepository<User, String> {
     User findByVerificationToken(String token);
 
     Optional<User> findById(String id);       // Ensure this also returns Optional<User>
-
-
 }
