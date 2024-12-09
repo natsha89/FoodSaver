@@ -9,7 +9,6 @@
             alt="FoodSaver Intro Image"
             class="intro-image"
         ></v-img>
-
       </v-col>
     </v-row>
 
@@ -41,7 +40,6 @@
           </v-btn>
         </v-card>
       </v-col>
-
     </v-row>
   </v-container>
 </template>
@@ -84,64 +82,73 @@ export default {
 <style scoped>
 .home {
   text-align: center;
-  margin-top: 80px;
+  margin-top: 60px;
   background-color: #f9f9f9;
 }
 
 .hero {
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .intro-image {
   height: auto;
-  margin: 0 auto 20px;
-  max-width: 50%; /* Reduce the width of the image */
-
+  margin: 0 auto 30px;
+  max-width: 45%; /* Slightly reduced width */
 }
 
 .headline {
-  font-size: 3em;
+  font-size: 3.2em;
   color: #2E7D32;
-  font-weight: bold;
-  margin-bottom: 10px;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
 
 .slogan {
-  font-size: 1.6em;
+  font-size: 1.7em;
   color: #388E3C;
   font-style: italic;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .cta-btn {
-  border-radius: 25px;
+  border-radius: 30px;
   font-weight: bold;
+  margin: 10px 0;
+  padding: 15px 30px; /* Increased padding for better clickability */
+  transition: background-color 0.3s ease;
+}
+
+.cta-btn:hover {
+  background-color: #2E7D32; /* Green hover effect */
 }
 
 .feature-card {
-  transition: transform 0.2s, box-shadow 0.3s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 10px; /* Rounded corners for the card */
 }
 
 .feature-card:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .feature-title {
-  font-size: 1.3em;
-  font-weight: bold;
+  font-size: 1.4em;
+  font-weight: 600;
   color: #388E3C;
 }
 
 .engagement-card {
   background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .engagement-card v-btn {
   width: 100%;
-  padding: 15px;
+  padding: 18px 0;
+  font-size: 1.1em;
+  font-weight: bold;
 }
 </style>

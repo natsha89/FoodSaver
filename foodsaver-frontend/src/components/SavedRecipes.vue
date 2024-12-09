@@ -1,13 +1,14 @@
 <template>
   <div>
-    <h2 class="page-title">My Saved Recipes</h2>
-    <!-- Bild för My Recipes -->
+    <h2 class="page-title">Saved Recipes</h2>
+    <!-- Banner Image under "Saved Recipes" (myrecipe.png) -->
     <v-img
         src="/myrecipe.png"
-        alt="My Recipes Image"
-        class="my-recipes-image"
+        alt="My Saved Recipes"
+        class="banner-image"
         aspect-ratio="16/9"
         max-height="400px"
+    contain
     ></v-img>
 
     <v-progress-circular v-if="loading" indeterminate class="loading-spinner"></v-progress-circular>
@@ -24,13 +25,21 @@
               lg="3"
               class="recipe-col"
           >
-            <v-card outlined class="recipe-card">
+            <v-card class="recipe-card" elevation="2" outlined>
+              <!-- Common Image for Each Recipe (recipe.png) -->
+              <v-img
+                  src="/recipe.png"
+                  alt="Recipe Image"
+                  height="200px"
+                  class="recipe-image"
+              ></v-img>
+
               <v-card-title class="recipe-title">{{ recipe.name }}</v-card-title>
-              <v-card-actions class="card-actions">
-                <v-btn color="primary" @click="openRecipeDialog(recipe)" class="view-btn">
+              <v-card-actions>
+                <v-btn @click="openRecipeDialog(recipe)" color="primary" rounded small>
                   View
                 </v-btn>
-                <v-btn color="error" @click="confirmDelete(recipe.id)" class="delete-btn">
+                <v-btn @click="confirmDelete(recipe.id)" color="error" rounded small>
                   Delete
                 </v-btn>
               </v-card-actions>
@@ -38,10 +47,10 @@
           </v-col>
         </v-row>
       </v-container>
-      <p v-else class="no-recipes-text">No recipes found.</p>
+      <p v-else class="no-recipes-text">No saved recipes found.</p>
     </template>
 
-    <!-- Dialog för att visa detaljer om recept -->
+    <!-- Recipe Detail Dialog -->
     <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title class="dialog-title">{{ selectedRecipe?.name }}</v-card-title>
@@ -59,11 +68,11 @@
             <p v-if="selectedRecipe.instructions" class="dialog-content">
               {{ selectedRecipe.instructions }}
             </p>
-            <p v-else class="no-instructions">No instructions available for this recipe.</p>
+            <p v-else class="no-instructions">No instructions available.</p>
 
             <h3 class="dialog-subheading">Serving:</h3>
             <p v-if="selectedRecipe.serving" class="dialog-content">
-              {{ selectedRecipe.serving }} Serving
+              {{ selectedRecipe.serving }} servings
             </p>
             <p v-else class="dialog-content">No serving information available.</p>
           </div>
@@ -133,16 +142,15 @@ export default {
 <style scoped>
 .page-title {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #388E3C;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 20px;
 }
 
-.my-recipes-image {
+.banner-image {
   border-radius: 8px;
   margin-top: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .loading-spinner {
@@ -160,7 +168,6 @@ export default {
 
 .recipe-card {
   transition: transform 0.2s, box-shadow 0.3s ease-in-out;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .recipe-card:hover {
@@ -168,18 +175,25 @@ export default {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
+.recipe-image {
+  border-radius: 8px 8px 0 0;
+}
+
 .recipe-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #388E3C;
+  text-align: center;
 }
 
 .card-actions {
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .view-btn, .delete-btn {
   font-weight: 600;
+  padding: 6px 12px; /* Reduced padding */
+  font-size: 0.875rem; /* Smaller font size */
 }
 
 .no-recipes-text {
@@ -213,5 +227,6 @@ export default {
 
 .close-btn {
   font-weight: 600;
+  color: #388E3C;
 }
 </style>
