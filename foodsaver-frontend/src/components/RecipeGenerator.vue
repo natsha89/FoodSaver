@@ -1,17 +1,20 @@
 <template>
   <v-container class="recipe-generator">
     <h2 class="page-title">Recipe Generator</h2>
-
+    <div class="image-container">
+      <img src="/generatore.png" alt="Recipe Generator" class="recipe-image"/>
+    </div>
     <v-form @submit.prevent="addIngredient" class="ingredient-form">
       <!-- Ingredient Input Field -->
       <v-text-field
           v-model="newIngredient"
-          label="Ingredient"
+          label="Add Ingredient"
           append-icon="mdi-plus"
           @click:append="addIngredient"
           @keyup.enter.prevent="addIngredient"
-          class="ingredient-input"
+          outlined
           full-width
+          class="ingredient-input"
       ></v-text-field>
 
       <v-chip-group v-if="selectedIngredients.length" class="ingredient-chip-group">
@@ -20,6 +23,7 @@
             :key="index"
             close
             @click:close="selectedIngredients.splice(index, 1)"
+            class="ingredient-chip"
         >
           {{ ingredient }}
         </v-chip>
@@ -32,6 +36,7 @@
           label="Allergies"
           multiple
           chips
+          outlined
           full-width
           class="allergy-select"
       ></v-select>
@@ -43,6 +48,7 @@
           label="Dietary Preferences"
           multiple
           chips
+          outlined
           full-width
           class="diet-select"
       ></v-select>
@@ -53,6 +59,7 @@
           type="number"
           label="Servings"
           min="1"
+          outlined
           full-width
           class="serving-input"
       ></v-text-field>
@@ -73,13 +80,13 @@
     </div>
 
     <!-- Recipe Dialog Box -->
-    <v-dialog v-model="dialogVisible" max-width="600">
-      <v-card>
+    <v-dialog v-model="dialogVisible" max-width="700px">
+      <v-card class="dialog-card">
         <v-card-title class="headline">Generated Recipes</v-card-title>
         <v-card-text>
           <v-sheet
               v-if="generatedRecipes.length"
-              class="pa-4 overflow-y-auto"
+              class="pa-4 overflow-y-auto recipe-list"
               max-height="400"
           >
             <v-expansion-panels>
@@ -174,22 +181,28 @@ export default {
 </script>
 
 <style scoped>
-/* Styling for the Recipe Generator Page */
+/* General Styling */
 .recipe-generator {
   text-align: center;
   margin-top: 40px;
+  font-family: 'Roboto', sans-serif;
+  background-color: #F9F9F9; /* Light background color for contrast */
 }
 
 .page-title {
   font-size: 2.5em;
   font-weight: bold;
-  color: #2E7D32;
+  color: #388E3C; /* More vibrant green */
   margin-bottom: 20px;
 }
 
 .ingredient-form {
-  max-width: 600px;
+  max-width: 650px;
   margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .ingredient-input,
@@ -198,17 +211,32 @@ export default {
 .serving-input {
   margin-bottom: 20px;
   max-width: 100%;
+  border-radius: 8px;
 }
 
 .generate-button {
   border-radius: 25px;
   font-weight: bold;
+  width: 100%;
+  height: 50px;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.generate-button:hover {
+  background-color: #2E7D32;
 }
 
 .ingredient-chip-group {
   margin: 20px 0;
 }
 
+.ingredient-chip {
+  border-radius: 20px;
+  background-color: #81C784;
+}
+
+/* Loading Animation */
 .loading-container {
   display: flex;
   justify-content: center;
@@ -222,7 +250,6 @@ export default {
   animation: rotate 1.5s infinite linear;
 }
 
-/* Rotate animation for fun effect */
 @keyframes rotate {
   0% {
     transform: rotate(0deg);
@@ -232,6 +259,18 @@ export default {
   }
 }
 
+/* Recipe Dialog Styling */
+.dialog-card {
+  background-color: #FFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .recipe-details h3 {
   margin-top: 10px;
   margin-bottom: 5px;
@@ -239,5 +278,12 @@ export default {
 
 .recipe-details p {
   margin-bottom: 10px;
+}
+
+.recipe-image {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  margin-bottom: 20px;
 }
 </style>

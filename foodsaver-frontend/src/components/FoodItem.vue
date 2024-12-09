@@ -3,12 +3,14 @@
     <v-row justify="center">
       <v-col cols="12" md="8">
         <h2 class="page-title">My Food Items</h2>
-        <!-- Alert for expiring food items, placed above the title -->
+
+        <!-- Alert for expiring food items -->
         <v-alert v-if="alerts.length" :type="alertsType" class="mt-4 mb-4">
           <div v-for="(alert, index) in alerts" :key="index">
             {{ alert }}
           </div>
         </v-alert>
+
         <v-img
             src="/myfooditems.png"
             alt="My Food Items Image"
@@ -16,6 +18,7 @@
             aspect-ratio="2/1"
             contain
         ></v-img>
+
         <v-card class="form-card">
           <v-card-title class="form-title">Add a New Food Item</v-card-title>
           <v-card-text>
@@ -45,16 +48,18 @@
           </v-card-text>
         </v-card>
 
+        <!-- Loading indicator -->
         <v-progress-circular v-if="loading" indeterminate color="primary" class="mt-4"></v-progress-circular>
 
+        <!-- Food items list -->
         <v-card class="food-list-card mt-4" v-else-if="foodItems.length">
           <v-card-title class="list-title">Your Food Items</v-card-title>
           <v-divider></v-divider>
           <v-list dense>
-            <v-list-item v-for="item in foodItems" :key="item.id">
-              <v-row>
+            <v-list-item v-for="item in foodItems" :key="item.id" class="food-item-card">
+              <v-row align="center">
                 <v-col cols="8">
-                  <span class="food-item-name">{{ item.name }}</span> -
+                  <span class="food-item-name">{{ item.name }}</span>
                   <span class="food-item-quantity">{{ item.quantity }} {{ item.unit }}</span>
                   <br>
                   <small class="food-item-expiration">Expires: {{ formatDate(item.expirationDate) }}</small>
@@ -67,6 +72,8 @@
             </v-list-item>
           </v-list>
         </v-card>
+
+        <!-- Empty state -->
         <v-alert v-else type="info" class="mt-4">No food items found.</v-alert>
 
         <!-- Edit Dialog -->
@@ -103,8 +110,8 @@ export default {
       editDialog: false,
       selectedItem: null,
       alerts: [],
-      alertsType: 'warning', // Default to warning
-      unitOptions: ['gram', 'kg', 'liter', 'pieces'], // Predefined list of units
+      alertsType: 'warning',
+      unitOptions: ['gram', 'kg', 'liter', 'pieces'],
       newFoodItem: {
         name: '',
         quantity: null,
@@ -192,11 +199,12 @@ export default {
         }
       });
       this.alerts = alerts.map(alert => alert.message);
-      this.alertsType = alerts.length && alerts[0].type === 'error' ? 'error' : 'warning'; // Determine alert type
+      this.alertsType = alerts.length && alerts[0].type === 'error' ? 'error' : 'warning';
     },
   },
 };
 </script>
+
 <style scoped>
 .my-food-items {
   margin-top: 40px;
@@ -205,15 +213,14 @@ export default {
   border-radius: 8px;
   margin-top: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 50%; /* Reduce the width of the image */
-  height: auto; /* Maintain the aspect ratio */
-  margin-left: auto; /* Center the image horizontally */
+  max-width: 70%;
+  height: auto;
+  margin-left: auto;
   margin-right: auto;
 }
 
-
 .page-title {
-  font-size: 2em;
+  font-size: 2.5em;
   color: #2E7D32;
   text-align: center;
 }
@@ -222,10 +229,11 @@ export default {
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
 }
 
 .form-title {
-  font-size: 1.2em;
+  font-size: 1.3em;
   color: #388E3C;
 }
 
@@ -235,6 +243,14 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.food-item-card {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .list-title {
   font-size: 1.3em;
   color: #4CAF50;
@@ -242,9 +258,21 @@ export default {
 
 .food-item-name {
   font-weight: bold;
+  font-size: 1.2em;
+  color: #388E3C;
+}
+
+.food-item-quantity {
+  font-size: 1.1em;
+  color: #555;
 }
 
 .food-item-expiration {
   color: #FF5722;
+  font-size: 0.9em;
+}
+
+.v-btn {
+  font-size: 0.85em;
 }
 </style>

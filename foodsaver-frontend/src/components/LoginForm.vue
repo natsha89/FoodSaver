@@ -2,8 +2,12 @@
   <v-container class="login-container" fluid>
     <v-row justify="center" align="center" class="login-row">
       <v-col cols="12" sm="8" md="6" lg="4">
-        <v-card class="login-card" elevation="4">
-          <v-card-title class="text-center">Log In</v-card-title>
+        <v-card class="login-card" elevation="8">
+          <!-- New text at the top -->
+          <v-card-title class="text-center welcome-text">
+            👩🏻‍🍳👨🏻‍🍳 Login to your FoodSaver world 👩🏻‍🍳👨🏻‍🍳
+          </v-card-title>
+
           <v-card-text>
             <v-form ref="form" v-model="valid" @keydown.enter="login">
               <v-text-field
@@ -12,6 +16,7 @@
                   label="Email"
                   required
                   outlined
+                  dense
               ></v-text-field>
               <v-text-field
                   v-model="password"
@@ -20,18 +25,21 @@
                   type="password"
                   required
                   outlined
+                  dense
               ></v-text-field>
             </v-form>
-            <v-alert v-if="responseMessage" type="error" dismissible class="mt-3">
+
+            <!-- Error message styling -->
+            <v-alert v-if="responseMessage" type="error" dismissible class="mt-3 error-alert">
               {{ responseMessage }}
             </v-alert>
           </v-card-text>
-          <v-card-actions class="text-center flex-column"> <!-- Added flex-column here -->
-            <!-- Login Button -->
+
+          <!-- Buttons section -->
+          <v-card-actions class="text-center flex-column">
             <v-btn color="primary" @click="login" :loading="loading" :disabled="loading" large class="login-btn">Login</v-btn>
-            <!-- Sign Up Button placed below the Login button -->
             <router-link to="/signup">
-              <v-btn text class="sign-up-btn">Sign Up</v-btn>
+              <v-btn text class="sign-up-btn">Don't have an account? Sign Up</v-btn>
             </router-link>
           </v-card-actions>
         </v-card>
@@ -109,34 +117,64 @@ export default {
 }
 
 .login-card {
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: white;
-  padding: 20px;
+  padding: 30px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-text {
+  font-size: 1em;
+  color: #388E3C;
+  font-weight: bold;
+  margin-bottom: 30px;
 }
 
 .v-text-field {
-  margin-bottom: 16px; /* Minska avståndet mellan textfält */
+  margin-bottom: 20px;
 }
 
 .login-btn {
   width: 100%; /* Gör knappen bredare */
   font-weight: bold;
   margin-bottom: 16px; /* Lägg till lite avstånd mellan knapparna */
+  transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+  background-color: #2C6A32;
 }
 
 .sign-up-btn {
   width: 100%;
   color: #4CAF50; /* Grön färg för knappen */
   font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.sign-up-btn:hover {
+  color: #388E3C;
 }
 
 .v-alert {
   margin-top: 16px;
 }
 
+.v-alert .v-alert__wrapper {
+  font-size: 1em;
+}
+
 .v-card-actions {
   display: flex;
   flex-direction: column; /* Vertikal ordning */
   align-items: center; /* Center justering av knapparna */
+}
+
+.error-alert {
+  background-color: #FFCDD2; /* Light red for error messages */
+  color: #D32F2F; /* Dark red for text */
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 8px;
 }
 </style>

@@ -1,26 +1,28 @@
 <template>
   <v-container class="welcome">
-    <v-row justify="center" align="center">
+    <v-row justify="center" align="center" class="welcome-row">
       <v-col class="text-center">
-        <h1>Welcome to your FoodSaver world!</h1>
+        <h1 class="welcome-title">Welcome to Your FoodSaver World!</h1>
         <v-img
             src="/welcome.png"
             alt="Welcome Image"
             class="welcome-image"
         ></v-img>
-        <h2>Start your recipe collection</h2>
-        <v-btn color="green" class="mr-4" @click="navigateTo('RecipeGenerator')" large>
-          Get Recipes
-        </v-btn>
-        <v-btn color="blue" class="mr-4" @click="navigateTo('IngredientList')" large>
-          Handle your groceries
-        </v-btn>
+        <h2 class="subheading">Start your recipe collection or add your groceries!</h2>
+        <div class="cta-buttons">
+          <v-btn color="success" class="cta-btn" @click="navigateTo('RecipeGenerator')" large>
+            Get Recipes
+          </v-btn>
+          <v-btn color="primary" class="cta-btn" @click="navigateTo('IngredientList')" large>
+            Manage Your Groceries
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
 
     <!-- Dialog for expiring food items -->
     <v-dialog v-model="dialogVisible" max-width="600px">
-      <v-card>
+      <v-card class="expiration-card">
         <v-card-title>
           <span class="headline">Expiration Alerts</span>
         </v-card-title>
@@ -37,7 +39,7 @@
           </v-list>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="green" @click="dialogVisible = false">Got it</v-btn>
+          <v-btn color="success" @click="dialogVisible = false">Got it</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -63,6 +65,10 @@ export default {
       if (newVal) {
         this.checkExpiringItems(); // Recheck on login
       }
+    },
+    // Watch for changes in the food items list from the store
+    '$store.getters.foodItems': function(newFoodItems) {
+      this.checkExpiringItems(newFoodItems);
     }
   },
   methods: {
@@ -102,6 +108,8 @@ export default {
       if (expiringItems.length > 0) {
         this.expiringItems = expiringItems;
         this.dialogVisible = true; // Show the dialog
+      } else {
+        this.dialogVisible = false; // Hide the dialog if no expiring items
       }
     },
   },
@@ -112,25 +120,69 @@ export default {
 .welcome {
   text-align: center;
   margin-top: 80px;
+  background-color: #fafafa;
+}
+
+.welcome-row {
+  padding: 40px 20px;
+}
+
+.welcome-title {
+  font-size: 2.4em;
+  font-weight: bold;
+  color: #2E7D32;
+  margin-bottom: 20px;
+}
+
+.subheading {
+  font-size: 1.6em;
+  color: #388E3C;
+  font-style: italic;
+  margin-bottom: 30px;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.cta-btn {
+  border-radius: 25px;
+  font-weight: bold;
+  padding: 12px 30px;
+  text-transform: none;
 }
 
 .welcome-image {
-  max-width: 800px;
+  max-width: 700px;
   height: auto;
-  margin: 20px auto;
-}
-
-h1 {
-  font-size: 2.2em;
-  color: #2E7D32;
-}
-
-h2 {
-  font-size: 1.4em;
-  color: #388E3C;
+  margin: 30px auto;
 }
 
 .v-dialog .v-card {
-  max-width: 500px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.expiration-card .v-card-title {
+  font-size: 1.8em;
+  font-weight: 600;
+  color: #2E7D32;
+}
+
+.expiration-card .v-list-item-title {
+  font-weight: 500;
+}
+
+.expiration-card .v-list-item-subtitle {
+  font-size: 0.9em;
+  color: #d32f2f;
+}
+
+.v-btn {
+  font-weight: bold;
+  text-transform: uppercase;
 }
 </style>
