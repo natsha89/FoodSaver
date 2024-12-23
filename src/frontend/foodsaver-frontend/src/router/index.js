@@ -8,15 +8,18 @@ const SavedRecipes = () => import('../components/SavedRecipes.vue');
 const LoginForm = () => import("../components/LoginForm.vue");
 const SignUpForm = () => import("../components/SignUpForm.vue");
 const UserProfile = () => import('../components/UserProfile.vue');
-const WelcomeView = () => import('../components/WelcomeView.vue'); // Optional welcome view
-const VerifyPage = () => import('../components/VerifyPage.vue'); // Add the VerifyPage component
-
+const WelcomeView = () => import('../components/WelcomeView.vue');
+const VerificationSuccess = () => import('../components/VerificationSuccess.vue');
+const VerificationExpired = () => import('../components/VerificationExpired.vue');
+const VerificationError = () => import('../components/VerificationError.vue');
 // Define routes
 const routes = [
     { path: '/', redirect: '/home' }, // Redirect root path to /home
     { path: '/home', name: 'Home', component: HomeView },
-    { path: '/verify', name: 'VerifyPage', component: VerifyPage }, // Add this route for verification status page
     { path: '/welcome', name: 'WelcomeView', component: WelcomeView, meta: { requiresAuth: true } },
+    { path: '/verification-success', name: 'VerificationSuccess', component: VerificationSuccess },
+    { path: '/verification-expired', name: 'VerificationExpired', component: VerificationExpired },
+    { path: '/verification-error', name: 'VerificationError', component: VerificationError},
     { path: '/ingredient-list', name: 'IngredientList', component: FoodItem },
     { path: '/recipe-generator', name: 'RecipeGenerator', component: RecipeGenerator },
     { path: '/saved-recipes', name: 'SavedRecipes', component: SavedRecipes, meta: { requiresAuth: true } },

@@ -56,40 +56,31 @@ export default {
     };
   },
   created() {
-    // Check for expiring food items when the component is created
     this.checkExpiringItems();
   },
   watch: {
-    // Watch for changes in the store (e.g., after a login)
     '$store.state.isLoggedIn': function(newVal) {
       if (newVal) {
-        this.checkExpiringItems(); // Recheck on login
+        console.log('User logged in, checking expiring items...');
+        this.checkExpiringItems();
       }
     },
-    // Watch for changes in the food items list from the store
     '$store.getters.foodItems': function(newFoodItems) {
       this.checkExpiringItems(newFoodItems);
     }
   },
   methods: {
-    // Navigate to different pages
     navigateTo(page) {
       this.$router.push({ name: page });
     },
-
-    // Check for expiring food items from the store (or API)
-    checkExpiringItems() {
-      // Fetch the food items from the store
-      const foodItems = this.$store.getters.foodItems;
-
-      // Current date
+    checkExpiringItems(newFoodItems) {
+      const foodItems = newFoodItems || this.$store.getters.foodItems || [];
       const now = new Date();
       const expiringItems = [];
 
-      // Check each food item for expiration
       foodItems.forEach(item => {
         const expiryDate = new Date(item.expirationDate);
-        const diffInDays = (expiryDate - now) / (1000 * 60 * 60 * 24); // Difference in days
+        const diffInDays = (expiryDate - now) / (1000 * 60 * 60 * 24);
 
         if (diffInDays <= 3 && diffInDays >= 0) {
           expiringItems.push({
@@ -104,14 +95,17 @@ export default {
         }
       });
 
-      // If there are any expiring items, show the dialog
-      if (expiringItems.length > 0) {
-        this.expiringItems = expiringItems;
-        this.dialogVisible = true; // Show the dialog
-      } else {
-        this.dialogVisible = false; // Hide the dialog if no expiring items
-      }
+      this.expiringItems = expiringItems;
+      this.dialogVisible = expiringItems.length > 0;
+      console.log('Expiring items:', expiringItems);
+      console.log('Dialog visible:', this.dialogVisible);
     },
+  },
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      vm.checkExpiringItems();
+      vm.dialogVisible = vm.expiringItems.length > 0; // Ensure the dialog is shown
+    });
   },
 };
 </script>

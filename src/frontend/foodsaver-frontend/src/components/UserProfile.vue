@@ -9,8 +9,8 @@
             Profile Details
           </v-card-title>
           <v-card-text>
-            <!-- Profile Details Form -->
-            <v-form v-if="!isEditing">
+            <!-- Profile Details -->
+            <v-form>
               <v-text-field
                   v-model="user.fullName"
                   label="Full Name"
@@ -53,72 +53,6 @@
               </v-chip-group>
             </v-form>
 
-            <!-- Edit Profile Form -->
-            <v-form v-else ref="profileForm" @submit.prevent="saveProfile">
-              <v-text-field
-                  v-model="editedUser.fullName"
-                  label="Full Name"
-                  outlined
-                  class="mb-3"
-                  :rules="[rules.required]"
-              ></v-text-field>
-
-              <v-text-field
-                  v-model="editedUser.email"
-                  label="Email Address"
-                  outlined
-                  :rules="[rules.required, rules.email]"
-              ></v-text-field>
-
-              <v-card-subtitle class="pa-0 mt-4">Dietary Preferences</v-card-subtitle>
-              <v-chip-group column>
-                <v-chip
-                    v-for="(preference, index) in editedUser.dietaryPreferences"
-                    :key="index"
-                    small
-                    close
-                    @click:close="editedUser.dietaryPreferences.splice(index, 1)"
-                    class="chip"
-                >
-                  {{ preference }}
-                </v-chip>
-                <v-chip
-                    small
-                    outlined
-                    @click="addDietaryPreference"
-                    class="add-chip"
-                >
-                  + Add
-                </v-chip>
-              </v-chip-group>
-
-              <v-card-subtitle class="pa-0 mt-4">Allergies</v-card-subtitle>
-              <v-chip-group column>
-                <v-chip
-                    v-for="(allergy, index) in editedUser.allergies"
-                    :key="index"
-                    small
-                    close
-                    color="red"
-                    text-color="white"
-                    @click:close="editedUser.allergies.splice(index, 1)"
-                    class="chip"
-                >
-                  {{ allergy }}
-                </v-chip>
-                <v-chip
-                    small
-                    outlined
-                    color="red"
-                    text-color="red"
-                    @click="addAllergy"
-                    class="add-chip"
-                >
-                  + Add
-                </v-chip>
-              </v-chip-group>
-            </v-form>
-
             <!-- New buttons for My Food Items and My Recipes -->
             <v-row justify="center" class="mt-4">
               <v-col cols="12" sm="5">
@@ -147,28 +81,11 @@
           <!-- Action Buttons -->
           <v-card-actions>
             <v-btn
-                v-if="!isEditing"
                 color="primary"
                 text
-                @click="startEditing"
+                @click="openEditDialog"
             >
               Edit Profile
-            </v-btn>
-            <v-btn
-                v-if="isEditing"
-                color="success"
-                text
-                type="submit"
-            >
-              Save
-            </v-btn>
-            <v-btn
-                v-if="isEditing"
-                color="grey"
-                text
-                @click="cancelEditing"
-            >
-              Cancel
             </v-btn>
             <v-spacer></v-spacer>
             <v-btn
@@ -198,9 +115,53 @@
         </v-alert>
       </v-col>
     </v-row>
+
+    <!-- Edit Profile Dialog -->
+    <v-dialog v-model="isEditing" max-width="600px">
+      <v-card>
+        <v-card-title>Edit Profile</v-card-title>
+        <v-card-text>
+          <v-form ref="profileForm" @submit.prevent="saveProfile">
+            <v-text-field
+                v-model="editedUser.fullName"
+                label="Full Name"
+                outlined
+                class="mb-3"
+                :rules="[rules.required]"
+                :error-messages="fullNameErrors"
+                @input="validateFullName"
+            ></v-text-field>
+
+            <v-card-subtitle class="pa-0 mt-4">Dietary Preferences</v-card-subtitle>
+            <v-select
+                v-model="editedUser.dietaryPreferences"
+                :items="allDietaryPreferences"
+                label="Select Dietary Preferences"
+                multiple
+                chips
+                deletable-chips
+            ></v-select>
+
+            <v-card-subtitle class="pa-0 mt-4">Allergies</v-card-subtitle>
+            <v-select
+                v-model="editedUser.allergies"
+                :items="allAllergies"
+                label="Select Allergies"
+                multiple
+                chips
+                deletable-chips
+                color="red"
+            ></v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="success" @click="saveProfile" :loading="saving">Save</v-btn>
+          <v-btn color="grey" @click="cancelEditing">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
-
 <script>
 export default {
   name: "UserProfile",
@@ -210,6 +171,11 @@ export default {
       error: null,
       isEditing: false,
       editedUser: {},
+      saving: false,
+      fullNameErrors: [],
+      emailErrors: [],
+      allDietaryPreferences: ['Vegan', 'Vegetarian', 'Gluten-Free', 'Keto', 'Paleo', 'None'], // Populate with all available dietary preferences
+      allAllergies: ['Peanuts', 'Tree Nuts', 'Dairy', 'Gluten', 'Shellfish', 'Soy', 'None'], // Populate with all available allergies
       rules: {
         required: value => !!value || 'This field is required',
         email: value => /.+@.+\..+/.test(value) || 'Please enter a valid email',
@@ -242,7 +208,7 @@ export default {
         this.loading = false;
       }
     },
-    startEditing() {
+    openEditDialog() {
       this.editedUser = {
         ...this.user,
         dietaryPreferences: [...(this.user.dietaryPreferences || [])],
@@ -254,6 +220,9 @@ export default {
       this.isEditing = false;
       this.editedUser = {};
     },
+    validateFullName() {
+      this.fullNameErrors = this.editedUser.fullName ? [] : ['This field is required'];
+    },
     async saveProfile() {
       const isValid = await this.$refs.profileForm.validate();
 
@@ -262,10 +231,10 @@ export default {
         return;
       }
 
+      this.saving = true;
       try {
         await this.$store.dispatch("updateUser", {
           fullName: this.editedUser.fullName,
-          email: this.editedUser.email,
           dietaryPreferences: this.editedUser.dietaryPreferences,
           allergies: this.editedUser.allergies,
         });
@@ -276,6 +245,8 @@ export default {
         this.error =
             error.response?.data?.message || "Failed to update profile";
         this.$toast.error(this.error);
+      } finally {
+        this.saving = false;
       }
     },
     async confirmDeleteAccount() {
@@ -298,32 +269,6 @@ export default {
     },
     navigateTo(route) {
       this.$router.push(route);
-    },
-    addDietaryPreference() {
-      this.$dialog
-          .prompt({
-            title: "Add Dietary Preference",
-            text: "Please enter a new dietary preference.",
-          })
-          .then((input) => {
-            if (input) {
-              this.editedUser.dietaryPreferences.push(input);
-            }
-          })
-          .catch(() => {});
-    },
-    addAllergy() {
-      this.$dialog
-          .prompt({
-            title: "Add Allergy",
-            text: "Please enter a new allergy.",
-          })
-          .then((input) => {
-            if (input) {
-              this.editedUser.allergies.push(input);
-            }
-          })
-          .catch(() => {});
     },
   },
 };

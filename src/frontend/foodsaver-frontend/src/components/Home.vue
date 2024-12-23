@@ -93,7 +93,7 @@ export default {
 .intro-image {
   height: auto;
   margin: 0 auto 30px;
-  max-width: 45%; /* Slightly reduced width */
+  max-width: 85%; /* Slightly reduced width */
 }
 
 .headline {

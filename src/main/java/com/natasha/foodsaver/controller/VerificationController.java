@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,46 +18,34 @@ import java.util.Map;
 public class VerificationController {
 
     @Autowired
-    private AuthService authService;  // Injektar AuthService för att hantera autentisering och e-postverifiering
+    private AuthService authService;
 
-    // Endpoint för att verifiera en e-postadress med en token
+    // Endpoint to verify an email address with a token and redirect accordingly
     @GetMapping("/verify")
-    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token) {
+    public RedirectView verifyEmail(@RequestParam String token) {
+        RedirectView redirectView = new RedirectView();
         try {
-            // Anropa AuthService för att verifiera e-posten med den angivna token
             boolean verified = authService.verifyEmail(token);
-            Map<String, String> response = new HashMap<>();
-
-            // Om e-posten verifierades framgångsrikt, sätt status till "success"
             if (verified) {
-                response.put("status", "success");
+                redirectView.setUrl("http://localhost:3000/verification-success");
             } else {
-                // Om token har gått ut eller är ogiltig, sätt status till "expired"
-                response.put("status", "expired");
+                redirectView.setUrl("http://localhost:3000/verification-expired");
             }
-
-            // Returnera ett framgångsrikt svar med statusen
-            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // Vid fel, sätt status till "error" och returnera ett internt serverfel
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            redirectView.setUrl("http://localhost:3000/verification-error");
         }
+        return redirectView;
     }
 
-    // Endpoint för att skicka ett nytt verifieringsmail till användaren
+    // Endpoint to send a new verification email to the user
     @GetMapping("/resend-verification")
     public ResponseEntity<Map<String, String>> resendVerificationEmail(@RequestParam String email) {
         try {
-            // Anropa AuthService för att skicka ett nytt verifieringsmail till den angivna e-posten
             authService.resendVerificationEmail(email);
             Map<String, String> response = new HashMap<>();
-            // Om verifieringsmailet skickas, sätt status till "resend"
             response.put("status", "resend");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // Vid fel, sätt status till "error" och returnera ett internt serverfel
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

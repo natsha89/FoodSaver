@@ -51,7 +51,7 @@ export default createStore({
     },
 
     actions: {
-        async login({ commit }, credentials) {
+        async login({ commit, dispatch }, credentials) {
             try {
                 const response = await axios.post('/api/auth/login', credentials);
                 const token = response.data.data.token;
@@ -60,6 +60,7 @@ export default createStore({
                     commit('setAuthToken', token);
                     commit('setAuthenticated', true);
                     commit('setUser', response.data.data.user);
+                    await dispatch('fetchFoodItems'); // Fetch food items after login
                 } else {
                     throw new Error('No token received');
                 }
@@ -68,6 +69,7 @@ export default createStore({
                 throw error;
             }
         },
+
 
         // Logout-funktion
         async logout({ commit }) {
