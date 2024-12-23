@@ -6,7 +6,7 @@
     "express": "^4.21.2",
     "openai": "^4.71.1",
     "vue-notification": "^1.0.6",
-    "vue-toastification": "^0.1.2"
+    "vue-toastification": "^1.7.14"
   },
   "scripts": {
     "start": "node src/server.js"
