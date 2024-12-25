@@ -9,6 +9,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+ * MIT License
+ * Copyright (c) [2024] [Natasha Shahran]
+ *
+ * Permission is granted under the MIT License to use, modify, and distribute
+ * this software, provided credit is given to the original creator ([Natasha Shahran]).
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
+
 // ControllerAdvice används för att fånga undantag (exceptions) globalt för hela applikationen
 @ControllerAdvice
 public class GlobalExceptionHandler {

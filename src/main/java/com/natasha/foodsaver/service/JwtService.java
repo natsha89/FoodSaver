@@ -16,6 +16,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/*
+ * MIT License
+ * Copyright (c) [2024] [Natasha Shahran]
+ *
+ * Permission is granted under the MIT License to use, modify, and distribute
+ * this software, provided credit is given to the original creator ([Natasha Shahran]).
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
 @Service
 public class JwtService {
 

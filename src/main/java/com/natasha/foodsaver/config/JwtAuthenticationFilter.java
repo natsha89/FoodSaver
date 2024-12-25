@@ -15,6 +15,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/*
+ * MIT License
+ * Copyright (c) [2024] [Natasha Shahran]
+ *
+ * Permission is granted under the MIT License to use, modify, and distribute
+ * this software, provided credit is given to the original creator ([Natasha Shahran]).
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
 @Component // Markerar denna klass som en Spring-komponent, så den kan användas som en bean i applikationen
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

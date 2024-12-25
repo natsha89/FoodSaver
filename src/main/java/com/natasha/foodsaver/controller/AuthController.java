@@ -19,6 +19,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/*
+ * MIT License
+ * Copyright (c) [2024] [Natasha Shahran]
+ *
+ * Permission is granted under the MIT License to use, modify, and distribute
+ * this software, provided credit is given to the original creator ([Natasha Shahran]).
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
+
 @RestController  // Markerar denna klass som en REST-controller som hanterar HTTP-förfrågningar
 @RequestMapping("/api/auth")  // Anger grundvägen för alla API-anrop (t.ex. /api/auth/register, /api/auth/login)
 public class AuthController {

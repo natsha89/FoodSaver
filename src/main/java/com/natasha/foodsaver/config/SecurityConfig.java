@@ -8,6 +8,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
 
+/*
+ * MIT License
+ * Copyright (c) [2024] [Natasha Shahran]
+ *
+ * Permission is granted under the MIT License to use, modify, and distribute
+ * this software, provided credit is given to the original creator ([Natasha Shahran]).
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+ */
+
 
 @Configuration  // Markerar denna klass som en Spring-konfigurationsklass
 @EnableWebSecurity  // Aktiverar webbsäkerhet för applikationen
